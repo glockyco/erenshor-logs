@@ -48,17 +48,21 @@ pnpm dev
 
 ## Commit Messages
 
-We use conventional commits:
+We use conventional commits with prose descriptions. Each commit should be
+atomic (one concept per commit) and the message should explain *why* the
+change was made, not just *what* changed.
+
+### Format
 
 ```
-type(scope): description
+type(scope): short summary
 
-[optional body]
-
-[optional footer]
+Prose description explaining the change. Focus on the reasoning and context
+rather than listing what files changed. Keep lines to 80 characters max.
 ```
 
-Types:
+### Types
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -66,11 +70,32 @@ Types:
 - `test`: Adding or updating tests
 - `chore`: Maintenance tasks
 
-Examples:
+### Examples
+
+Good:
 ```
 feat(mod): add DoT damage attribution
+
+Track the source spell when damage-over-time effects are applied so that
+periodic damage ticks can be correctly attributed to the original ability
+rather than showing as "Unknown" in the breakdown.
+```
+
+```
 fix(web): correct DPS calculation for partial seconds
-docs: update installation instructions
+
+The final second of combat was being excluded from DPS calculations when
+the session duration wasn't an exact multiple of the bucket size. This
+caused artificially inflated DPS numbers for short encounters.
+```
+
+Avoid bullet-point style messages like:
+```
+feat: add new feature
+
+- Added file X
+- Modified file Y
+- Updated file Z
 ```
 
 ## Pull Requests
