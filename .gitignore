@@ -1,0 +1,51 @@
+# Build outputs
+mod/bin/
+mod/obj/
+web/build/
+web/.svelte-kit/
+
+# Dependencies
+web/node_modules/
+packages/
+
+# IDE
+.idea/
+.vs/
+*.suo
+*.user
+*.userprefs
+*.sln.docstates
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Test outputs
+coverage/
+*.coverage
+
+# Build artifacts
+*.dll
+*.exe
+*.pdb
+!mod/lib/*.dll
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~
+
+# Combat log exports (don't commit test logs)
+*.json.gz
+CombatLogs/
