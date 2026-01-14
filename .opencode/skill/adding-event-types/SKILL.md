@@ -91,9 +91,10 @@ export interface CombatEvent {
 Keep C# and TypeScript enums in sync. Use snake_case in TypeScript to match
 the JSON serialization format.
 
-## Step 4: Update Aggregation
+## Step 4: Update State and Aggregation
 
-If the event contributes to existing metrics, update `web/src/lib/data/aggregator.ts`:
+If the event contributes to existing metrics, update the aggregation in
+`web/src/lib/state/` or `web/src/lib/data/`:
 
 ```typescript
 function aggregateDamage(events: CombatEvent[]): DamageBreakdown {
