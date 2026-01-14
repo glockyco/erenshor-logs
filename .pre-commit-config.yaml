@@ -4,9 +4,10 @@ repos:
     hooks:
       - id: prettier
         name: prettier
-        entry: pnpm --dir web exec prettier --write --ignore-unknown
+        entry: pnpm --dir web run format
         language: system
         files: ^web/.*\.(js|ts|svelte|json|md|yaml|css|html)$
+        pass_filenames: false
 
   # ESLint - Lint TypeScript/Svelte (auto-fix)
   - repo: local

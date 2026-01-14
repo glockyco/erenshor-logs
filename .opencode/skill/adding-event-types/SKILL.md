@@ -26,7 +26,7 @@ public enum EventType
     // Existing types...
     DamageMelee,
     DamageSpell,
-    
+
     // New type
     DamageReflect,  // Add here
 }
@@ -38,7 +38,7 @@ If the event needs new fields, add them to `CombatEvent.cs`:
 public class CombatEvent
 {
     // Existing fields...
-    
+
     // New field for reflect damage
     public int? ReflectedFrom { get; set; }
 }
@@ -83,7 +83,7 @@ export type EventType =
 
 export interface CombatEvent {
   // Existing fields...
-  
+
   reflectedFrom?: number;  // Add if needed
 }
 ```
@@ -99,7 +99,7 @@ If the event contributes to existing metrics, update the aggregation in
 ```typescript
 function aggregateDamage(events: CombatEvent[]): DamageBreakdown {
   return events
-    .filter(e => 
+    .filter(e =>
       e.eventType === 'damage_melee' ||
       e.eventType === 'damage_spell' ||
       e.eventType === 'damage_reflect'  // Include in damage totals

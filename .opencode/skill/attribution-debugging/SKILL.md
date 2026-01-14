@@ -44,9 +44,9 @@ Search `reference/game-source/` for where damage originates. Start from the
 ability and trace forward:
 
 ```
-UseSkill.DoSkill() 
+UseSkill.DoSkill()
   → calls target.DamageMe()
-  
+
 CastSpell.StartSpell()
   → creates SpellVessel
   → SpellVessel.ResolveSpell()
