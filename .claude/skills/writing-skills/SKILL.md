@@ -1,0 +1,132 @@
+---
+name: writing-skills
+description: Create new agent skills for this project. Use when adding reusable guidance for recurring tasks or capturing project-specific knowledge.
+---
+
+# Writing Skills
+
+Skills provide reusable instructions that agents can load on-demand. They help
+maintain consistency and capture non-obvious knowledge.
+
+## When to Create a Skill
+
+Create a skill when:
+- A task recurs and benefits from a consistent approach
+- Patterns are non-obvious or easy to forget
+- A process has multiple steps that should be followed in order
+- Project-specific conventions need enforcement
+
+Avoid creating skills for:
+- One-off tasks
+- Information that belongs in regular documentation
+- Simple facts that don't require guidance
+
+## File Structure
+
+```
+.claude/skills/<skill-name>/SKILL.md
+```
+
+The directory name must exactly match the `name` in frontmatter.
+
+## Frontmatter
+
+Required fields only:
+
+```yaml
+---
+name: my-skill-name
+description: Brief description. Use when [specific trigger conditions].
+---
+```
+
+**Name rules**:
+- 1-64 characters
+- Lowercase alphanumeric with single hyphens
+- No leading/trailing hyphens, no consecutive hyphens
+- Must match containing directory name
+
+**Description rules**:
+- 1-1024 characters
+- Include "Use when..." to help the agent know when to load it
+- Be specific enough to distinguish from other skills
+
+## Content Structure
+
+```markdown
+# Title
+
+Brief intro explaining what this skill covers (1-2 sentences).
+
+## Section 1
+Actionable guidance with examples.
+
+## Section 2
+More guidance, patterns, or rules.
+
+## Common Pitfalls (optional)
+Things to avoid or watch out for.
+```
+
+## Content Guidelines
+
+**Do**:
+- Focus on actionable guidance (what to do, how to do it)
+- Include code examples where they clarify
+- Use good/bad examples for conventions
+- Keep it concise (50-150 lines is typical)
+- Use imperative mood ("Add the hook" not "You should add the hook")
+
+**Don't**:
+- Duplicate information from regular docs
+- Include lengthy background or theory
+- Write exhaustive references (link to docs instead)
+- Add content that rarely applies
+
+## Skill Categories
+
+**Process skills**: Step-by-step guides for multi-step tasks.
+Example: `adding-event-types` walks through adding a new combat event.
+
+**Convention skills**: Rules and patterns to follow consistently.
+Example: `commit-guidelines` defines commit message format.
+
+**Debugging skills**: Troubleshooting approaches for specific problems.
+Example: `attribution-debugging` helps investigate attribution failures.
+
+## Checklist
+
+Before committing a new skill:
+
+- [ ] Directory name matches frontmatter `name` exactly
+- [ ] Description includes "Use when..." trigger
+- [ ] Content is actionable, not just informational
+- [ ] Examples included where they add clarity
+- [ ] Length is appropriate (not too short, not exhaustive)
+- [ ] No duplicate information from existing docs or skills
+
+## Example
+
+A minimal but complete skill:
+
+```markdown
+---
+name: example-skill
+description: Demonstrate skill format. Use when learning how to write skills.
+---
+
+# Example Skill
+
+This skill shows the basic structure.
+
+## When to Use
+
+Use this as a template when creating new skills.
+
+## Key Points
+
+- Keep frontmatter minimal (name + description only)
+- Start with a brief intro
+- Organize content into clear sections
+- Include examples where helpful
+```
