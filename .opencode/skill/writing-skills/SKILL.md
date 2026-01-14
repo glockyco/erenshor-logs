@@ -24,7 +24,7 @@ Avoid creating skills for:
 ## File Structure
 
 ```
-.claude/skills/<skill-name>/SKILL.md
+.opencode/skill/<skill-name>/SKILL.md
 ```
 
 The directory name must exactly match the `name` in frontmatter.
