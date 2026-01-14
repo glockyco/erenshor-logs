@@ -172,21 +172,21 @@ interface CombatEvent {
   id: string;                    // UUID
   timestamp: number;             // Unix ms
   eventType: EventType;
-  
+
   source: ActorRef;
   target: ActorRef;
-  
+
   ability: {
     name: string;
     type: "skill" | "spell" | "auto" | "proc" | "dot" | "hot";
     stableKey?: string;
   } | null;
-  
+
   amount?: number;
   rawAmount?: number;
   mitigated?: number;
   damageType?: DamageType;
-  
+
   flags: {
     critical?: boolean;
     overkill?: boolean;
@@ -195,7 +195,7 @@ interface CombatEvent {
     isProc?: boolean;
     attributionFailed?: boolean;
   };
-  
+
   effect?: {
     name: string;
     duration?: number;

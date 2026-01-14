@@ -12,15 +12,15 @@ A clear description of the bug.
 
 ## Environment
 
-- **Erenshor Version**: 
-- **Mod Version**: 
+- **Erenshor Version**:
+- **Mod Version**:
 - **OS**: Windows / macOS / Linux
 
 ## Steps to Reproduce
 
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 ## Expected Behavior
 
