@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <AssemblyName>ErenshorLogs</AssemblyName>
+    <RootNamespace>ErenshorLogs</RootNamespace>
+    <Version>0.1.0</Version>
+
+    <!-- Roslyn Analyzers -->
+    <AnalysisMode>Recommended</AnalysisMode>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+
+    <!-- Suppress specific warnings that don't apply to mods -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- BepInEx -->
+    <PackageReference Include="BepInEx.Core" Version="5.*" PrivateAssets="all" />
+    <PackageReference Include="HarmonyX" Version="2.*" PrivateAssets="all" />
+
+    <!-- JSON serialization -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.*" />
+
+    <!-- WebSocket server for live streaming -->
+    <PackageReference Include="Fleck" Version="1.*" />
+  </ItemGroup>
+
+  <!-- Game assembly references will be added here -->
+  <ItemGroup>
+    <!--
+    <Reference Include="Assembly-CSharp">
+      <HintPath>lib/Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>lib/UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    -->
+  </ItemGroup>
+
+</Project>
