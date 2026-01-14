@@ -45,7 +45,7 @@ jobs:
         run: pnpm build
 
   lint-mod:
-    name: Lint & Build (Mod)
+    name: Lint (Mod)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -65,11 +65,9 @@ jobs:
       - name: Check formatting
         run: dotnet csharpier --check .
 
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --no-restore --warnaserror
+      # Note: dotnet restore and build are skipped because game DLLs
+      # (Assembly-CSharp.dll, UnityEngine.dll) cannot be distributed publicly.
+      # The mod is built locally by developers with access to game files.
 
   secrets:
     name: Secret Scanning
