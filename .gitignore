@@ -49,3 +49,7 @@ coverage/
 # Combat log exports (don't commit test logs)
 *.json.gz
 CombatLogs/
+
+# Game source reference (not distributable - see reference/README.md)
+reference/game-source/*
+!reference/game-source/README.md
