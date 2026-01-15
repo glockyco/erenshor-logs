@@ -18,6 +18,9 @@
 
     <!-- Suppress specific warnings that don't apply to mods -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
+
+    <!-- Exclude tests directory from main project compilation -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);tests/**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,8 +28,8 @@
     <PackageReference Include="BepInEx.Core" Version="5.*" PrivateAssets="all" />
     <PackageReference Include="HarmonyX" Version="2.*" PrivateAssets="all" />
 
-    <!-- JSON serialization -->
-    <PackageReference Include="Newtonsoft.Json" Version="13.*" />
+    <!-- JSON serialization (System.Text.Json is built-in but needs polyfill for netstandard2.1) -->
+    <PackageReference Include="System.Text.Json" Version="9.*" />
 
     <!-- WebSocket server for live streaming -->
     <PackageReference Include="Fleck" Version="1.*" />

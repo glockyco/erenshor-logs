@@ -1,6 +1,6 @@
 # Build outputs
-mod/bin/
-mod/obj/
+mod/**/bin/
+mod/**/obj/
 web/build/
 web/.svelte-kit/
 
