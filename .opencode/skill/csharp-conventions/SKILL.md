@@ -8,6 +8,19 @@ description: Modern C# patterns for the mod. Use when writing C# code, defining 
 Modern C# patterns and conventions for the Erenshor Logs mod. The project uses
 C# 12+ features while targeting netstandard2.1 for Unity compatibility.
 
+## Runtime Compatibility
+
+The mod targets `netstandard2.1` for Unity/BepInEx compatibility but uses modern
+C# features. The `PolySharp` package provides compile-time polyfills for language
+features that require runtime types not present in netstandard2.1:
+
+- `record` types (C# 9)
+- `init` properties (C# 9)
+- `required` modifier (C# 11)
+
+PolySharp is a compile-time only dependency (`PrivateAssets="all"`) that injects
+the necessary type stubs. No runtime dependency is added to the mod.
+
 ## Data Types
 
 ### Records for Data

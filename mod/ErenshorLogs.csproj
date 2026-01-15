@@ -28,6 +28,9 @@
     <PackageReference Include="BepInEx.Core" Version="5.*" PrivateAssets="all" />
     <PackageReference Include="HarmonyX" Version="2.*" PrivateAssets="all" />
 
+    <!-- C# language feature polyfills for netstandard2.1 (records, init, required) -->
+    <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="all" />
+
     <!-- JSON serialization (System.Text.Json is built-in but needs polyfill for netstandard2.1) -->
     <PackageReference Include="System.Text.Json" Version="9.*" />
 
