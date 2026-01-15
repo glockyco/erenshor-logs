@@ -102,3 +102,39 @@ When updating an issue:
 - Add new tasks discovered during implementation
 - Update acceptance criteria if scope changed
 - Add notes explaining any deviations from original plan
+
+## GitHub CLI Commands
+
+### Creating Issues
+
+Use `gh issue create` with all metadata in one command:
+
+```bash
+gh issue create \
+  --title "Issue title" \
+  --label "mod" --label "P1-high" \
+  --milestone "Foundation & Core Hooks" \
+  --project "Erenshor Logs Development" \
+  --body "$(cat <<'EOF'
+## Summary
+...
+EOF
+)"
+```
+
+Always use `--project` with the project name. This is more reliable than using
+`gh project item-add` with a project number, which can easily target the wrong
+project.
+
+### Verifying Project Assignment
+
+```bash
+gh issue view <number> --json projectItems
+```
+
+### Listing Available Labels and Milestones
+
+```bash
+gh label list
+gh milestone list
+```
