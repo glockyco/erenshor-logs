@@ -15,10 +15,12 @@ class Config:
         erenshor_path: Path,
         crossover_bottle: str | None = None,
         crossover_path: Path | None = None,
+        dotnet8_root: Path | None = None,
     ):
         self.erenshor_path = erenshor_path
         self.crossover_bottle = crossover_bottle
         self.crossover_path = crossover_path or Path("/Applications/CrossOver.app")
+        self.dotnet8_root = dotnet8_root
 
     @property
     def managed_path(self) -> Path:
@@ -122,9 +124,12 @@ def load_config() -> Config:
     crossover_bottle = os.getenv("CROSSOVER_BOTTLE")
     crossover_path_str = os.getenv("CROSSOVER_PATH")
     crossover_path = Path(crossover_path_str) if crossover_path_str else None
+    dotnet8_root_str = os.getenv("DOTNET8_ROOT")
+    dotnet8_root = Path(dotnet8_root_str) if dotnet8_root_str else None
 
     return Config(
         erenshor_path=erenshor_path,
         crossover_bottle=crossover_bottle,
         crossover_path=crossover_path,
+        dotnet8_root=dotnet8_root,
     )

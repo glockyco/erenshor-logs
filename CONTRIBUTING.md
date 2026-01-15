@@ -52,6 +52,9 @@ uv run erenshor deploy
 
 # Launch Erenshor (via CrossOver on macOS)
 uv run erenshor launch
+
+# Decompile game source for reference (requires ilspycmd)
+uv run erenshor decompile
 ```
 
 ### Web Development
@@ -103,6 +106,20 @@ good performance.
    uv run erenshor bepinex
    uv run erenshor setup
    ```
+
+6. **Decompile game source** (optional, for hook development):
+
+   ```bash
+   # Install ilspycmd if not already installed
+   dotnet tool install -g ilspycmd
+
+   # Add to .env (ilspycmd requires .NET 8)
+   # DOTNET8_ROOT=/opt/homebrew/opt/dotnet@8/libexec
+
+   uv run erenshor decompile
+   ```
+
+   This creates searchable C# files in `reference/game-source/`.
 
 #### Development Workflow
 

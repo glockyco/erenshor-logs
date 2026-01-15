@@ -16,35 +16,42 @@ opening a decompiler.
 
 ## Setup Instructions
 
-### 1. Locate the Game DLL
+### Using the CLI (Recommended)
 
-Find `Assembly-CSharp.dll` in your Erenshor installation:
+The easiest way to decompile the game source:
 
+```bash
+cd cli
+uv run erenshor decompile
 ```
-<Steam>/steamapps/common/Erenshor/Erenshor_Data/Managed/Assembly-CSharp.dll
-```
 
-### 2. Decompile
+This requires:
+1. Game DLLs in `mod/lib/` (run `erenshor setup` first)
+2. ilspycmd installed (`dotnet tool install -g ilspycmd`)
+3. On macOS/Linux: `DOTNET8_ROOT` set in `cli/.env` (ilspycmd needs .NET 8)
 
-Use one of these tools:
+### Manual Decompilation
+
+If you prefer to use a GUI decompiler:
 
 **dnSpy** (recommended for browsing): https://github.com/dnSpy/dnSpy
-- Open the DLL
+- Open `mod/lib/Assembly-CSharp.dll`
 - Right-click Assembly-CSharp → Export to Project
 - Choose this folder as the destination
 
 **ILSpy**: https://github.com/icsharpcode/ILSpy
-- Open the DLL
+- Open `mod/lib/Assembly-CSharp.dll`
 - File → Save Code
 - Choose this folder as the destination
 
-### 3. Resulting Structure
+### Resulting Structure
 
 After decompiling, you should have:
 
 ```
 reference/game-source/
 ├── README.md           (this file, committed)
+├── Assembly-CSharp.csproj (gitignored)
 ├── Character.cs        (gitignored)
 ├── Stats.cs            (gitignored)
 ├── UseSkill.cs         (gitignored)
@@ -70,5 +77,6 @@ When working on hooks, these files are most relevant:
 
 ## Updating
 
-When Erenshor updates, repeat the decompile process to get the latest code.
-Method signatures may change between versions.
+When Erenshor updates, run `erenshor decompile` again to get the latest code.
+The command cleans existing files before decompiling, so you'll always have
+a fresh copy. Method signatures may change between versions.
