@@ -18,7 +18,7 @@ Adding an event type touches multiple layers:
 
 ## Step 1: Update C# Event Model
 
-Add the new event type to the `EventType` enum in `mod/src/Events/EventTypes.cs`:
+Add the new event type to the `EventType` enum in `mod/src/Events/EventType.cs`:
 
 ```csharp
 public enum EventType
@@ -32,17 +32,20 @@ public enum EventType
 }
 ```
 
-If the event needs new fields, add them to `CombatEvent.cs`:
+If the event needs new fields, add them to `CombatEvent.cs` using record syntax:
 
 ```csharp
-public class CombatEvent
+public sealed record CombatEvent
 {
     // Existing fields...
 
-    // New field for reflect damage
-    public int? ReflectedFrom { get; set; }
+    // New optional field for reflect damage
+    [JsonPropertyName("reflectedFrom")]
+    public int? ReflectedFrom { get; init; }
 }
 ```
+
+See the `csharp-conventions` skill for record and JSON serialization patterns.
 
 ## Step 2: Add Harmony Hooks
 
@@ -72,7 +75,7 @@ Register the hook in `Plugin.cs` if using manual patching.
 
 ## Step 3: Update TypeScript Types
 
-Mirror changes in `web/src/lib/data/types.ts`:
+Mirror changes in the TypeScript types:
 
 ```typescript
 export type EventType =
@@ -88,8 +91,8 @@ export interface CombatEvent {
 }
 ```
 
-Keep C# and TypeScript enums in sync. Use snake_case in TypeScript to match
-the JSON serialization format.
+TypeScript types use snake_case to match JSON serialization (e.g.,
+`damage_reflect` not `DamageReflect`).
 
 ## Step 4: Update State and Aggregation
 
@@ -136,6 +139,7 @@ If the event should be streamed via WebSocket, ensure the serialization works:
 - [ ] EventType enum updated (C#)
 - [ ] CombatEvent fields added if needed (C#)
 - [ ] Harmony hook captures the event
+- [ ] Unit tests added for serialization
 - [ ] EventType added (TypeScript)
 - [ ] CombatEvent interface updated (TypeScript)
 - [ ] Aggregation includes new event type
