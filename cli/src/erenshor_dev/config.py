@@ -10,9 +10,15 @@ from dotenv import load_dotenv
 class Config:
     """Configuration loaded from .env file."""
 
-    def __init__(self, erenshor_path: Path, crossover_bottle: str | None = None):
+    def __init__(
+        self,
+        erenshor_path: Path,
+        crossover_bottle: str | None = None,
+        crossover_path: Path | None = None,
+    ):
         self.erenshor_path = erenshor_path
         self.crossover_bottle = crossover_bottle
+        self.crossover_path = crossover_path or Path("/Applications/CrossOver.app")
 
     @property
     def managed_path(self) -> Path:
@@ -28,6 +34,18 @@ class Config:
     def plugins_path(self) -> Path:
         """Path to the BepInEx plugins folder."""
         return self.bepinex_path / "plugins"
+
+    @property
+    def wine_binary(self) -> Path:
+        """Path to CrossOver's wine binary (macOS only)."""
+        return (
+            self.crossover_path
+            / "Contents"
+            / "SharedSupport"
+            / "CrossOver"
+            / "bin"
+            / "wine"
+        )
 
 
 def get_cli_dir() -> Path:
@@ -102,5 +120,11 @@ def load_config() -> Config:
         sys.exit(1)
 
     crossover_bottle = os.getenv("CROSSOVER_BOTTLE")
+    crossover_path_str = os.getenv("CROSSOVER_PATH")
+    crossover_path = Path(crossover_path_str) if crossover_path_str else None
 
-    return Config(erenshor_path=erenshor_path, crossover_bottle=crossover_bottle)
+    return Config(
+        erenshor_path=erenshor_path,
+        crossover_bottle=crossover_bottle,
+        crossover_path=crossover_path,
+    )
