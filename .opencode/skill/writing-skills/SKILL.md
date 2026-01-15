@@ -68,18 +68,42 @@ More guidance, patterns, or rules.
 Things to avoid or watch out for.
 ```
 
+## Content Principles
+
+Skills should contain **project-specific, non-obvious, arbitrary decisions** -
+things an agent can't derive from first principles or by reading existing code.
+
+**Include**:
+- Architectural decisions ("Harmony patches get services via static properties")
+- Arbitrary conventions ("JSON enums use snake_case")
+- Project-specific constraints ("PolySharp needed for Unity compatibility")
+- Multi-step processes with non-obvious order
+- Checklists for tasks that are easy to partially complete
+
+**Exclude**:
+- General programming knowledge ("here's how C# records work")
+- Patterns the agent can learn by reading existing code
+- Reference material that belongs in external documentation
+- Syntax examples for standard language features
+
+**Test**: Before adding content, ask "Could an experienced developer figure
+this out by reading the codebase?" If yes, don't include it.
+
+A 100-line skill with only project-specific content is more useful than a
+300-line skill padded with general knowledge.
+
 ## Content Guidelines
 
 **Do**:
 - Focus on actionable guidance (what to do, how to do it)
-- Include code examples where they clarify
+- Include code examples only where they show project-specific patterns
 - Use good/bad examples for conventions
-- Keep it concise (50-150 lines is typical)
+- Keep it concise (50-100 lines is ideal, 150 max)
 - Use imperative mood ("Add the hook" not "You should add the hook")
 
 **Don't**:
-- Duplicate information from regular docs
-- Include lengthy background or theory
+- Duplicate information from regular docs or AGENTS.md
+- Include general language/framework tutorials
 - Write exhaustive references (link to docs instead)
 - Add content that rarely applies
 
