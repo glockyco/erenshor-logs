@@ -14,15 +14,21 @@ Unity game code.
 mod/
 ├── src/
 │   ├── Plugin.cs           # Entry point, BepInPlugin attribute
+│   ├── PluginInfo.cs       # GUID, name (version is generated)
+│   ├── Events/             # Event model and emitter
+│   ├── Json/               # Serialization utilities
 │   ├── Hooks/              # Harmony patches organized by system
 │   ├── Context/            # Ability context, effect tracking
-│   ├── Events/             # Event model and emitter
 │   ├── Session/            # Session management, ring buffer
 │   ├── Export/             # JSON file export
 │   ├── Server/             # WebSocket server
 │   └── UI/                 # IMGUI overlay
-└── CombatLogger.csproj
+├── tests/                  # Unit tests (xUnit)
+└── ErenshorLogs.csproj
 ```
+
+For C# coding conventions (records, JSON serialization, etc.), see the
+`csharp-conventions` skill.
 
 ## Finding Methods to Hook
 
@@ -105,7 +111,7 @@ void Awake()
 }
 ```
 
-Config is saved to `BepInEx/config/com.author.combatlogger.cfg`.
+Config is saved to `BepInEx/config/com.github.glockyco.erenshorlogs.cfg`.
 
 ## Common Pitfalls
 
@@ -130,11 +136,25 @@ underscore prefix convention the game uses like `_incdmg`).
 
 ## Testing Changes
 
-1. Build the mod: `dotnet build`
-2. Copy DLL to game's `BepInEx/plugins/` folder
-3. Launch Erenshor
-4. Check `BepInEx/LogOutput.log` for errors
-5. Use the in-game UI to verify events are captured
+### Unit Tests
 
-For rapid iteration, configure the build output path directly to the plugins
-folder in your .csproj file.
+Run unit tests from the mod directory:
+
+```bash
+cd mod
+dotnet test
+```
+
+Tests require game DLLs to be present (run `erenshor setup` first).
+
+### In-Game Testing
+
+Use the development CLI for the full workflow:
+
+```bash
+cd cli
+uv run erenshor deploy   # Build and copy to plugins folder
+uv run erenshor launch   # Start the game
+```
+
+Check `BepInEx/LogOutput.log` for errors and verify events are captured.
