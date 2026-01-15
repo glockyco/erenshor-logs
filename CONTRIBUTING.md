@@ -133,6 +133,20 @@ uv run erenshor deploy
 uv run erenshor launch
 ```
 
+#### When the Game Updates
+
+After an Erenshor update, refresh your development environment:
+
+```bash
+cd cli
+uv run erenshor setup      # Copy updated game DLLs
+uv run erenshor decompile  # Refresh decompiled source
+uv run erenshor deploy     # Rebuild against new DLLs
+```
+
+Method signatures may change between versions, which could break Harmony
+patches. Check the decompiled source if hooks stop working.
+
 ## Code Style
 
 ### C# (Mod)
