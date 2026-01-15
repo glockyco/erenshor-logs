@@ -1,33 +1,119 @@
 # Contributing to Erenshor Logs
 
-Thank you for your interest in contributing! This document provides guidelines for contributing to the project.
+Thank you for your interest in contributing! This document provides guidelines
+for contributing to the project.
 
 ## Getting Started
 
 1. Fork the repository
 2. Clone your fork locally
-3. Set up development environment (see README.md)
+3. Set up development environment (see below)
 4. Create a branch for your changes
 
 ## Development Setup
 
-### Mod Development
+### Prerequisites (All Platforms)
 
-The mod requires:
-- .NET Framework 4.7.2 SDK
-- Erenshor installed with BepInEx
-- References to game assemblies (see mod/README.md)
+- .NET SDK 8.0+
+- Node.js 18+ and pnpm
+- Python 3.11+ and uv (`pip install uv`)
+- pre-commit (`pip install pre-commit && pre-commit install`)
+
+### Development CLI
+
+The `cli/` directory contains development tools for the mod workflow. All
+commands require configuration via a `.env` file.
+
+#### Initial Setup
+
+```bash
+cd cli
+cp .env.example .env
+# Edit .env and set ERENSHOR_PATH to your game installation
+uv sync
+```
+
+#### Available Commands
+
+```bash
+cd cli
+
+# Copy game DLLs for mod compilation
+uv run erenshor setup
+
+# Install BepInEx to game folder
+uv run erenshor bepinex
+
+# Build the mod
+uv run erenshor build
+
+# Build and deploy mod to BepInEx plugins
+uv run erenshor deploy
+
+# Launch Erenshor (via CrossOver on macOS)
+uv run erenshor launch
+```
 
 ### Web Development
-
-The web app requires:
-- Node.js 18+
-- pnpm
 
 ```bash
 cd web
 pnpm install
 pnpm dev
+```
+
+### macOS Development (CrossOver)
+
+Erenshor is Windows-only, so macOS developers need a way to run the game.
+We recommend CrossOver, which runs Windows apps via Wine translation with
+good performance.
+
+#### CrossOver Setup
+
+1. **Install CrossOver** (~$75, 14-day free trial available):
+   - Download from [codeweavers.com](https://www.codeweavers.com/crossover)
+   - Or: `brew install --cask crossover`
+
+2. **Install Steam in CrossOver**:
+   - Open CrossOver
+   - Click "Install a Windows Application"
+   - Search for "Steam" and install it (creates a bottle named "Steam")
+
+3. **Install Erenshor**:
+   - Launch Steam from CrossOver
+   - Log in and install Erenshor
+
+4. **Configure CLI**:
+
+   ```bash
+   cd cli
+   cp .env.example .env
+   ```
+
+   Edit `.env` with:
+
+   ```bash
+   ERENSHOR_PATH=~/Library/Application Support/CrossOver/Bottles/Steam/drive_c/Program Files (x86)/Steam/steamapps/common/Erenshor
+   CROSSOVER_BOTTLE=Steam
+   ```
+
+5. **Install BepInEx and copy game DLLs**:
+
+   ```bash
+   uv run erenshor bepinex
+   uv run erenshor setup
+   ```
+
+#### Development Workflow
+
+```bash
+cd cli
+
+# Build and deploy mod
+uv run erenshor deploy
+
+# Launch game to test
+uv run erenshor launch
 ```
 
 ## Code Style

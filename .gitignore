@@ -7,7 +7,7 @@ web/.svelte-kit/
 # Dependencies
 web/node_modules/
 packages/
-scripts/.venv/
+cli/.venv/
 
 # IDE
 .idea/
@@ -38,6 +38,7 @@ coverage/
 # Tool caches
 .mypy_cache/
 .ruff_cache/
+__pycache__/
 
 # Build artifacts
 *.dll

@@ -35,15 +35,15 @@ repos:
     hooks:
       - id: ruff-format
         name: ruff format
-        entry: uv run --directory scripts ruff format
+        entry: uv run --directory cli ruff format
         language: system
-        files: ^scripts/.*\.py$
+        files: ^cli/.*\.py$
         pass_filenames: false
       - id: ruff-lint
         name: ruff lint
-        entry: uv run --directory scripts ruff check --fix
+        entry: uv run --directory cli ruff check --fix
         language: system
-        files: ^scripts/.*\.py$
+        files: ^cli/.*\.py$
         pass_filenames: false
 
   # Mypy - Type check Python
@@ -51,9 +51,9 @@ repos:
     hooks:
       - id: mypy
         name: mypy
-        entry: uv run --directory scripts mypy .
+        entry: uv run --directory cli mypy src
         language: system
-        files: ^scripts/.*\.py$
+        files: ^cli/.*\.py$
         pass_filenames: false
 
   # Gitleaks - Secret scanning

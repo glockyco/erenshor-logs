@@ -1,11 +1,25 @@
 [project]
-name = "erenshor-logs-scripts"
+name = "erenshor-dev"
 version = "0.1.0"
-description = "Development scripts for Erenshor Logs"
+description = "Development CLI for Erenshor Logs"
 requires-python = ">=3.11"
 dependencies = [
+    "click>=8.1",
     "python-dotenv>=1.0.0",
 ]
+
+[project.scripts]
+erenshor = "erenshor_dev.main:cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/erenshor_dev"]
+
+[tool.uv]
+package = true
 
 [dependency-groups]
 dev = [
@@ -16,6 +30,7 @@ dev = [
 [tool.ruff]
 target-version = "py311"
 line-length = 88
+src = ["src"]
 
 [tool.ruff.lint]
 select = [
@@ -34,7 +49,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["erenshor_logs_scripts"]
+known-first-party = ["erenshor_dev"]
 
 [tool.mypy]
 python_version = "3.11"
