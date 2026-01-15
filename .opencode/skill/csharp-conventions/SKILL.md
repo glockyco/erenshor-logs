@@ -147,3 +147,97 @@ namespace ErenshorLogs.Events;
 
 public sealed record CombatEvent { }
 ```
+
+## Dependency Injection
+
+The mod uses `Microsoft.Extensions.DependencyInjection` for service management.
+This enables proper unit testing without `InternalsVisibleTo` hacks.
+
+### Composition Root
+
+`Plugin.cs` is the composition root - the only place where services are wired:
+
+```csharp
+public sealed class Plugin : BaseUnityPlugin
+{
+    internal static ServiceProvider ServiceProvider { get; private set; } = null!;
+
+    private void Awake()
+    {
+        var services = new ServiceCollection();
+
+        // Register services as singletons
+        services.AddSingleton<IEventEmitter>(new EventEmitter(Log));
+
+        ServiceProvider = services.BuildServiceProvider();
+    }
+
+    private void Log(string message) => Logger.LogInfo(message);
+}
+```
+
+### Service Design
+
+Services have public constructors and accept dependencies explicitly:
+
+```csharp
+public sealed class EventEmitter : IEventEmitter
+{
+    private readonly Action<string>? _log;
+
+    public EventEmitter(Action<string>? log = null)
+    {
+        _log = log;
+    }
+}
+```
+
+Key principles:
+- **Public constructors**: No `internal` visibility tricks
+- **Optional logging**: Pass `Action<string>?` to avoid BepInEx coupling in tests
+- **Interface-based**: Define `IFoo` interface, implement in `Foo` class
+
+### Harmony Patch Integration
+
+Harmony patches are static methods that can't use constructor injection. Use
+static properties set during plugin startup:
+
+```csharp
+[HarmonyPatch(typeof(Stats), nameof(Stats.TakeDamage))]
+public static class TakeDamagePatch
+{
+    internal static IEventEmitter? Emitter { get; set; }
+
+    [HarmonyPostfix]
+    public static void Postfix(Stats __instance, int damage)
+    {
+        Emitter?.Emit(new DamageEvent { /* ... */ });
+    }
+}
+```
+
+In `Plugin.Awake()`:
+
+```csharp
+TakeDamagePatch.Emitter = ServiceProvider.GetRequiredService<IEventEmitter>();
+_harmony.PatchAll();
+```
+
+### Testing Services
+
+Tests create services directly without DI container overhead:
+
+```csharp
+[Fact]
+public void Emit_logs_event()
+{
+    var logged = new List<string>();
+    var emitter = new EventEmitter(msg => logged.Add(msg));
+
+    emitter.Emit(someEvent);
+
+    Assert.Single(logged);
+}
+```
+
+No mocking frameworks needed - just pass test implementations.
