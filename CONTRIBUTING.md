@@ -147,14 +147,36 @@ uv run erenshor deploy     # Rebuild against new DLLs
 Method signatures may change between versions, which could break Harmony
 patches. Check the decompiled source if hooks stop working.
 
+## Testing
+
+### Mod Tests
+
+Run unit tests locally (requires game DLLs from `erenshor setup`):
+
+```bash
+cd mod && dotnet test tests/ErenshorLogs.Tests
+```
+
+Tests target `net9.0` while the mod targets `netstandard2.1` for Unity
+compatibility.
+
+### Web Tests
+
+```bash
+cd web
+pnpm check  # Type checking
+pnpm lint   # ESLint
+```
+
 ## Code Style
 
 ### C# (Mod)
 
-- Use C# 9.0 features where appropriate
+- Use modern C# features (records, init, required) via PolySharp polyfills
 - Follow standard .NET naming conventions
 - Add XML documentation for public APIs
 - Keep methods focused and small
+- Use `sealed` on classes/records unless inheritance is intended
 
 ### TypeScript (Web)
 
