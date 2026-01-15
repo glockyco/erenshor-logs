@@ -8,7 +8,7 @@ namespace ErenshorLogs;
 /// Main plugin entry point for Erenshor Logs.
 /// </summary>
 [BepInPlugin(PluginInfo.GUID, PluginInfo.Name, PluginInfo.Version)]
-public class Plugin : BaseUnityPlugin
+public sealed class Plugin : BaseUnityPlugin
 {
   internal static ManualLogSource Log { get; private set; } = null!;
 

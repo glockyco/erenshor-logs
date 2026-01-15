@@ -14,6 +14,7 @@
     <AnalysisMode>Recommended</AnalysisMode>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
     <!-- Suppress specific warnings that don't apply to mods -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>

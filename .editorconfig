@@ -16,6 +16,14 @@ trim_trailing_whitespace = false
 [*.{cs,csx}]
 indent_size = 2
 
+# C# analyzer rules - enforce at build time
+dotnet_diagnostic.IDE0005.severity = warning    # Remove unnecessary usings
+dotnet_diagnostic.IDE0040.severity = warning    # Add accessibility modifiers
+dotnet_diagnostic.IDE0161.severity = warning    # Use file-scoped namespace
+
+# Style preferences
+csharp_style_namespace_declarations = file_scoped:warning
+
 [*.{csproj,props,targets}]
 indent_size = 2
 
