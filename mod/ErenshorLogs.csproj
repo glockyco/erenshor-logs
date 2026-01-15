@@ -31,6 +31,9 @@
     <!-- C# language feature polyfills for netstandard2.1 (records, init, required) -->
     <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="all" />
 
+    <!-- Dependency injection -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.*" />
+
     <!-- JSON serialization (System.Text.Json is built-in but needs polyfill for netstandard2.1) -->
     <PackageReference Include="System.Text.Json" Version="9.*" />
 
