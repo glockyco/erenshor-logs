@@ -31,9 +31,8 @@
     <PackageReference Include="Fleck" Version="1.*" />
   </ItemGroup>
 
-  <!-- Game assembly references will be added here -->
+  <!-- Game assembly references (copied via scripts/setup.py) -->
   <ItemGroup>
-    <!--
     <Reference Include="Assembly-CSharp">
       <HintPath>lib/Assembly-CSharp.dll</HintPath>
       <Private>false</Private>
@@ -42,7 +41,14 @@
       <HintPath>lib/UnityEngine.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    -->
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>lib/UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>lib/UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
 </Project>
