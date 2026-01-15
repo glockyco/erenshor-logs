@@ -30,6 +30,32 @@ repos:
         args: [.]
         pass_filenames: false
 
+  # Ruff - Format and lint Python (auto-fix)
+  - repo: local
+    hooks:
+      - id: ruff-format
+        name: ruff format
+        entry: uv run --directory scripts ruff format
+        language: system
+        files: ^scripts/.*\.py$
+        pass_filenames: false
+      - id: ruff-lint
+        name: ruff lint
+        entry: uv run --directory scripts ruff check --fix
+        language: system
+        files: ^scripts/.*\.py$
+        pass_filenames: false
+
+  # Mypy - Type check Python
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: uv run --directory scripts mypy .
+        language: system
+        files: ^scripts/.*\.py$
+        pass_filenames: false
+
   # Gitleaks - Secret scanning
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.21.2
