@@ -24,10 +24,9 @@ repos:
     hooks:
       - id: csharpier
         name: csharpier
-        entry: dotnet csharpier
+        entry: bash -c 'cd mod && dotnet csharpier --check .'
         language: system
         files: ^mod/.*\.cs$
-        args: [.]
         pass_filenames: false
 
   # Ruff - Format and lint Python (auto-fix)
