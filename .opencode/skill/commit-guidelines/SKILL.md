@@ -50,6 +50,28 @@ Common scopes for this project:
 - Explain why, not what (the diff shows what)
 - One concept per commit
 
+## Issue References
+
+Reference GitHub issues in commit bodies to maintain traceability between code
+changes and tracked work items.
+
+**Reference syntax**: Use `#<number>` at the end of the commit body.
+
+- `Part of #N` - Commit contributes to but doesn't complete the issue
+- `Closes #N` - Commit completes the issue (GitHub auto-closes it when merged)
+
+```
+feat(hooks): add DamageMePatch for physical damage capture
+
+Harmony postfix on Character.DamageMe that captures all physical damage events.
+Uses DamageResult constants to interpret return values and set appropriate
+flags for missed attacks and shield absorption.
+
+Part of #6.
+```
+
+Multiple issues can be referenced: `Part of #6. Related to #49.`
+
 ## Good Example
 
 ```
@@ -59,6 +81,8 @@ Track the source spell when damage-over-time effects are applied so that
 periodic damage ticks can be correctly attributed to the original ability.
 The EffectTracker maintains a mapping from active StatusEffects to their
 source spell names, which is consulted when TickEffects deals damage.
+
+Part of #11.
 ```
 
 ## Bad Example
@@ -72,8 +96,8 @@ feat(hooks): add DoT tracking
 - Added unit tests
 ```
 
-The bad example uses bullet points instead of prose and describes what changed
-rather than why. The summary is also too vague to be useful in git log output.
+The bad example uses bullet points instead of prose, describes what changed
+rather than why, has a vague summary, and lacks an issue reference.
 
 ## Atomic Commits
 
