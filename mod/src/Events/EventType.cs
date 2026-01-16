@@ -6,6 +6,12 @@ namespace ErenshorLogs.Events;
 /// </summary>
 public enum EventType
 {
+  /// <summary>Physical damage (pre-attribution, from Character.DamageMe).</summary>
+  DamagePhysical,
+
+  /// <summary>Magic damage (pre-attribution, from Character.MagicDamageMe).</summary>
+  DamageMagic,
+
   /// <summary>Auto-attack damage.</summary>
   DamageMelee,
 

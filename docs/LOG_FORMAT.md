@@ -107,6 +107,8 @@ Array of combat events in chronological order:
 
 | Type | Description |
 |------|-------------|
+| `damage_physical` | Physical damage (pre-attribution) |
+| `damage_magic` | Magic damage (pre-attribution) |
 | `damage_melee` | Auto-attack damage |
 | `damage_skill` | Melee/ranged skill damage |
 | `damage_spell` | Direct damage spell |
