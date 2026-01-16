@@ -6,8 +6,11 @@ namespace ErenshorLogs.Hooks;
 /// </summary>
 public static class DamageResult
 {
-  /// <summary>Damage was fully mitigated by armor (no damage dealt).</summary>
+  /// <summary>Damage was fully mitigated by armor (DamageMe).</summary>
   public const int FullyMitigated = 0;
+
+  /// <summary>Spell was fully resisted (MagicDamageMe). Same value as FullyMitigated.</summary>
+  public const int FullyResisted = 0;
 
   /// <summary>Target is dead or invulnerable.</summary>
   public const int DeadOrInvulnerable = -1;
