@@ -1,6 +1,7 @@
 using BepInEx;
 using BepInEx.Logging;
 using ErenshorLogs.Events;
+using ErenshorLogs.Hooks;
 using ErenshorLogs.Registry;
 using HarmonyLib;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,10 +26,29 @@ public sealed class Plugin : BaseUnityPlugin
     _services = ConfigureServices();
     _harmony = new Harmony(PluginInfo.GUID);
 
-    // Patches will be added in future issues
-    // Example: DamagePatch.Emitter = _services.GetRequiredService<IEventEmitter>();
+    ConfigureDamagePatches();
+    _harmony.PatchAll();
 
     Log.LogInfo($"{PluginInfo.Name} v{PluginInfo.Version} loaded");
+  }
+
+  private void ConfigureDamagePatches()
+  {
+    var services = _services!;
+    var emitter = services.GetRequiredService<IEventEmitter>();
+    var eventBuilder = services.GetRequiredService<ICombatEventBuilder>();
+
+    DamageMePatch.Emitter = emitter;
+    DamageMePatch.EventBuilder = eventBuilder;
+
+    MagicDamageMePatch.Emitter = emitter;
+    MagicDamageMePatch.EventBuilder = eventBuilder;
+
+    BleedDamageMePatch.Emitter = emitter;
+    BleedDamageMePatch.EventBuilder = eventBuilder;
+
+    EnvironmentalDamageMePatch.Emitter = emitter;
+    EnvironmentalDamageMePatch.EventBuilder = eventBuilder;
   }
 
   private ServiceProvider ConfigureServices()
@@ -42,6 +62,9 @@ public sealed class Plugin : BaseUnityPlugin
       sp.GetRequiredService<IActorTypeResolver>(),
       sp.GetRequiredService<IActorDataExtractor>(),
       msg => Logger.LogError(msg)
+    ));
+    services.AddSingleton<ICombatEventBuilder>(sp => new CombatEventBuilderAdapter(
+      sp.GetRequiredService<IActorRegistry>()
     ));
 
     return services.BuildServiceProvider();
