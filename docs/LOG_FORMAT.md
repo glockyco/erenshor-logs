@@ -172,6 +172,7 @@ Null for auto-attacks without a named ability.
 
 | Type | Description |
 |------|-------------|
+| `Unknown` | Unrecognized game damage type (indicates mapper needs updating) |
 | `Physical` | Melee/physical damage |
 | `Magic` | Arcane/magic damage |
 | `Elemental` | Fire/ice/lightning |

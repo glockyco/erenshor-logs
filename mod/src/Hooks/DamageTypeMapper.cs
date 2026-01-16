@@ -21,7 +21,7 @@ public static class DamageTypeMapper
       GameData.DamageType.Elemental => DamageType.Elemental,
       GameData.DamageType.Void => DamageType.Void,
       GameData.DamageType.Poison => DamageType.Poison,
-      _ => DamageType.Physical, // Fallback for unknown types
+      _ => DamageType.Unknown,
     };
   }
 }

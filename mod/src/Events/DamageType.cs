@@ -5,6 +5,9 @@ namespace ErenshorLogs.Events;
 /// </summary>
 public enum DamageType
 {
+  /// <summary>Unrecognized damage type from game. Indicates mapper needs updating.</summary>
+  Unknown,
+
   /// <summary>Melee/physical damage.</summary>
   Physical,
 
