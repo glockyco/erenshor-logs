@@ -183,9 +183,12 @@ Null for auto-attacks without a named ability.
 | `critical` | boolean | Was a critical hit |
 | `overkill` | boolean | Damage exceeded target's HP |
 | `fromPlayer` | boolean | Originated from player (not NPC) |
-| `isPet` | boolean | Source was a pet |
-| `isProc` | boolean | Triggered by a proc effect |
+| `pet` | boolean | Source was a pet |
+| `proc` | boolean | Triggered by a proc effect |
 | `attributionFailed` | boolean | Ability attribution failed (debug) |
+| `missed` | boolean | Attack missed (failed hit roll) |
+| `resisted` | boolean | Spell was fully resisted |
+| `absorbed` | boolean | Damage fully absorbed by shield |
 
 ### Status Effect Events
 
