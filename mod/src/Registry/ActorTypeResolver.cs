@@ -21,7 +21,9 @@ public sealed class ActorTypeResolver : IActorTypeResolver
     if (character.GetComponent<SimPlayer>() != null)
       return ActorType.SimPlayer;
 
-    // Default to NPC
+    // All remaining Characters are NPCs (enemies, friendly NPCs, etc.)
+    // In Erenshor, every Character is one of: Player, Pet, SimPlayer, or NPC.
+    // This is not a fallback - NPC is the correct type for anything not matching above.
     return ActorType.Npc;
   }
 }
