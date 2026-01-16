@@ -1,6 +1,7 @@
 using BepInEx;
 using BepInEx.Logging;
 using ErenshorLogs.Events;
+using ErenshorLogs.Registry;
 using HarmonyLib;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -35,6 +36,13 @@ public sealed class Plugin : BaseUnityPlugin
     var services = new ServiceCollection();
 
     services.AddSingleton<IEventEmitter>(new EventEmitter(msg => Logger.LogError(msg)));
+    services.AddSingleton<IActorTypeResolver, ActorTypeResolver>();
+    services.AddSingleton<IActorDataExtractor, ActorDataExtractor>();
+    services.AddSingleton<IActorRegistry>(sp => new ActorRegistryAdapter(
+      sp.GetRequiredService<IActorTypeResolver>(),
+      sp.GetRequiredService<IActorDataExtractor>(),
+      msg => Logger.LogError(msg)
+    ));
 
     return services.BuildServiceProvider();
   }
