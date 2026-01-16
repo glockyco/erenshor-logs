@@ -14,7 +14,7 @@ public interface IActorRegistry
   /// </summary>
   /// <param name="character">The game Character.</param>
   /// <returns>The ActorRef, or null if character is null/destroyed.</returns>
-  ActorRef? GetOrCreate(Character character);
+  ActorRef? GetOrCreate(Character? character);
 
   /// <summary>
   /// Looks up a previously registered actor by stable ID.

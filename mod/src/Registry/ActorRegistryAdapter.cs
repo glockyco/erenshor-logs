@@ -31,7 +31,7 @@ public sealed class ActorRegistryAdapter : IActorRegistry
   }
 
   /// <inheritdoc />
-  public ActorRef? GetOrCreate(Character character) => _inner.GetOrCreate(character);
+  public ActorRef? GetOrCreate(Character? character) => _inner.GetOrCreate(character);
 
   /// <inheritdoc />
   public ActorRef? GetById(string id) => _inner.GetById(id);
