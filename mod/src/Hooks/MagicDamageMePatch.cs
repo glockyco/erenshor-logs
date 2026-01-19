@@ -20,6 +20,11 @@ public static class MagicDamageMePatch
   internal static IEventEmitter? Emitter { get; set; }
 
   /// <summary>
+  /// Optional debug logging callback. Set by Plugin during initialization.
+  /// </summary>
+  internal static Action<string>? LogDebug { get; set; }
+
+  /// <summary>
   /// Postfix hook that captures magic damage events after MagicDamageMe completes.
   /// </summary>
   /// <param name="__instance">The Character that received damage (target).</param>
@@ -72,6 +77,11 @@ public static class MagicDamageMePatch
 
     if (evt != null)
     {
+      LogDebug?.Invoke(
+        $"Magic damage: {evt.Source?.Name ?? "Unknown"} -> {evt.Target?.Name ?? "Unknown"} "
+          + $"for {amount} ({damageType})"
+          + (flags.Resisted == true ? " [RESISTED]" : "")
+      );
       Emitter.Emit(evt);
     }
   }

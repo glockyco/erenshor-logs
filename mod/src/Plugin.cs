@@ -2,6 +2,7 @@ using BepInEx;
 using BepInEx.Logging;
 using ErenshorLogs.Events;
 using ErenshorLogs.Hooks;
+using ErenshorLogs.Logging;
 using ErenshorLogs.Registry;
 using ErenshorLogs.Session;
 using HarmonyLib;
@@ -42,15 +43,19 @@ public sealed class Plugin : BaseUnityPlugin
 
     DamageMePatch.Emitter = emitter;
     DamageMePatch.EventBuilder = eventBuilder;
+    DamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
 
     MagicDamageMePatch.Emitter = emitter;
     MagicDamageMePatch.EventBuilder = eventBuilder;
+    MagicDamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
 
     BleedDamageMePatch.Emitter = emitter;
     BleedDamageMePatch.EventBuilder = eventBuilder;
+    BleedDamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
 
     EnvironmentalDamageMePatch.Emitter = emitter;
     EnvironmentalDamageMePatch.EventBuilder = eventBuilder;
+    EnvironmentalDamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
   }
 
   private void ConfigureSessionPatch()
@@ -59,6 +64,7 @@ public sealed class Plugin : BaseUnityPlugin
     var sessionManager = services.GetRequiredService<ISessionManager>();
 
     CheckForTrueCombatPatch.SessionManager = sessionManager;
+    CheckForTrueCombatPatch.LogDebug = msg => Logger.LogDebug(msg);
   }
 
   private ServiceProvider ConfigureServices()
@@ -80,7 +86,25 @@ public sealed class Plugin : BaseUnityPlugin
     services.AddSingleton<ISessionManager>(sp => new SessionManager(
       sp.GetRequiredService<IEventEmitter>(),
       sp.GetRequiredService<IPlayerInfoProvider>(),
-      PluginInfo.Version
+      PluginInfo.Version,
+      log: (level, msg) =>
+      {
+        switch (level)
+        {
+          case Logging.LogLevel.Debug:
+            Logger.LogDebug(msg);
+            break;
+          case Logging.LogLevel.Info:
+            Logger.LogInfo(msg);
+            break;
+          case Logging.LogLevel.Warning:
+            Logger.LogWarning(msg);
+            break;
+          case Logging.LogLevel.Error:
+            Logger.LogError(msg);
+            break;
+        }
+      }
     ));
 
     return services.BuildServiceProvider();

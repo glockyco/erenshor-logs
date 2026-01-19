@@ -20,6 +20,11 @@ public static class BleedDamageMePatch
   internal static IEventEmitter? Emitter { get; set; }
 
   /// <summary>
+  /// Optional debug logging callback. Set by Plugin during initialization.
+  /// </summary>
+  internal static Action<string>? LogDebug { get; set; }
+
+  /// <summary>
   /// Postfix hook that captures DoT tick events after BleedDamageMe completes.
   /// </summary>
   /// <param name="__instance">The Character that received damage (target).</param>
@@ -60,6 +65,10 @@ public static class BleedDamageMePatch
 
     if (evt != null)
     {
+      LogDebug?.Invoke(
+        $"DoT damage: {evt.Source?.Name ?? "Unknown"} -> {evt.Target?.Name ?? "Unknown"} "
+          + $"for {__result}"
+      );
       Emitter.Emit(evt);
     }
   }

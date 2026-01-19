@@ -20,6 +20,11 @@ public static class EnvironmentalDamageMePatch
   internal static IEventEmitter? Emitter { get; set; }
 
   /// <summary>
+  /// Optional debug logging callback. Set by Plugin during initialization.
+  /// </summary>
+  internal static Action<string>? LogDebug { get; set; }
+
+  /// <summary>
   /// Postfix hook that captures environmental damage events after EnvironmentalDamageMe completes.
   /// </summary>
   /// <param name="__instance">The Character that received damage (target).</param>
@@ -48,6 +53,7 @@ public static class EnvironmentalDamageMePatch
 
     if (evt != null)
     {
+      LogDebug?.Invoke($"Environmental damage: {evt.Target?.Name ?? "Unknown"} took {__result}");
       Emitter.Emit(evt);
     }
   }

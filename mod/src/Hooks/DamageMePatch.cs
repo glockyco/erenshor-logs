@@ -20,6 +20,11 @@ public static class DamageMePatch
   internal static IEventEmitter? Emitter { get; set; }
 
   /// <summary>
+  /// Optional debug logging callback. Set by Plugin during initialization.
+  /// </summary>
+  internal static Action<string>? LogDebug { get; set; }
+
+  /// <summary>
   /// Postfix hook that captures damage events after DamageMe completes.
   /// </summary>
   /// <param name="__instance">The Character that received damage (target).</param>
@@ -75,6 +80,13 @@ public static class DamageMePatch
 
     if (evt != null)
     {
+      LogDebug?.Invoke(
+        $"Physical damage: {evt.Source?.Name ?? "Unknown"} -> {evt.Target?.Name ?? "Unknown"} "
+          + $"for {amount} ({damageType})"
+          + (flags.Critical == true ? " [CRIT]" : "")
+          + (flags.Missed == true ? " [MISS]" : "")
+          + (flags.Absorbed == true ? " [ABSORBED]" : "")
+      );
       Emitter.Emit(evt);
     }
   }
