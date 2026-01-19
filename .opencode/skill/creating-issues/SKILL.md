@@ -40,6 +40,29 @@ Observable outcomes that indicate completion:
 Focus on "what" not "how". These should be verifiable by someone other than
 the implementer.
 
+### Planned Commits
+Document the atomic commits that will implement this issue:
+
+```markdown
+## Planned Commits
+
+1. `type(scope): short description`
+   - What this commit includes
+   - Key changes or files affected
+
+2. `type(scope): another description`
+   - Details about this commit
+```
+
+This provides:
+- Implementation roadmap for the developer
+- Context for reviewers about the intended structure
+- Reference point for tracking progress on complex changes
+- Forces upfront thinking about how to break down the work
+
+Even single-commit issues should document the planned commit - it clarifies
+intent and ensures the commit message is thought through before implementation.
+
 ### Notes (optional)
 Additional context that doesn't fit above:
 - Constraints or limitations
@@ -88,6 +111,22 @@ Depends on #3 (Event emitter system).
 - Clients can connect to ws://localhost:18585
 - Combat events are received by connected clients in real-time
 - Server handles disconnections gracefully without errors
+
+## Planned Commits
+
+1. `feat(server): add Fleck WebSocket server initialization`
+   - Add Fleck NuGet dependency
+   - Initialize server in Plugin.Awake()
+   - Add basic connection handling
+
+2. `feat(protocol): add combat event message serialization`
+   - Create message record types
+   - Implement JSON serialization
+
+3. `feat(server): add event broadcasting to connected clients`
+   - Subscribe to EventEmitter
+   - Batch and broadcast events on interval
+   - Add BepInEx config for port
 
 ## Notes
 
