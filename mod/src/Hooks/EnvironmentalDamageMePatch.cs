@@ -25,16 +25,25 @@ public static class EnvironmentalDamageMePatch
   internal static Action<string>? LogDebug { get; set; }
 
   /// <summary>
-  /// Postfix hook that captures environmental damage events after EnvironmentalDamageMe completes.
+  /// Combat relevance checker for filtering events. Set by Plugin during initialization.
+  /// </summary>
+  internal static ICombatRelevanceChecker? RelevanceChecker { get; set; }
+
+  /// <summary>
+  /// Postfix hook that captures environmental damage after EnvironmentalDamageMe completes.
   /// </summary>
   /// <param name="__instance">The Character that received damage (target).</param>
   /// <param name="__result">The return value from EnvironmentalDamageMe.</param>
-  /// <param name="_dmg">The damage amount.</param>
+  /// <param name="_dmg">The environmental damage amount.</param>
   [HarmonyPostfix]
   public static void Postfix(Character __instance, int __result, int _dmg)
   {
     // Skip if not initialized
     if (EventBuilder == null || Emitter == null)
+      return;
+
+    // Skip if target not relevant to player's group (no source for environmental damage)
+    if (RelevanceChecker != null && !RelevanceChecker.IsRelevantCombat(null, __instance))
       return;
 
     // Skip non-loggable results (-1 = dead/invulnerable)

@@ -20,6 +20,7 @@ public sealed class Plugin : BaseUnityPlugin
 
   private ServiceProvider? _services;
   private Harmony? _harmony;
+  private ICombatRelevanceChecker? _relevanceChecker;
 
   private void Awake()
   {
@@ -41,21 +42,28 @@ public sealed class Plugin : BaseUnityPlugin
     var emitter = services.GetRequiredService<IEventEmitter>();
     var eventBuilder = services.GetRequiredService<ICombatEventBuilder>();
 
+    // Create and store relevance checker
+    _relevanceChecker = new CombatRelevanceCheckerAdapter();
+
     DamageMePatch.Emitter = emitter;
     DamageMePatch.EventBuilder = eventBuilder;
     DamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
+    DamageMePatch.RelevanceChecker = _relevanceChecker;
 
     MagicDamageMePatch.Emitter = emitter;
     MagicDamageMePatch.EventBuilder = eventBuilder;
     MagicDamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
+    MagicDamageMePatch.RelevanceChecker = _relevanceChecker;
 
     BleedDamageMePatch.Emitter = emitter;
     BleedDamageMePatch.EventBuilder = eventBuilder;
     BleedDamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
+    BleedDamageMePatch.RelevanceChecker = _relevanceChecker;
 
     EnvironmentalDamageMePatch.Emitter = emitter;
     EnvironmentalDamageMePatch.EventBuilder = eventBuilder;
     EnvironmentalDamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
+    EnvironmentalDamageMePatch.RelevanceChecker = _relevanceChecker;
   }
 
   private void ConfigureSessionPatch()
@@ -64,6 +72,9 @@ public sealed class Plugin : BaseUnityPlugin
     var sessionManager = services.GetRequiredService<ISessionManager>();
 
     CheckForTrueCombatPatch.SessionManager = sessionManager;
+
+    // Clear relevance cache when combat sessions end
+    sessionManager.SessionEnded += _ => _relevanceChecker?.ClearCache();
   }
 
   private ServiceProvider ConfigureServices()

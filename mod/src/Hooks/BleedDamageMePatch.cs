@@ -25,6 +25,11 @@ public static class BleedDamageMePatch
   internal static Action<string>? LogDebug { get; set; }
 
   /// <summary>
+  /// Combat relevance checker for filtering events. Set by Plugin during initialization.
+  /// </summary>
+  internal static ICombatRelevanceChecker? RelevanceChecker { get; set; }
+
+  /// <summary>
   /// Postfix hook that captures DoT tick events after BleedDamageMe completes.
   /// </summary>
   /// <param name="__instance">The Character that received damage (target).</param>
@@ -43,6 +48,10 @@ public static class BleedDamageMePatch
   {
     // Skip if not initialized
     if (EventBuilder == null || Emitter == null)
+      return;
+
+    // Skip if not relevant to player's group
+    if (RelevanceChecker != null && !RelevanceChecker.IsRelevantCombat(_attacker, __instance))
       return;
 
     // Skip non-loggable results (negative values indicate skip conditions)
