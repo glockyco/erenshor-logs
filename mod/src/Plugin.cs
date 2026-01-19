@@ -64,7 +64,6 @@ public sealed class Plugin : BaseUnityPlugin
     var sessionManager = services.GetRequiredService<ISessionManager>();
 
     CheckForTrueCombatPatch.SessionManager = sessionManager;
-    CheckForTrueCombatPatch.LogDebug = msg => Logger.LogDebug(msg);
   }
 
   private ServiceProvider ConfigureServices()
