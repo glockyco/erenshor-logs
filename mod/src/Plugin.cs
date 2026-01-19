@@ -3,6 +3,7 @@ using BepInEx.Logging;
 using ErenshorLogs.Events;
 using ErenshorLogs.Hooks;
 using ErenshorLogs.Registry;
+using ErenshorLogs.Session;
 using HarmonyLib;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,6 +28,7 @@ public sealed class Plugin : BaseUnityPlugin
     _harmony = new Harmony(PluginInfo.GUID);
 
     ConfigureDamagePatches();
+    ConfigureSessionPatch();
     _harmony.PatchAll();
 
     Log.LogInfo($"{PluginInfo.Name} v{PluginInfo.Version} loaded");
@@ -51,6 +53,14 @@ public sealed class Plugin : BaseUnityPlugin
     EnvironmentalDamageMePatch.EventBuilder = eventBuilder;
   }
 
+  private void ConfigureSessionPatch()
+  {
+    var services = _services!;
+    var sessionManager = services.GetRequiredService<ISessionManager>();
+
+    CheckForTrueCombatPatch.SessionManager = sessionManager;
+  }
+
   private ServiceProvider ConfigureServices()
   {
     var services = new ServiceCollection();
@@ -65,6 +75,12 @@ public sealed class Plugin : BaseUnityPlugin
     ));
     services.AddSingleton<ICombatEventBuilder>(sp => new CombatEventBuilderAdapter(
       sp.GetRequiredService<IActorRegistry>()
+    ));
+    services.AddSingleton<IPlayerInfoProvider, PlayerInfoProvider>();
+    services.AddSingleton<ISessionManager>(sp => new SessionManager(
+      sp.GetRequiredService<IEventEmitter>(),
+      sp.GetRequiredService<IPlayerInfoProvider>(),
+      PluginInfo.Version
     ));
 
     return services.BuildServiceProvider();
