@@ -26,18 +26,21 @@ REQUIRED_CONFIG = {
 
 @click.command()
 @click.option("--no-build", is_flag=True, help="Skip building before deploy")
-@click.option("--release", "-r", is_flag=True, help="Deploy Release build")
-def deploy(no_build: bool, release: bool) -> None:
+@click.option("--debug", is_flag=True, help="Deploy Debug build (default is Release)")
+def deploy(no_build: bool, debug: bool) -> None:
     """Build and deploy the mod to BepInEx plugins folder.
 
-    Builds the mod (unless --no-build is specified) and copies the
-    output DLL to the BepInEx plugins folder in your game installation.
+    Builds the mod in Release configuration (unless --debug is specified) and
+    copies the output DLL to the BepInEx plugins folder in your game installation.
+
+    Release builds use ILRepack to merge all dependencies into a single DLL.
+    Debug builds keep dependencies separate and may not work at runtime.
 
     Also validates BepInEx configuration and fixes settings if needed.
     """
     config = load_config()
     mod_path = get_project_root() / "mod"
-    configuration = "Release" if release else "Debug"
+    configuration = "Debug" if debug else "Release"
 
     # Build first (unless skipped)
     if not no_build:
