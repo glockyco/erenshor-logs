@@ -4,7 +4,6 @@ using ErenshorLogs.Broadcast;
 using ErenshorLogs.Config;
 using ErenshorLogs.Events;
 using ErenshorLogs.Hooks;
-using ErenshorLogs.Logging;
 using ErenshorLogs.Registry;
 using ErenshorLogs.Server;
 using ErenshorLogs.Session;
