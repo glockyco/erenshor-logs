@@ -1,6 +1,6 @@
-using System.Text.Json;
 using ErenshorLogs.Events;
 using ErenshorLogs.Json;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace ErenshorLogs.Tests.Events;
@@ -14,7 +14,7 @@ public class EnumSerializationTests
   [InlineData(EventType.CombatStart, "\"combat_start\"")]
   public void EventType_SerializesToSnakeCase(EventType value, string expected)
   {
-    var json = JsonSerializer.Serialize(value, JsonContext.Options);
+    var json = JsonConvert.SerializeObject(value, JsonSettings.Default);
     Assert.Equal(expected, json);
   }
 
@@ -24,7 +24,7 @@ public class EnumSerializationTests
   [InlineData(DamageType.Elemental, "\"elemental\"")]
   public void DamageType_SerializesToSnakeCase(DamageType value, string expected)
   {
-    var json = JsonSerializer.Serialize(value, JsonContext.Options);
+    var json = JsonConvert.SerializeObject(value, JsonSettings.Default);
     Assert.Equal(expected, json);
   }
 
@@ -34,7 +34,7 @@ public class EnumSerializationTests
   [InlineData(ActorType.Npc, "\"npc\"")]
   public void ActorType_SerializesToSnakeCase(ActorType value, string expected)
   {
-    var json = JsonSerializer.Serialize(value, JsonContext.Options);
+    var json = JsonConvert.SerializeObject(value, JsonSettings.Default);
     Assert.Equal(expected, json);
   }
 
@@ -45,7 +45,7 @@ public class EnumSerializationTests
   [InlineData(AbilityType.Hot, "\"hot\"")]
   public void AbilityType_SerializesToSnakeCase(AbilityType value, string expected)
   {
-    var json = JsonSerializer.Serialize(value, JsonContext.Options);
+    var json = JsonConvert.SerializeObject(value, JsonSettings.Default);
     Assert.Equal(expected, json);
   }
 }

@@ -1,6 +1,6 @@
-using System.Text.Json;
 using ErenshorLogs.Events;
 using ErenshorLogs.Json;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace ErenshorLogs.Tests.Events;
@@ -19,7 +19,7 @@ public class ReferenceTypeTests
       Level = 35,
     };
 
-    var json = JsonSerializer.Serialize(actor, JsonContext.Options);
+    var json = JsonConvert.SerializeObject(actor, JsonSettings.Default);
 
     Assert.Contains("\"id\":\"player:0\"", json);
     Assert.Contains("\"name\":\"Valdris\"", json);
@@ -38,7 +38,7 @@ public class ReferenceTypeTests
       Type = ActorType.Npc,
     };
 
-    var json = JsonSerializer.Serialize(actor, JsonContext.Options);
+    var json = JsonConvert.SerializeObject(actor, JsonSettings.Default);
 
     Assert.DoesNotContain("class", json);
     Assert.DoesNotContain("level", json);
@@ -55,7 +55,7 @@ public class ReferenceTypeTests
       StableKey = "skill:Backstab",
     };
 
-    var json = JsonSerializer.Serialize(ability, JsonContext.Options);
+    var json = JsonConvert.SerializeObject(ability, JsonSettings.Default);
 
     Assert.Contains("\"type\":\"skill\"", json);
     Assert.Contains("\"stableKey\":\"skill:Backstab\"", json);
@@ -71,7 +71,7 @@ public class ReferenceTypeTests
       Stacks = 1,
     };
 
-    var json = JsonSerializer.Serialize(effect, JsonContext.Options);
+    var json = JsonConvert.SerializeObject(effect, JsonSettings.Default);
 
     Assert.Contains("\"name\":\"Battle Shout\"", json);
     Assert.Contains("\"duration\":300", json);
@@ -83,7 +83,7 @@ public class ReferenceTypeTests
   {
     var flags = new EventFlags { Critical = true, FromPlayer = true };
 
-    var json = JsonSerializer.Serialize(flags, JsonContext.Options);
+    var json = JsonConvert.SerializeObject(flags, JsonSettings.Default);
 
     Assert.Contains("\"critical\":true", json);
     Assert.Contains("\"fromPlayer\":true", json);

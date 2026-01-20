@@ -1,6 +1,6 @@
-using System.Text.Json;
 using ErenshorLogs.Events;
 using ErenshorLogs.Json;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace ErenshorLogs.Tests.Events;
@@ -35,7 +35,7 @@ public class CombatEventTests
       Flags = new EventFlags { Critical = true, FromPlayer = true },
     };
 
-    var json = JsonSerializer.Serialize(evt, JsonContext.Options);
+    var json = JsonConvert.SerializeObject(evt, JsonSettings.Default);
 
     Assert.Contains("\"eventType\":\"damage_skill\"", json);
     Assert.Contains("\"amount\":1500", json);
@@ -53,7 +53,7 @@ public class CombatEventTests
       EventType = EventType.CombatStart,
     };
 
-    var json = JsonSerializer.Serialize(evt, JsonContext.Options);
+    var json = JsonConvert.SerializeObject(evt, JsonSettings.Default);
 
     Assert.DoesNotContain("source", json);
     Assert.DoesNotContain("target", json);

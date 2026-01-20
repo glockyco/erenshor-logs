@@ -1,6 +1,6 @@
-using System.Text.Json;
 using ErenshorLogs.Events;
 using ErenshorLogs.Json;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace ErenshorLogs.Tests.Events;
@@ -61,7 +61,7 @@ public class CombatLogTests
       ],
     };
 
-    var json = JsonSerializer.Serialize(log, JsonContext.Options);
+    var json = JsonConvert.SerializeObject(log, JsonSettings.Default);
 
     Assert.Contains("\"version\":\"1.0.0\"", json);
     Assert.Contains("\"session\":", json);

@@ -37,8 +37,8 @@
     <!-- Dependency injection -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.*" />
 
-    <!-- JSON serialization (System.Text.Json is built-in but needs polyfill for netstandard2.1) -->
-    <PackageReference Include="System.Text.Json" Version="9.*" />
+    <!-- JSON serialization (Newtonsoft.Json works with Unity Mono runtime) -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.*" />
 
     <!-- WebSocket server for live streaming -->
     <PackageReference Include="Fleck" Version="1.*" />
