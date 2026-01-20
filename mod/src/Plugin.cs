@@ -1,9 +1,12 @@
 using BepInEx;
 using BepInEx.Logging;
+using ErenshorLogs.Broadcast;
+using ErenshorLogs.Config;
 using ErenshorLogs.Events;
 using ErenshorLogs.Hooks;
 using ErenshorLogs.Logging;
 using ErenshorLogs.Registry;
+using ErenshorLogs.Server;
 using ErenshorLogs.Session;
 using HarmonyLib;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +24,8 @@ public sealed class Plugin : BaseUnityPlugin
   private ServiceProvider? _services;
   private Harmony? _harmony;
   private ICombatRelevanceChecker? _relevanceChecker;
+  private IWebSocketServer? _server;
+  private ICombatEventBroadcaster? _broadcaster;
 
   private void Awake()
   {
@@ -31,9 +36,19 @@ public sealed class Plugin : BaseUnityPlugin
 
     ConfigureDamagePatches();
     ConfigureSessionPatch();
+    ConfigureWebSocket();
     _harmony.PatchAll();
 
     Log.LogInfo($"{PluginInfo.Name} v{PluginInfo.Version} loaded");
+  }
+
+  private void Update()
+  {
+    // Tick the broadcaster for periodic event batching
+    if (_broadcaster != null)
+    {
+      _broadcaster.Tick(UnityEngine.Time.deltaTime);
+    }
   }
 
   private void ConfigureDamagePatches()
@@ -77,11 +92,42 @@ public sealed class Plugin : BaseUnityPlugin
     sessionManager.SessionEnded += _ => _relevanceChecker?.ClearCache();
   }
 
+  private void ConfigureWebSocket()
+  {
+    var services = _services!;
+    var config = services.GetRequiredService<ModConfig>();
+    var eventEmitter = services.GetRequiredService<IEventEmitter>();
+    var sessionManager = services.GetRequiredService<ISessionManager>();
+
+    // Create WebSocket server
+    _server = new WebSocketServer(config, Logger);
+    _server.Start();
+
+    // Create broadcaster
+    _broadcaster = new CombatEventBroadcaster(
+      eventEmitter,
+      sessionManager,
+      _server,
+      config,
+      PluginInfo.Version,
+      log: msg => Logger.LogDebug(msg)
+    );
+
+    // Send handshake to clients when they connect
+    // (This will be called on first Update() if clients are already connected)
+  }
+
   private ServiceProvider ConfigureServices()
   {
     var services = new ServiceCollection();
 
+    // Configuration
+    services.AddSingleton(new ModConfig(Config));
+
+    // Event system
     services.AddSingleton<IEventEmitter>(new EventEmitter(msg => Logger.LogError(msg)));
+
+    // Actor registry
     services.AddSingleton<IActorTypeResolver, ActorTypeResolver>();
     services.AddSingleton<IActorDataExtractor, ActorDataExtractor>();
     services.AddSingleton<IActorRegistry>(sp => new ActorRegistryAdapter(
@@ -89,9 +135,13 @@ public sealed class Plugin : BaseUnityPlugin
       sp.GetRequiredService<IActorDataExtractor>(),
       msg => Logger.LogError(msg)
     ));
+
+    // Combat event building
     services.AddSingleton<ICombatEventBuilder>(sp => new CombatEventBuilderAdapter(
       sp.GetRequiredService<IActorRegistry>()
     ));
+
+    // Session management
     services.AddSingleton<IPlayerInfoProvider, PlayerInfoProvider>();
     services.AddSingleton<ISessionManager>(sp => new SessionManager(
       sp.GetRequiredService<IEventEmitter>(),
@@ -122,6 +172,8 @@ public sealed class Plugin : BaseUnityPlugin
 
   private void OnDestroy()
   {
+    _broadcaster?.Dispose();
+    _server?.Dispose();
     _harmony?.UnpatchSelf();
     _services?.Dispose();
   }
