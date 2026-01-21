@@ -120,9 +120,16 @@ Array of combat events in chronological order:
 | `heal_spell` | Direct healing spell |
 | `heal_hot` | Heal over time tick |
 | `heal_lifesteal` | Lifesteal healing |
+| `heal_regen` | Natural HP regeneration tick |
+| `mana_use` | Mana consumed by ability |
+| `mana_restore` | Mana restored by ability or effect |
+| `mana_regen` | Natural mana regeneration tick |
+| `spell_interrupt` | Spell cast was interrupted |
 | `buff_apply` | Buff applied |
+| `buff_refresh` | Buff duration refreshed |
 | `buff_fade` | Buff removed/expired |
 | `debuff_apply` | Debuff applied |
+| `debuff_refresh` | Debuff duration refreshed |
 | `debuff_fade` | Debuff removed/expired |
 | `death` | Entity died |
 | `combat_start` | Combat began |
@@ -154,19 +161,21 @@ Array of combat events in chronological order:
 
 ```json
 {
-  "name": "Backstab",
-  "type": "skill",
-  "stableKey": "skill:Backstab"
+  "name": "Fireball",
+  "type": "spell",
+  "stableKey": "spell:Fireball",
+  "procSource": "weapon"
 }
 ```
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `name` | string | Display name |
-| `type` | string | `skill`, `spell`, `auto`, `proc`, `dot`, `hot` |
+| `type` | string | `skill`, `spell`, `auto`, `dot`, `hot` |
 | `stableKey` | string? | Game's stable key for linking |
+| `procSource` | string? | What triggered this ability: `weapon`, `wand`, `bow`, `buff`, `skill` |
 
-Null for auto-attacks without a named ability.
+Null for auto-attacks without a named ability. `procSource` is only present when the ability was triggered by a proc mechanism.
 
 ### Damage Types
 
@@ -187,7 +196,7 @@ Null for auto-attacks without a named ability.
 | `overkill` | boolean | Damage exceeded target's HP |
 | `fromPlayer` | boolean | Originated from player (not NPC) |
 | `pet` | boolean | Source was a pet |
-| `proc` | boolean | Triggered by a proc effect |
+| `resonating` | boolean | Spell was triggered by resonance mechanic |
 | `attributionFailed` | boolean | Ability attribution failed (debug) |
 | `missed` | boolean | Attack missed (failed hit roll) |
 | `resisted` | boolean | Spell was fully resisted |
@@ -195,7 +204,7 @@ Null for auto-attacks without a named ability.
 
 ### Status Effect Events
 
-For `buff_apply`, `buff_fade`, `debuff_apply`, `debuff_fade`:
+For `buff_apply`, `buff_refresh`, `buff_fade`, `debuff_apply`, `debuff_refresh`, `debuff_fade`:
 
 ```json
 {
