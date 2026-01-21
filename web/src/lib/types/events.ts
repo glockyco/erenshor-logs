@@ -15,9 +15,16 @@ export type EventType =
   | "heal_spell"
   | "heal_hot"
   | "heal_lifesteal"
+  | "heal_regen"
+  | "mana_use"
+  | "mana_restore"
+  | "mana_regen"
+  | "spell_interrupt"
   | "buff_apply"
+  | "buff_refresh"
   | "buff_fade"
   | "debuff_apply"
+  | "debuff_refresh"
   | "debuff_fade"
   | "death"
   | "combat_start"
@@ -27,7 +34,9 @@ export type ActorType = "player" | "sim_player" | "npc" | "pet";
 
 export type DamageType = "unknown" | "physical" | "magic" | "elemental" | "void" | "poison";
 
-export type AbilityType = "skill" | "spell" | "auto" | "proc" | "dot" | "hot";
+export type AbilityType = "skill" | "spell" | "auto" | "dot" | "hot";
+
+export type ProcSource = "weapon" | "wand" | "bow" | "buff" | "skill";
 
 export interface ActorRef {
   id: string;
@@ -42,6 +51,7 @@ export interface AbilityRef {
   name: string;
   type: AbilityType;
   stableKey?: string; // Game's stable identifier for linking
+  procSource?: ProcSource; // What triggered this ability, if it was proc'd
 }
 
 export interface EffectRef {
@@ -55,7 +65,7 @@ export interface EventFlags {
   overkill?: boolean;
   fromPlayer?: boolean;
   pet?: boolean;
-  proc?: boolean;
+  resonating?: boolean;
   attributionFailed?: boolean;
   missed?: boolean;
   resisted?: boolean;
