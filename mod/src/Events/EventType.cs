@@ -45,6 +45,18 @@ public enum EventType
   /// <summary>Lifesteal healing.</summary>
   HealLifesteal,
 
+  /// <summary>Mana consumed by ability.</summary>
+  ManaUse,
+
+  /// <summary>Mana restored by ability or effect.</summary>
+  ManaRestore,
+
+  /// <summary>Natural mana regeneration tick.</summary>
+  ManaRegen,
+
+  /// <summary>Spell cast was interrupted.</summary>
+  SpellInterrupt,
+
   /// <summary>Buff applied.</summary>
   BuffApply,
 
