@@ -11,14 +11,17 @@ analyzes via static web app.
 ## Architecture
 
 ```
-BepInEx Mod (C#) → JSON logs → Web App (Svelte) → DPS/HPS analysis
-                → WebSocket → Live streaming
+BepInEx Mod (C#) → WebSocket → Web App (Svelte) → Live DPS/HPS analysis
+                → JSON export → File import (later)
 ```
 
 Components:
 - **mod/**: BepInEx plugin with Harmony patches for combat event capture
 - **web/**: Static SvelteKit app for log analysis (Cloudflare Pages)
 - **cli/**: Development tools (deploy, launch, setup)
+
+Live streaming via WebSocket (port 38729) is the primary mode. JSON file
+export exists for offline analysis but is secondary.
 
 ## Essential Commands
 
@@ -70,6 +73,32 @@ Prioritize accuracy over agreement. Avoid sycophantic behavior.
 3. **No Game Distribution**: Never commit game DLLs or decompiled source
 4. **MIT License**: All code MIT licensed under Johann Glock
 
+## Key Technical Decisions
+
+### JSON Serialization (Mod)
+Use **Newtonsoft.Json** for all JSON serialization in the mod.
+System.Text.Json fails at runtime in Unity's Mono environment with VTable
+errors. This is non-negotiable.
+
+### State Management (Web)
+Use **Svelte 5 runes** (`$state`, `$derived`, `$effect`) in `.svelte.ts` files.
+Traditional Svelte stores are deprecated. Never create writable/readable stores.
+
+### Visual Design
+**Cyberpunk Analyst** theme - dark slate backgrounds with cyan accents, neon
+glows, and JetBrains Mono for numbers. See `/web/docs/style-guide.md` and
+`/web/demos/demo-cyberpunk.html`.
+
+### Component Structure
+Follow **shadcn/ui conventions** even before using shadcn components:
+- Base components in `lib/components/ui/`
+- Use `cn()` utility for class merging
+- Support variants via props
+
+### WebSocket Configuration
+Default port **38729** (configurable via BepInEx config). This port was chosen
+as a random high port unlikely to conflict with other services.
+
 ## Available Skills
 
 Load these for specialized guidance:
@@ -84,4 +113,5 @@ Load these for specialized guidance:
 | `csharp-conventions` | Writing C# code, especially DI or JSON |
 | `debugging` | Troubleshooting mod or web app issues |
 | `svelte-web-development` | Working on web app structure or state |
+| `ui-design-system` | Building UI components or styling screens |
 | `writing-skills` | Creating new agent skills for this project |
