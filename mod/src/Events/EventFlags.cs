@@ -17,6 +17,9 @@ public sealed record EventFlags
   /// <summary>Source was a pet.</summary>
   public bool? Pet { get; init; }
 
+  /// <summary>Spell was triggered by resonance mechanic.</summary>
+  public bool? Resonating { get; init; }
+
   /// <summary>Ability attribution failed (debug flag).</summary>
   public bool? AttributionFailed { get; init; }
 

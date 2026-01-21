@@ -45,6 +45,9 @@ public enum EventType
   /// <summary>Lifesteal healing.</summary>
   HealLifesteal,
 
+  /// <summary>Natural HP regeneration tick.</summary>
+  HealRegen,
+
   /// <summary>Mana consumed by ability.</summary>
   ManaUse,
 
@@ -60,11 +63,17 @@ public enum EventType
   /// <summary>Buff applied.</summary>
   BuffApply,
 
+  /// <summary>Buff duration refreshed.</summary>
+  BuffRefresh,
+
   /// <summary>Buff removed/expired.</summary>
   BuffFade,
 
   /// <summary>Debuff applied.</summary>
   DebuffApply,
+
+  /// <summary>Debuff duration refreshed.</summary>
+  DebuffRefresh,
 
   /// <summary>Debuff removed/expired.</summary>
   DebuffFade,
