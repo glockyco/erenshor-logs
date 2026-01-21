@@ -17,9 +17,6 @@ public sealed record EventFlags
   /// <summary>Source was a pet.</summary>
   public bool? Pet { get; init; }
 
-  /// <summary>Triggered by a proc effect.</summary>
-  public bool? Proc { get; init; }
-
   /// <summary>Ability attribution failed (debug flag).</summary>
   public bool? AttributionFailed { get; init; }
 

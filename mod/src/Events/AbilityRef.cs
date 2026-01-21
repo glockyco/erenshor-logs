@@ -13,4 +13,7 @@ public sealed record AbilityRef
 
   /// <summary>Game's stable key for linking (e.g. skill:Backstab).</summary>
   public string? StableKey { get; init; }
+
+  /// <summary>What triggered this ability, if it was proc'd.</summary>
+  public ProcSource? ProcSource { get; init; }
 }
