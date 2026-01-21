@@ -14,9 +14,6 @@ public enum AbilityType
   /// <summary>Auto-attack.</summary>
   Auto,
 
-  /// <summary>Proc effect.</summary>
-  Proc,
-
   /// <summary>Damage over time effect.</summary>
   Dot,
 
