@@ -103,6 +103,8 @@ All damage events should include: source actor, target actor, damage type, amoun
 
 **Hook strategy**: Hook `Stats.TickEffects()` (Prefix) to capture effect before damage, then correlate with DamageMe hook.
 
+**Special case - ReapAndRenew**: Some DoT effects have `Spell.ReapAndRenew` flag (line 1303-1321). When these effects deal damage to an NPC, they also heal the attacker's current target for 50% of the damage dealt. This creates a simultaneous `damage_dot` and `heal_spell` event pair.
+
 ---
 
 ### Environmental Damage
@@ -257,18 +259,24 @@ All healing events should include: source actor, target actor, heal amount, abil
 
 ---
 
-### Natural Regeneration
+### Natural HP Regeneration
 
-**Method**: `Stats.RegenEffects(float _mod)`  
-**File**: `reference/game-source/Stats.cs:1441`  
-**EventType**: (Background, may not need explicit events)
+**Method**: `Stats.RegenEffects(float _mod)` - HP portion  
+**File**: `reference/game-source/Stats.cs:1443-1449`  
+**EventType**: `heal_regen`
 
 **Process**:
-- Restores HP based on level and Endurance (lines 1443-1449)
-- Restores mana based on Wisdom (lines 1451-1458)
-- Passive regeneration, called every tick
+- Restores HP based on level and Endurance
+- Formula: `Level + RoundToInt((2 * EndScaleMod / 100) * CurrentEnd)`
+- Caps at `CurrentMaxHP`
+- Called every tick for passive regeneration
 
-**Hook strategy**: Optional - may not need events for passive regen. Decide based on "replay 1:1" requirements.
+**Hook strategy**: Postfix on `RegenEffects()` or hook the HP modification to emit regen events with:
+- Actor being healed
+- Amount restored
+- Remaining HP
+
+**Note**: For 1:1 combat replay, this is required to show passive HP recovery between damage events.
 
 ---
 
@@ -376,6 +384,37 @@ Procs are triggered spells/abilities. The trigger source should be tracked separ
 
 ---
 
+### Resonating Spells (Self-Proc)
+
+**Method**: `SpellVessel.ResolveSpell()` - resonance check  
+**Files**: `reference/game-source/SpellVessel.cs:794-806, 1183-1211, 1360-1388, 1639-1667`  
+**ProcSource**: N/A (resonance is self-triggered, not from external source)  
+**EventFlag**: `resonating: true`
+
+**Process**:
+1. After spell resolves, rolls against resonance chance (`Spell.ResonateChance`)
+2. Resonance chance can be modified by buffs (`StatusEffect.ResonateChance`)
+3. If successful, calls `StartSpell()` or `StartSpellFromProc()` with `_resonate: true` or `_resonating: true`
+4. Resonated spell may have reduced damage (`_scaleDmg` parameter)
+5. Shows combat log: "Your spell resonates and casts again!"
+
+**Key mechanic**: Resonance allows spells to re-cast themselves instantly for no mana cost. This is a critical DPS multiplier for spell-based classes and occurs on both direct casts and proc'd spells.
+
+**Locations where resonance triggers**:
+- SpellVessel.cs:794-806 - Direct damage spells (Type.Damage)
+- SpellVessel.cs:1183-1211 - AE/PBAE spells
+- SpellVessel.cs:1360-1388 - Status effect application spells
+- SpellVessel.cs:1639-1667 - Beneficial/healing spells
+
+**Hook strategy**: Check `_resonating` parameter in `StartSpellFromProc()` or `CreateSpellProc()` to set `flags.resonating = true`. This distinguishes resonance procs from weapon/buff/skill procs.
+
+**Analysis value**:
+- Track resonance proc rate vs character's resonance stat
+- Calculate effective DPS multiplier from resonance
+- Identify which spells benefit most from resonance
+
+---
+
 ## Status Effects (Buffs/Debuffs)
 
 Status effects modify character stats, apply DoTs/HoTs, and can trigger procs.
@@ -427,14 +466,34 @@ Status effects modify character stats, apply DoTs/HoTs, and can trigger procs.
 
 ---
 
-### Effect Refresh
+### Buff/Debuff Refresh
 
-**Method**: `Stats.RefreshWornSE(Spell spell)`  
-**File**: `reference/game-source/Stats.cs` (exact line not in excerpt)
+**Method**: Multiple paths - depends on buff type  
+**Files**:
+- `Stats.AddStatusEffect()` - checks for existing effect and refreshes
+- `Stats.RefreshWornSE(Spell spell)` - dedicated refresh method for worn effects
 
-**Process**: Resets duration when same effect is re-applied
+**EventType**: `buff_refresh` or `debuff_refresh`
 
-**Hook strategy**: May want separate event for refreshes vs new applications.
+**Process**:
+1. When buff is reapplied while already active, duration is reset
+2. Some buffs check `CheckForHigherLevelSE()` to prevent lower-rank refreshes
+3. `RefreshWornSE()` specifically handles worn item effects (auras)
+
+**Refresh vs Apply distinction**:
+- **Apply**: New buff instance, triggers application effects
+- **Refresh**: Existing buff extended, does NOT trigger application effects again
+- For stacking buffs, refresh may increment stacks
+
+**Hook strategy**: In `AddStatusEffect()`, check if effect already exists in `StatusEffects[]` array before emitting event:
+- If slot empty → emit `buff_apply`
+- If slot occupied by same spell → emit `buff_refresh`
+- If slot occupied by different spell → emit `buff_fade` then `buff_apply`
+
+**Required for 1:1 replay**: Distinguishing refresh from apply matters because:
+- Combat logs show different messages ("refreshed" vs "applied")
+- Some mechanics depend on application events (on-apply damage/healing)
+- Buff timeline visualization needs to show refresh points
 
 ---
 
@@ -632,13 +691,18 @@ Pets and charmed NPCs deal damage that should credit their owner.
 | Category | Events | Implementation Status |
 |----------|--------|---------------------|
 | **Damage** | physical, magic, melee, skill, spell, dot, proc, pet, reflect, environmental | Partial (#6 done, needs proc/pet/skill attribution) |
-| **Healing** | spell, hot, lifesteal | Not implemented (#49) |
-| **Status Effects** | buff_apply, buff_fade, debuff_apply, debuff_fade | Not implemented (#14) |
+| **Healing** | spell, hot, lifesteal, regen | Not implemented (#49) |
+| **Status Effects** | buff_apply, buff_refresh, buff_fade, debuff_apply, debuff_refresh, debuff_fade | Not implemented (#14) |
 | **Combat State** | combat_start, combat_end | Implemented (#7) |
 | **Death** | death | Not implemented |
 | **Resources** | mana_use, mana_restore, mana_regen | Not implemented (NEW) |
 | **Interrupts** | spell_interrupt | Not implemented (NEW) |
 | **Avoidance** | damage_avoided (with dodge/block flags) | Not implemented (#47) |
+
+**Key Mechanics**:
+- **Resonance**: Tracked via `flags.resonating` - spells that re-cast themselves
+- **Procs**: Tracked via `ability.procSource` (weapon/wand/bow/buff/skill) - NOT as AbilityType
+- **Pets**: Tracked via `flags.pet` and `actor.masterId` - damage credited to owner
 
 ---
 
@@ -664,16 +728,6 @@ Based on "replay combat 1:1" goal:
 **P3 - Low** (optional enhancements):
 10. Position tracking (#52) - for visual replay
 11. Threat tracking (#51) - for tank analysis
-
----
-
-## Next Steps
-
-1. Update type system to remove `AbilityType.Proc`, add `ProcSource` enum
-2. Implement remaining P0 hooks (healing, death, status effects)
-3. Add mana and interrupt event types
-4. Implement P1 hooks (mana, interrupts, DoT/HoT context)
-5. Update issues with findings from this document
 
 ---
 
