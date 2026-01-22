@@ -137,8 +137,11 @@ export function appendEvents(sessionId: string, events: CombatEvent[]): void {
     return;
   }
 
-  // Mutate in place - Svelte 5 tracks this
-  session.events.push(...events);
+  // Create new object to trigger SvelteMap reactivity and persistence
+  sessions.set(sessionId, {
+    ...session,
+    events: [...session.events, ...events],
+  });
 }
 
 /**
@@ -152,7 +155,11 @@ export function endSession(sessionId: string, endTime: number): void {
     return;
   }
 
-  session.endTime = endTime;
+  // Create new object to trigger SvelteMap reactivity and persistence
+  sessions.set(sessionId, {
+    ...session,
+    endTime,
+  });
 }
 
 /**
