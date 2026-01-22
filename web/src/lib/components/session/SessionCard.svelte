@@ -17,14 +17,17 @@
 
   // Subscribe to clock only for active sessions (no endTime)
   $effect(() => {
-    if (!session.endTime) {
-      return subscribeToClock();
-    }
+    if (session.endTime) return;
+    return subscribeToClock();
   });
 
-  const duration = $derived(
-    session.endTime ? session.endTime - session.startTime : now.value - session.startTime
-  );
+  const duration = $derived.by(() => {
+    // Use explicit conditionals to ensure proper dependency tracking
+    if (session.endTime !== undefined) {
+      return session.endTime - session.startTime;
+    }
+    return now.value - session.startTime;
+  });
 
   const stats = $derived(calculateSessionStats(session.events, duration));
 </script>

@@ -33,20 +33,19 @@
   // Is live
   const isLive = $derived(session?.endTime === undefined);
 
-  // Live-updating duration
-  const duration = $derived(
-    session
-      ? isLive
-        ? now.value - session.startTime
-        : (session.endTime ?? now.value) - session.startTime
-      : 0
-  );
+  // Live-updating duration with explicit conditionals for proper dependency tracking
+  const duration = $derived.by(() => {
+    if (!session) return 0;
+    if (session.endTime !== undefined) {
+      return session.endTime - session.startTime;
+    }
+    return now.value - session.startTime;
+  });
 
   // Subscribe to clock for live sessions
   $effect(() => {
-    if (isLive) {
-      return subscribeToClock();
-    }
+    if (!isLive) return;
+    return subscribeToClock();
   });
 
   // Sort actors

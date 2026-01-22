@@ -38,9 +38,15 @@ export const activeSession = {
 const _activeSessionStats = $derived.by(() => {
   if (!_activeSession) return null;
 
-  const durationMs = _activeSession.endTime
-    ? _activeSession.endTime - _activeSession.startTime
-    : now.value - _activeSession.startTime;
+  // Calculate duration with explicit conditionals to ensure proper dependency tracking
+  let durationMs: number;
+  if (_activeSession.endTime !== undefined) {
+    // Session ended - use fixed end time
+    durationMs = _activeSession.endTime - _activeSession.startTime;
+  } else {
+    // Session live - use current time
+    durationMs = now.value - _activeSession.startTime;
+  }
 
   return calculateSessionStats(_activeSession.events, durationMs);
 });
