@@ -40,13 +40,13 @@ public record SessionStartMessage(string Type, SessionInfo Session)
 /// <summary>
 /// Notification sent when a combat session ends.
 /// </summary>
-public record SessionEndMessage(string Type, string SessionId, long Duration)
+public record SessionEndMessage(string Type, string SessionId, long EndTime)
 {
   /// <summary>
   /// Creates a session end message.
   /// </summary>
-  public static SessionEndMessage Create(string sessionId, long duration) =>
-    new(Type: "sessionEnd", SessionId: sessionId, Duration: duration);
+  public static SessionEndMessage Create(string sessionId, long endTime) =>
+    new(Type: "sessionEnd", SessionId: sessionId, EndTime: endTime);
 }
 
 /// <summary>

@@ -104,7 +104,7 @@ export function appendEvents(sessionId: string, events: CombatEvent[]): void {
 }
 
 /**
- * Mark a session as ended with endTime.
+ * Mark a session as ended.
  */
 export function endSession(sessionId: string, endTime: number): void {
   const session = sessions.get(sessionId);

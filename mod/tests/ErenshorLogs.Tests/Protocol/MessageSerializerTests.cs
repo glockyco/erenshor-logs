@@ -88,25 +88,25 @@ public class MessageSerializerTests
   [Fact]
   public void Serialize_SessionEndMessage_UsesCamelCase()
   {
-    var message = SessionEndMessage.Create("test-session", 5000);
+    var message = SessionEndMessage.Create("test-session", 1700000000000);
 
     var json = MessageSerializer.Serialize(message);
 
     Assert.Contains("\"type\":", json);
     Assert.Contains("\"sessionId\":", json);
-    Assert.Contains("\"duration\":", json);
+    Assert.Contains("\"endTime\":", json);
   }
 
   [Fact]
   public void Serialize_SessionEndMessage_ContainsCorrectValues()
   {
-    var message = SessionEndMessage.Create("test-session", 5000);
+    var message = SessionEndMessage.Create("test-session", 1700000000000);
 
     var json = MessageSerializer.Serialize(message);
 
     Assert.Contains("\"type\":\"sessionEnd\"", json);
     Assert.Contains("\"sessionId\":\"test-session\"", json);
-    Assert.Contains("\"duration\":5000", json);
+    Assert.Contains("\"endTime\":1700000000000", json);
   }
 
   [Fact]

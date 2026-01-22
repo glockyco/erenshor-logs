@@ -201,7 +201,7 @@ export type SessionStartMessage = z.infer<typeof SessionStartMessageSchema>;
 export const SessionEndMessageSchema = z.object({
   type: z.literal("sessionEnd"),
   sessionId: z.string(),
-  duration: z.number(),
+  endTime: z.number(),
 });
 export type SessionEndMessage = z.infer<typeof SessionEndMessageSchema>;
 

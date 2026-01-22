@@ -147,7 +147,7 @@ public sealed class CombatEventBroadcaster : ICombatEventBroadcaster
 
     try
     {
-      var message = SessionEndMessage.Create(session.Id, session.Duration);
+      var message = SessionEndMessage.Create(session.Id, session.EndTime!.Value);
       var json = MessageSerializer.Serialize(message);
       _server.Broadcast(json);
     }
