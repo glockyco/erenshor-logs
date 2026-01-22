@@ -1,6 +1,6 @@
 <script lang="ts">
   import "../app.css";
-  import Header from "$lib/components/layout/Header.svelte";
+  import Header from "$lib/components/layout/Header.connected.svelte";
   import { createWebSocketClient, type WebSocketCallbacks } from "$lib/services";
   import {
     setConnecting,
