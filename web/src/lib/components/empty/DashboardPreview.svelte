@@ -3,68 +3,53 @@
   import ActorBreakdownTable from "$lib/components/dashboard/ActorBreakdownTable.svelte";
   import Card from "$lib/components/ui/Card.svelte";
   import { Swords } from "@lucide/svelte";
+  import { createSessionStats, createActorStats } from "$lib/testing";
   import type { SessionStats, ActorStats } from "$lib/types";
 
   // Mock data for preview - realistic game numbers
   const previewDuration = 331000; // 5m 31s
 
-  const previewStats: SessionStats = {
+  const previewStats: SessionStats = createSessionStats({
     totalDamage: 4125000,
     totalHealing: 372500,
     durationMs: previewDuration,
     dps: 12458.3,
     hps: 1247.8,
     actorBreakdown: [
-      {
+      createActorStats({
         actorId: "preview-player",
         actorName: "Adventurer",
         actorType: "player",
         totalDamage: 1862500,
-        totalHealing: 0,
         dps: 5625.0,
-        hps: 0,
         percentOfTotalDamage: 45.2,
-        percentOfTotalHealing: 0,
-        abilityBreakdown: [],
-      },
-      {
+      }),
+      createActorStats({
         actorId: "preview-pet",
         actorName: "Dire Wolf",
         actorType: "pet",
         totalDamage: 1064250,
-        totalHealing: 0,
         dps: 3212.5,
-        hps: 0,
         percentOfTotalDamage: 25.8,
-        percentOfTotalHealing: 0,
-        abilityBreakdown: [],
-      },
-      {
+      }),
+      createActorStats({
         actorId: "preview-sim1",
         actorName: "Aeryn",
         actorType: "simPlayer",
         totalDamage: 804375,
-        totalHealing: 0,
         dps: 2428.3,
-        hps: 0,
         percentOfTotalDamage: 19.5,
-        percentOfTotalHealing: 0,
-        abilityBreakdown: [],
-      },
-      {
+      }),
+      createActorStats({
         actorId: "preview-sim2",
         actorName: "Gideon",
         actorType: "simPlayer",
         totalDamage: 393875,
-        totalHealing: 0,
         dps: 1190.5,
-        hps: 0,
         percentOfTotalDamage: 9.5,
-        percentOfTotalHealing: 0,
-        abilityBreakdown: [],
-      },
+      }),
     ],
-  };
+  });
 
   const previewActors: ActorStats[] = previewStats.actorBreakdown;
 </script>
