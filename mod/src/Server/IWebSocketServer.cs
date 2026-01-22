@@ -24,4 +24,9 @@ public interface IWebSocketServer : IDisposable
   /// Number of currently connected clients.
   /// </summary>
   int ClientCount { get; }
+
+  /// <summary>
+  /// Fired when a new client connects to the server.
+  /// </summary>
+  event Action? ClientConnected;
 }

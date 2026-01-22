@@ -112,8 +112,12 @@ public sealed class Plugin : BaseUnityPlugin
       log: msg => Logger.LogDebug(msg)
     );
 
-    // Send handshake to clients when they connect
-    // (This will be called on first Update() if clients are already connected)
+    // Send handshake when clients connect
+    _server.ClientConnected += () =>
+    {
+      Logger.LogDebug("Client connected, sending handshake");
+      _broadcaster.SendHandshakeToNewClient();
+    };
   }
 
   private ServiceProvider ConfigureServices()

@@ -21,6 +21,9 @@ public class WebSocketServer : IWebSocketServer
   /// <inheritdoc />
   public int ClientCount => _clients.Count;
 
+  /// <inheritdoc />
+  public event Action? ClientConnected;
+
   /// <summary>
   /// Creates a new WebSocketServer.
   /// </summary>
@@ -127,7 +130,8 @@ public class WebSocketServer : IWebSocketServer
       $"Client connected: {socket.ConnectionInfo.ClientIpAddress} (total: {ClientCount})"
     );
 
-    // Handshake will be sent by the broadcaster after it's wired up
+    // Fire event so Plugin can send handshake
+    ClientConnected?.Invoke();
   }
 
   private void OnClientDisconnected(IWebSocketConnection socket)
