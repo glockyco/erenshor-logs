@@ -11,6 +11,8 @@ export type {
   ConnectionStatus,
   SortBy,
   SortDirection,
+  ActorBreakdownTab,
+  FactionFilter,
   UIPreferences,
 } from "./schemas";
 
@@ -20,5 +22,7 @@ export {
   ConnectionStatusSchema,
   SortBySchema,
   SortDirectionSchema,
+  ActorBreakdownTabSchema,
+  FactionFilterSchema,
   UIPreferencesSchema,
 } from "./schemas";
