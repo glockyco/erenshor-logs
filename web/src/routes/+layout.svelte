@@ -9,9 +9,22 @@
     addSession,
     endSession,
     appendEvents,
+    initSessionsPersistence,
+    initUiPersistence,
   } from "$lib/state";
 
   let { children } = $props();
+
+  // Initialize state persistence
+  $effect(() => {
+    const cleanupSessions = initSessionsPersistence();
+    const cleanupUi = initUiPersistence();
+
+    return () => {
+      cleanupSessions();
+      cleanupUi();
+    };
+  });
 
   // Initialize WebSocket client in browser only
   $effect(() => {

@@ -11,23 +11,44 @@ import { loadFromStorage, saveToStorage, removeFromStorage } from "$lib/utils/st
 
 // State
 export const sessions = new SvelteMap<string, Session>();
-export let activeSessionId = $state<string | null>(null);
+
+const state = $state({
+  activeSessionId: null as string | null,
+});
+
+export const activeSessionId = {
+  get value() {
+    return state.activeSessionId;
+  },
+};
 
 // Derived state
-export const activeSession = $derived.by(() => {
-  if (!activeSessionId) return null;
-  return sessions.get(activeSessionId) ?? null;
+const _activeSession = $derived.by(() => {
+  if (!state.activeSessionId) return null;
+  return sessions.get(state.activeSessionId) ?? null;
 });
 
-export const activeSessionStats = $derived.by(() => {
-  if (!activeSession) return null;
+export const activeSession = {
+  get value() {
+    return _activeSession;
+  },
+};
 
-  const durationMs = activeSession.endTime
-    ? activeSession.endTime - activeSession.startTime
-    : Date.now() - activeSession.startTime;
+const _activeSessionStats = $derived.by(() => {
+  if (!_activeSession) return null;
 
-  return calculateSessionStats(activeSession.events, durationMs);
+  const durationMs = _activeSession.endTime
+    ? _activeSession.endTime - _activeSession.startTime
+    : Date.now() - _activeSession.startTime;
+
+  return calculateSessionStats(_activeSession.events, durationMs);
 });
+
+export const activeSessionStats = {
+  get value() {
+    return _activeSessionStats;
+  },
+};
 
 const ACTIVE_SESSION_KEY = `${STORAGE_KEYS.SESSIONS}-active`;
 
@@ -41,23 +62,33 @@ if (storedSessions) {
   // Validate activeSessionId exists
   const storedActiveId = loadFromStorage(ACTIVE_SESSION_KEY, z.string());
   if (storedActiveId && sessions.has(storedActiveId)) {
-    activeSessionId = storedActiveId;
+    state.activeSessionId = storedActiveId;
   }
 }
 
-// Persist to localStorage on changes
-$effect(() => {
-  saveToStorage(STORAGE_KEYS.SESSIONS, Array.from(sessions.entries()));
-});
+/**
+ * Initialize persistence effects. Must be called from a component context.
+ * Returns a cleanup function.
+ */
+export function initSessionsPersistence(): () => void {
+  const cleanup = $effect.root(() => {
+    // Persist sessions to localStorage on changes
+    $effect(() => {
+      saveToStorage(STORAGE_KEYS.SESSIONS, Array.from(sessions.entries()));
+    });
 
-// Persist active session ID separately
-$effect(() => {
-  if (activeSessionId) {
-    saveToStorage(ACTIVE_SESSION_KEY, activeSessionId);
-  } else {
-    removeFromStorage(ACTIVE_SESSION_KEY);
-  }
-});
+    // Persist active session ID separately
+    $effect(() => {
+      if (state.activeSessionId) {
+        saveToStorage(ACTIVE_SESSION_KEY, state.activeSessionId);
+      } else {
+        removeFromStorage(ACTIVE_SESSION_KEY);
+      }
+    });
+  });
+
+  return cleanup;
+}
 
 // Functions
 
@@ -80,8 +111,8 @@ export function addSession(info: SessionInfo): void {
   sessions.set(info.id, session);
 
   // Set as active if no active session
-  if (!activeSessionId) {
-    activeSessionId = info.id;
+  if (!state.activeSessionId) {
+    state.activeSessionId = info.id;
   }
 }
 
@@ -124,8 +155,8 @@ export function deleteSession(sessionId: string): void {
   sessions.delete(sessionId);
 
   // Clear active if deleted
-  if (activeSessionId === sessionId) {
-    activeSessionId = null;
+  if (state.activeSessionId === sessionId) {
+    state.activeSessionId = null;
   }
 }
 
@@ -134,7 +165,7 @@ export function deleteSession(sessionId: string): void {
  */
 export function clearAllSessions(): void {
   sessions.clear();
-  activeSessionId = null;
+  state.activeSessionId = null;
 }
 
 /**
@@ -146,5 +177,5 @@ export function setActiveSession(sessionId: string | null): void {
     return;
   }
 
-  activeSessionId = sessionId;
+  state.activeSessionId = sessionId;
 }

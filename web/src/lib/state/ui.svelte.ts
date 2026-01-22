@@ -9,25 +9,56 @@ import { loadFromStorage, saveToStorage } from "$lib/utils/storage";
 
 // State
 export const collapsedActors = new SvelteSet<string>();
-export let sortBy = $state<SortBy>("damage");
-export let sortDirection = $state<SortDirection>("desc");
+
+const uiState = $state({
+  sortBy: "damage" as SortBy,
+  sortDirection: "desc" as SortDirection,
+});
+
+export const sortBy = {
+  get value() {
+    return uiState.sortBy;
+  },
+  set value(val: SortBy) {
+    uiState.sortBy = val;
+  },
+};
+
+export const sortDirection = {
+  get value() {
+    return uiState.sortDirection;
+  },
+  set value(val: SortDirection) {
+    uiState.sortDirection = val;
+  },
+};
 
 // SSR-safe initialization from localStorage
 const stored = loadFromStorage(STORAGE_KEYS.PREFERENCES, UIPreferencesSchema);
 if (stored) {
   stored.collapsedActors.forEach((id) => collapsedActors.add(id));
-  sortBy = stored.sortBy;
-  sortDirection = stored.sortDirection;
+  uiState.sortBy = stored.sortBy;
+  uiState.sortDirection = stored.sortDirection;
 }
 
-// Persist to localStorage on changes
-$effect(() => {
-  saveToStorage(STORAGE_KEYS.PREFERENCES, {
-    collapsedActors: Array.from(collapsedActors),
-    sortBy,
-    sortDirection,
+/**
+ * Initialize persistence effects. Must be called from a component context.
+ * Returns a cleanup function.
+ */
+export function initUiPersistence(): () => void {
+  const cleanup = $effect.root(() => {
+    // Persist to localStorage on changes
+    $effect(() => {
+      saveToStorage(STORAGE_KEYS.PREFERENCES, {
+        collapsedActors: Array.from(collapsedActors),
+        sortBy: uiState.sortBy,
+        sortDirection: uiState.sortDirection,
+      });
+    });
   });
-});
+
+  return cleanup;
+}
 
 // Functions
 
@@ -46,12 +77,12 @@ export function toggleActor(actorId: string): void {
  * Set the sort field for actor breakdown.
  */
 export function setSortBy(field: SortBy): void {
-  sortBy = field;
+  uiState.sortBy = field;
 }
 
 /**
  * Set the sort direction for actor breakdown.
  */
 export function setSortDirection(direction: SortDirection): void {
-  sortDirection = direction;
+  uiState.sortDirection = direction;
 }

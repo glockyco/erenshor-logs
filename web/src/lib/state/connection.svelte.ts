@@ -9,10 +9,36 @@ import type {
 } from "$lib/types";
 
 // State
-export let connectionStatus = $state<ConnectionStatus>("disconnected");
-export let connectionError = $state<ConnectionError | null>(null);
-export let protocolVersion = $state<string | null>(null);
-export let modVersion = $state<string | null>(null);
+const state = $state({
+  connectionStatus: "disconnected" as ConnectionStatus,
+  connectionError: null as ConnectionError | null,
+  protocolVersion: null as string | null,
+  modVersion: null as string | null,
+});
+
+export const connectionStatus = {
+  get value() {
+    return state.connectionStatus;
+  },
+};
+
+export const connectionError = {
+  get value() {
+    return state.connectionError;
+  },
+};
+
+export const protocolVersion = {
+  get value() {
+    return state.protocolVersion;
+  },
+};
+
+export const modVersion = {
+  get value() {
+    return state.modVersion;
+  },
+};
 
 // Functions
 
@@ -20,34 +46,34 @@ export let modVersion = $state<string | null>(null);
  * Set connection status to connecting.
  */
 export function setConnecting(): void {
-  connectionStatus = "connecting";
-  connectionError = null;
+  state.connectionStatus = "connecting";
+  state.connectionError = null;
 }
 
 /**
  * Set connection status to connected with handshake data.
  */
 export function setConnected(handshake: HandshakeMessage): void {
-  connectionStatus = "connected";
-  connectionError = null;
-  protocolVersion = handshake.protocolVersion;
-  modVersion = handshake.modVersion;
+  state.connectionStatus = "connected";
+  state.connectionError = null;
+  state.protocolVersion = handshake.protocolVersion;
+  state.modVersion = handshake.modVersion;
 }
 
 /**
  * Set connection status to disconnected.
  */
 export function setDisconnected(): void {
-  connectionStatus = "disconnected";
-  protocolVersion = null;
-  modVersion = null;
+  state.connectionStatus = "disconnected";
+  state.protocolVersion = null;
+  state.modVersion = null;
 }
 
 /**
  * Set a connection error.
  */
 export function setError(code: ConnectionErrorCode, message: string): void {
-  connectionError = {
+  state.connectionError = {
     code,
     message,
     timestamp: Date.now(),
@@ -58,5 +84,5 @@ export function setError(code: ConnectionErrorCode, message: string): void {
  * Clear the current connection error.
  */
 export function clearError(): void {
-  connectionError = null;
+  state.connectionError = null;
 }
