@@ -160,22 +160,48 @@ export const ActorStatsSchema = z.object({
   actorId: z.string(),
   actorName: z.string(),
   actorType: ActorTypeSchema,
+  // Outgoing metrics (damage/healing dealt by this actor)
   totalDamage: z.number(),
   totalHealing: z.number(),
   dps: z.number(),
   hps: z.number(),
   percentOfTotalDamage: z.number(),
   percentOfTotalHealing: z.number(),
-  abilityBreakdown: z.array(AbilityStatsSchema),
+  // Incoming metrics (damage/healing received by this actor)
+  damageTaken: z.number(),
+  healingReceived: z.number(),
+  dtps: z.number(), // Damage Taken Per Second
+  hrps: z.number(), // Healing Received Per Second
+  percentOfTotalDamageTaken: z.number(),
+  percentOfTotalHealingReceived: z.number(),
+  // Defensive stats
+  totalMitigated: z.number(), // Total damage reduced by armor/resists
+  mitigationRate: z.number(), // Percentage of raw damage mitigated
+  totalMissedAgainst: z.number(), // Number of attacks that missed this actor
+  avoidanceRate: z.number(), // Percentage of attacks avoided
+  // Ability breakdowns
+  abilityBreakdown: z.array(AbilityStatsSchema), // Abilities this actor USED
+  abilitiesReceivedFrom: z.array(AbilityStatsSchema), // Abilities that HIT this actor
 });
 export type ActorStats = z.infer<typeof ActorStatsSchema>;
 
 export const SessionStatsSchema = z.object({
+  // Outgoing metrics (dealt by player faction)
   totalDamage: z.number(),
   totalHealing: z.number(),
-  durationMs: z.number(),
   dps: z.number(),
   hps: z.number(),
+  // Incoming metrics (received by player faction)
+  totalDamageTaken: z.number(),
+  totalHealingReceived: z.number(),
+  dtps: z.number(), // Damage Taken Per Second
+  hrps: z.number(), // Healing Received Per Second
+  // Defense stats
+  totalMitigated: z.number(),
+  mitigationRate: z.number(),
+  // Duration
+  durationMs: z.number(),
+  // Actor breakdown (complete bidirectional tracking)
   actorBreakdown: z.array(ActorStatsSchema),
 });
 export type SessionStats = z.infer<typeof SessionStatsSchema>;
@@ -260,16 +286,39 @@ export type ConnectionError = z.infer<typeof ConnectionErrorSchema>;
 export const ConnectionStatusSchema = z.enum(["disconnected", "connecting", "connected"]);
 export type ConnectionStatus = z.infer<typeof ConnectionStatusSchema>;
 
-export const SortBySchema = z.enum(["damage", "dps", "name"]);
+export const SortBySchema = z.enum([
+  "name",
+  "damage",
+  "dps",
+  "damageTaken",
+  "dtps",
+  "healing",
+  "hps",
+  "healingReceived",
+  "hrps",
+]);
 export type SortBy = z.infer<typeof SortBySchema>;
 
 export const SortDirectionSchema = z.enum(["asc", "desc"]);
 export type SortDirection = z.infer<typeof SortDirectionSchema>;
 
+export const ActorBreakdownTabSchema = z.enum([
+  "damageDealt",
+  "damageTaken",
+  "healingDone",
+  "healingReceived",
+]);
+export type ActorBreakdownTab = z.infer<typeof ActorBreakdownTabSchema>;
+
+export const FactionFilterSchema = z.enum(["all", "friendly", "hostile"]);
+export type FactionFilter = z.infer<typeof FactionFilterSchema>;
+
 export const UIPreferencesSchema = z.object({
   collapsedActors: z.array(z.string()),
   sortBy: SortBySchema,
   sortDirection: SortDirectionSchema,
+  actorBreakdownTab: ActorBreakdownTabSchema,
+  factionFilter: FactionFilterSchema,
 });
 export type UIPreferences = z.infer<typeof UIPreferencesSchema>;
 
