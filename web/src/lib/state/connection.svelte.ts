@@ -1,15 +1,12 @@
 // WebSocket connection state
 // Uses Svelte 5 runes for reactive state
 
-import type { HandshakeMessage } from "$lib/types/protocol";
-
-export type ConnectionStatus = "disconnected" | "connecting" | "connected";
-
-export interface ConnectionError {
-  code: "connection_failed" | "parse_error" | "unexpected_disconnect";
-  message: string;
-  timestamp: number;
-}
+import type {
+  ConnectionStatus,
+  ConnectionError,
+  ConnectionErrorCode,
+  HandshakeMessage,
+} from "$lib/types";
 
 // State
 export let connectionStatus = $state<ConnectionStatus>("disconnected");
@@ -49,9 +46,10 @@ export function setDisconnected(): void {
 /**
  * Set a connection error.
  */
-export function setError(error: Omit<ConnectionError, "timestamp">): void {
+export function setError(code: ConnectionErrorCode, message: string): void {
   connectionError = {
-    ...error,
+    code,
+    message,
     timestamp: Date.now(),
   };
 }
