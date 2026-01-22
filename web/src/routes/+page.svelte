@@ -8,7 +8,16 @@
   import Card from "$lib/components/ui/Card.svelte";
 
   import { sessions, activeSession, activeSessionStats } from "$lib/state/sessions.svelte";
-  import { sortBy, sortDirection, setSortBy, setSortDirection } from "$lib/state/ui.svelte";
+  import {
+    sortBy,
+    sortDirection,
+    actorBreakdownTab,
+    factionFilter,
+    setSortBy,
+    setSortDirection,
+    setActorBreakdownTab,
+    setFactionFilter,
+  } from "$lib/state/ui.svelte";
   import { now, subscribeToClock } from "$lib/state/clock.svelte";
   import type { SortBy } from "$lib/types";
 
@@ -100,8 +109,12 @@
               <Card title="Actor Breakdown">
                 <ActorBreakdownTable
                   actors={sortedActors}
+                  activeTab={actorBreakdownTab.value}
+                  factionFilter={factionFilter.value}
                   sortBy={sortBy.value}
                   sortDirection={sortDirection.value}
+                  onTabChange={setActorBreakdownTab}
+                  onFactionChange={setFactionFilter}
                   onSort={handleSort}
                 />
               </Card>
