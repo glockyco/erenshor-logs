@@ -14,8 +14,12 @@
 
 <!-- Mobile/Tablet: Tab navigation -->
 <div class="lg:hidden">
-  <div class="flex border-b border-slate-800">
+  <div class="flex border-b border-slate-800" role="tablist" aria-label="Content sections">
     <button
+      role="tab"
+      id="tab-sessions"
+      aria-selected={activeTab === "sessions"}
+      aria-controls="panel-sessions"
       class={clsx(
         "flex-1 px-4 py-3 text-sm font-semibold uppercase tracking-wider transition",
         activeTab === "sessions"
@@ -27,6 +31,10 @@
       Sessions
     </button>
     <button
+      role="tab"
+      id="tab-detail"
+      aria-selected={activeTab === "detail"}
+      aria-controls="panel-detail"
       class={clsx(
         "flex-1 px-4 py-3 text-sm font-semibold uppercase tracking-wider transition",
         activeTab === "detail"
@@ -38,13 +46,22 @@
       Detail
     </button>
   </div>
-  <div class="p-4">
-    {#if activeTab === "sessions"}
+
+  {#if activeTab === "sessions"}
+    <div
+      role="tabpanel"
+      id="panel-sessions"
+      aria-labelledby="tab-sessions"
+      tabindex="0"
+      class="p-4"
+    >
       {@render sidebar()}
-    {:else}
+    </div>
+  {:else}
+    <div role="tabpanel" id="panel-detail" aria-labelledby="tab-detail" tabindex="0" class="p-4">
       {@render main()}
-    {/if}
-  </div>
+    </div>
+  {/if}
 </div>
 
 <!-- Desktop: Two-column layout -->
