@@ -182,6 +182,11 @@
 
   // Column span for empty state
   const emptyColSpan = $derived(5 + (columns.extraColumns?.length ?? 0));
+
+  // Wrapper to cast string back to ActorBreakdownTab
+  function handleTabChange(value: string) {
+    onTabChange(value as ActorBreakdownTab);
+  }
 </script>
 
 <div>
@@ -189,13 +194,13 @@
   <div class="flex flex-col gap-3 mb-4">
     <!-- Mobile: Dropdown + Filters (stacked) -->
     <div class="lg:hidden space-y-3">
-      <TabSelect {tabs} active={activeTab} {onTabChange} />
+      <TabSelect {tabs} active={activeTab} onTabChange={handleTabChange} />
       <FactionFilterComponent active={factionFilter} onFilterChange={onFactionChange} />
     </div>
 
     <!-- Desktop: Tabs + Filters (horizontal) -->
     <div class="hidden lg:flex lg:items-center lg:justify-between">
-      <TabGroup {tabs} active={activeTab} {onTabChange} />
+      <TabGroup {tabs} active={activeTab} onTabChange={handleTabChange} />
       <FactionFilterComponent active={factionFilter} onFilterChange={onFactionChange} />
     </div>
   </div>

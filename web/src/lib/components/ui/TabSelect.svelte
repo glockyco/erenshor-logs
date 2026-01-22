@@ -1,15 +1,15 @@
-<script lang="ts" generics="T extends string">
+<script lang="ts">
   import { ChevronDown } from "@lucide/svelte";
 
-  interface Tab<T> {
-    value: T;
+  interface Tab {
+    value: string;
     label: string;
   }
 
   interface Props {
-    tabs: Tab<T>[];
-    active: T;
-    onTabChange: (value: T) => void;
+    tabs: Tab[];
+    active: string;
+    onTabChange: (value: string) => void;
   }
 
   let { tabs, active, onTabChange }: Props = $props();
@@ -18,7 +18,7 @@
 
   const activeTab = $derived(tabs.find((t) => t.value === active));
 
-  function handleSelect(value: T) {
+  function handleSelect(value: string) {
     onTabChange(value);
     isOpen = false;
   }

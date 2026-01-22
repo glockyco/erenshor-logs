@@ -35,11 +35,12 @@ export function getActorFaction(actor?: ActorRef): Faction | null {
 
 /**
  * Filter actors by faction.
+ * Preserves the full type of the input array.
  */
-export function filterByFaction(
-  actors: Array<{ actorType: ActorType }>,
+export function filterByFaction<T extends { actorType: ActorType }>(
+  actors: T[],
   faction: "all" | Faction
-): Array<{ actorType: ActorType }> {
+): T[] {
   if (faction === "all") return actors;
 
   return actors.filter((actor) => {

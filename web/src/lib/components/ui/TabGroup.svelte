@@ -1,13 +1,13 @@
-<script lang="ts" generics="T extends string">
-  interface Tab<T> {
-    value: T;
+<script lang="ts">
+  interface Tab {
+    value: string;
     label: string;
   }
 
   interface Props {
-    tabs: Tab<T>[];
-    active: T;
-    onTabChange: (value: T) => void;
+    tabs: Tab[];
+    active: string;
+    onTabChange: (value: string) => void;
   }
 
   let { tabs, active, onTabChange }: Props = $props();
