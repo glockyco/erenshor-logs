@@ -64,4 +64,4 @@ public record CombatEventsMessage(string Type, string SessionId, CombatEvent[] E
 /// <summary>
 /// Session information included in handshake and session start messages.
 /// </summary>
-public record SessionInfo(string Id, long StartTime, PlayerInfo Player);
+public record SessionInfo(string Id, long StartTime);

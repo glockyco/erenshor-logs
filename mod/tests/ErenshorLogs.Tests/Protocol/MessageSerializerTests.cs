@@ -9,16 +9,7 @@ public class MessageSerializerTests
   [Fact]
   public void Serialize_HandshakeMessage_UsesCamelCase()
   {
-    var sessionInfo = new SessionInfo(
-      "test-session",
-      1234567890,
-      new PlayerInfo
-      {
-        Name = "TestPlayer",
-        Class = "Arcanist",
-        Level = 10,
-      }
-    );
+    var sessionInfo = new SessionInfo("test-session", 1234567890);
     var message = HandshakeMessage.Create("0.1.0", sessionInfo);
 
     var json = MessageSerializer.Serialize(message);
@@ -32,16 +23,7 @@ public class MessageSerializerTests
   [Fact]
   public void Serialize_HandshakeMessage_ContainsCorrectValues()
   {
-    var sessionInfo = new SessionInfo(
-      "test-session",
-      1234567890,
-      new PlayerInfo
-      {
-        Name = "TestPlayer",
-        Class = "Arcanist",
-        Level = 10,
-      }
-    );
+    var sessionInfo = new SessionInfo("test-session", 1234567890);
     var message = HandshakeMessage.Create("0.1.0", sessionInfo);
 
     var json = MessageSerializer.Serialize(message);
@@ -77,16 +59,7 @@ public class MessageSerializerTests
   [Fact]
   public void Serialize_HandshakeMessage_RoundTrips()
   {
-    var sessionInfo = new SessionInfo(
-      "test-session",
-      1234567890,
-      new PlayerInfo
-      {
-        Name = "TestPlayer",
-        Class = "Arcanist",
-        Level = 10,
-      }
-    );
+    var sessionInfo = new SessionInfo("test-session", 1234567890);
     var original = HandshakeMessage.Create("0.1.0", sessionInfo);
 
     var json = MessageSerializer.Serialize(original);
@@ -103,16 +76,7 @@ public class MessageSerializerTests
   [Fact]
   public void Serialize_SessionStartMessage_UsesCamelCase()
   {
-    var sessionInfo = new SessionInfo(
-      "test-session",
-      1234567890,
-      new PlayerInfo
-      {
-        Name = "TestPlayer",
-        Class = "Arcanist",
-        Level = 10,
-      }
-    );
+    var sessionInfo = new SessionInfo("test-session", 1234567890);
     var message = SessionStartMessage.Create(sessionInfo);
 
     var json = MessageSerializer.Serialize(message);

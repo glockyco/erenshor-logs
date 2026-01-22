@@ -83,8 +83,7 @@ public sealed class CombatEventBroadcaster : ICombatEventBroadcaster
     try
     {
       var session = _sessionManager.CurrentSession;
-      var sessionInfo =
-        session != null ? new SessionInfo(session.Id, session.StartTime, session.Player) : null;
+      var sessionInfo = session != null ? new SessionInfo(session.Id, session.StartTime) : null;
 
       var handshake = HandshakeMessage.Create(_modVersion, sessionInfo);
       var json = MessageSerializer.Serialize(handshake);
@@ -126,7 +125,7 @@ public sealed class CombatEventBroadcaster : ICombatEventBroadcaster
 
     try
     {
-      var sessionInfo = new SessionInfo(session.Id, session.StartTime, session.Player);
+      var sessionInfo = new SessionInfo(session.Id, session.StartTime);
       var message = SessionStartMessage.Create(sessionInfo);
       var json = MessageSerializer.Serialize(message);
       _server.Broadcast(json);
