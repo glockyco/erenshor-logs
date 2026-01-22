@@ -1,59 +1,44 @@
 <script module lang="ts">
   import { defineMeta } from "@storybook/addon-svelte-csf";
   import ActorBreakdownTable from "./ActorBreakdownTable.svelte";
+  import { createActorStats } from "$lib/testing";
   import type { ActorStats } from "$lib/types";
 
   // Create realistic mock actors with actual game numbers (sorted by DPS descending by default)
   // Typical DPS range: 10-15k per character
   const mockActors: ActorStats[] = [
-    {
+    createActorStats({
       actorId: "player-1",
       actorName: "Adventurer",
       actorType: "player",
       totalDamage: 4125000, // ~5 min fight at 13.75k DPS
-      totalHealing: 0,
       dps: 13750.0,
-      hps: 0,
       percentOfTotalDamage: 45.2,
-      percentOfTotalHealing: 0,
-      abilityBreakdown: [],
-    },
-    {
+    }),
+    createActorStats({
       actorId: "pet-1",
       actorName: "Wolf",
       actorType: "pet",
       totalDamage: 2350000,
-      totalHealing: 0,
       dps: 7833.3,
-      hps: 0,
       percentOfTotalDamage: 25.8,
-      percentOfTotalHealing: 0,
-      abilityBreakdown: [],
-    },
-    {
+    }),
+    createActorStats({
       actorId: "sim-1",
       actorName: "SimPlayer1",
       actorType: "simPlayer",
       totalDamage: 1775000,
-      totalHealing: 0,
       dps: 5916.7,
-      hps: 0,
       percentOfTotalDamage: 19.5,
-      percentOfTotalHealing: 0,
-      abilityBreakdown: [],
-    },
-    {
+    }),
+    createActorStats({
       actorId: "sim-2",
       actorName: "SimPlayer2",
       actorType: "simPlayer",
       totalDamage: 865000,
-      totalHealing: 0,
       dps: 2883.3,
-      hps: 0,
       percentOfTotalDamage: 9.5,
-      percentOfTotalHealing: 0,
-      abilityBreakdown: [],
-    },
+    }),
   ];
 
   // Pre-sorted variants
