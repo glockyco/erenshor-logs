@@ -9,6 +9,7 @@
   } from "$lib/types";
   import Badge from "$lib/components/ui/Badge.svelte";
   import TabGroup from "$lib/components/ui/TabGroup.svelte";
+  import TabSelect from "$lib/components/ui/TabSelect.svelte";
   import FactionFilterComponent from "$lib/components/ui/FactionFilter.svelte";
   import { formatDps, formatNumber, formatPercent } from "$lib/utils";
   import { filterByFaction } from "$lib/utils/actor-utils";
@@ -133,6 +134,28 @@
   // Filter actors by faction
   const filteredActors = $derived(filterByFaction(actors, factionFilter));
 
+  // Recalculate percentages relative to filtered set
+  const actorsWithFilteredPercentages = $derived.by(() => {
+    if (filteredActors.length === 0) return [];
+
+    // Calculate total for the current metric within filtered actors
+    const totalField = columns.totalField;
+    const filteredTotal = filteredActors.reduce((sum, actor) => {
+      return sum + ((actor[totalField] as number) || 0);
+    }, 0);
+
+    // Recalculate percentage for each actor relative to filtered total
+    return filteredActors.map((actor) => {
+      const actorValue = (actor[totalField] as number) || 0;
+      const filteredPercentage = filteredTotal > 0 ? (actorValue / filteredTotal) * 100 : 0;
+
+      return {
+        ...actor,
+        _filteredPercentage: filteredPercentage,
+      };
+    });
+  });
+
   // Actor type to color mapping
   function getActorColor(type: ActorType): string {
     const colors = {
@@ -163,9 +186,18 @@
 
 <div>
   <!-- Tabs and Filters -->
-  <div class="flex items-center justify-between mb-4">
-    <TabGroup {tabs} active={activeTab} {onTabChange} />
-    <FactionFilterComponent active={factionFilter} onFilterChange={onFactionChange} />
+  <div class="flex flex-col gap-3 mb-4">
+    <!-- Mobile: Dropdown + Filters (stacked) -->
+    <div class="lg:hidden space-y-3">
+      <TabSelect {tabs} active={activeTab} {onTabChange} />
+      <FactionFilterComponent active={factionFilter} onFilterChange={onFactionChange} />
+    </div>
+
+    <!-- Desktop: Tabs + Filters (horizontal) -->
+    <div class="hidden lg:flex lg:items-center lg:justify-between">
+      <TabGroup {tabs} active={activeTab} {onTabChange} />
+      <FactionFilterComponent active={factionFilter} onFilterChange={onFactionChange} />
+    </div>
   </div>
 
   <!-- Table -->
@@ -270,14 +302,14 @@
       </thead>
 
       <tbody>
-        {#if filteredActors.length === 0}
+        {#if actorsWithFilteredPercentages.length === 0}
           <tr>
             <td colspan={emptyColSpan} class="px-4 py-12 text-center text-slate-500">
               No combat data available
             </td>
           </tr>
         {:else}
-          {#each filteredActors as actor, index (actor.actorId)}
+          {#each actorsWithFilteredPercentages as actor, index (actor.actorId)}
             <tr class="border-b border-slate-800 last:border-b-0 hover:bg-slate-800/30 transition">
               <!-- Rank -->
               <td class="px-3 py-3 text-right text-sm text-slate-500 font-mono">
@@ -321,14 +353,14 @@
                 <!-- Background bar -->
                 <div
                   class="absolute inset-y-0 right-0 opacity-20"
-                  style="width: {actor[
-                    columns.percentField
-                  ] as number}%; background-color: {getActorColor(actor.actorType)};"
+                  style="width: {actor._filteredPercentage}%; background-color: {getActorColor(
+                    actor.actorType
+                  )};"
                 ></div>
 
                 <!-- Percentage text -->
                 <div class="relative text-right font-mono text-sm text-slate-200">
-                  {formatPercent((actor[columns.percentField] as number) / 100)}
+                  {formatPercent(actor._filteredPercentage / 100)}
                 </div>
               </td>
             </tr>
