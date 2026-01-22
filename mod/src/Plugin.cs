@@ -23,6 +23,7 @@ public sealed class Plugin : BaseUnityPlugin
   private ServiceProvider? _services;
   private Harmony? _harmony;
   private ICombatRelevanceChecker? _relevanceChecker;
+  private ISessionManager? _sessionManager;
   private IWebSocketServer? _server;
   private ICombatEventBroadcaster? _broadcaster;
 
@@ -48,6 +49,12 @@ public sealed class Plugin : BaseUnityPlugin
     {
       _broadcaster.Tick(UnityEngine.Time.deltaTime);
     }
+
+    // Check for pending session timeout
+    if (_sessionManager != null)
+    {
+      _sessionManager.CheckPendingSessionTimeout(UnityEngine.Time.time);
+    }
   }
 
   private void ConfigureDamagePatches()
@@ -55,6 +62,7 @@ public sealed class Plugin : BaseUnityPlugin
     var services = _services!;
     var emitter = services.GetRequiredService<IEventEmitter>();
     var eventBuilder = services.GetRequiredService<ICombatEventBuilder>();
+    var sessionManager = services.GetRequiredService<ISessionManager>();
 
     // Create and store relevance checker
     _relevanceChecker = new CombatRelevanceCheckerAdapter();
@@ -63,27 +71,34 @@ public sealed class Plugin : BaseUnityPlugin
     DamageMePatch.EventBuilder = eventBuilder;
     DamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
     DamageMePatch.RelevanceChecker = _relevanceChecker;
+    DamageMePatch.SessionManager = sessionManager;
 
     MagicDamageMePatch.Emitter = emitter;
     MagicDamageMePatch.EventBuilder = eventBuilder;
     MagicDamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
     MagicDamageMePatch.RelevanceChecker = _relevanceChecker;
+    MagicDamageMePatch.SessionManager = sessionManager;
 
     BleedDamageMePatch.Emitter = emitter;
     BleedDamageMePatch.EventBuilder = eventBuilder;
     BleedDamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
     BleedDamageMePatch.RelevanceChecker = _relevanceChecker;
+    BleedDamageMePatch.SessionManager = sessionManager;
 
     EnvironmentalDamageMePatch.Emitter = emitter;
     EnvironmentalDamageMePatch.EventBuilder = eventBuilder;
     EnvironmentalDamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
     EnvironmentalDamageMePatch.RelevanceChecker = _relevanceChecker;
+    EnvironmentalDamageMePatch.SessionManager = sessionManager;
   }
 
   private void ConfigureSessionPatch()
   {
     var services = _services!;
     var sessionManager = services.GetRequiredService<ISessionManager>();
+
+    // Store reference for Update() timeout checks
+    _sessionManager = sessionManager;
 
     CheckForTrueCombatPatch.SessionManager = sessionManager;
 

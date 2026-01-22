@@ -1,4 +1,5 @@
 using ErenshorLogs.Events;
+using ErenshorLogs.Session;
 using HarmonyLib;
 
 namespace ErenshorLogs.Hooks;
@@ -30,6 +31,12 @@ public static class EnvironmentalDamageMePatch
   internal static ICombatRelevanceChecker? RelevanceChecker { get; set; }
 
   /// <summary>
+  /// Session manager for ensuring session exists before emitting events.
+  /// Set by Plugin during initialization.
+  /// </summary>
+  internal static ISessionManager? SessionManager { get; set; }
+
+  /// <summary>
   /// Postfix hook that captures environmental damage after EnvironmentalDamageMe completes.
   /// </summary>
   /// <param name="__instance">The Character that received damage (target).</param>
@@ -45,6 +52,10 @@ public static class EnvironmentalDamageMePatch
     // Skip if target not relevant to player's group (no source for environmental damage)
     if (RelevanceChecker != null && !RelevanceChecker.IsRelevantCombat(null, __instance))
       return;
+
+    // Note: EnsureSessionStarted filters out DamageEnvironmental
+    // Environmental damage does not start sessions
+    SessionManager?.EnsureSessionStarted(EventType.DamageEnvironmental);
 
     // Skip non-loggable results (-1 = dead/invulnerable)
     if (__result <= 0)

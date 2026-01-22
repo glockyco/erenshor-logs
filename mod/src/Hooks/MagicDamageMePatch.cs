@@ -1,4 +1,5 @@
 using ErenshorLogs.Events;
+using ErenshorLogs.Session;
 using HarmonyLib;
 
 namespace ErenshorLogs.Hooks;
@@ -30,6 +31,12 @@ public static class MagicDamageMePatch
   internal static ICombatRelevanceChecker? RelevanceChecker { get; set; }
 
   /// <summary>
+  /// Session manager for ensuring session exists before emitting events.
+  /// Set by Plugin during initialization.
+  /// </summary>
+  internal static ISessionManager? SessionManager { get; set; }
+
+  /// <summary>
   /// Postfix hook that captures magic damage events after MagicDamageMe completes.
   /// </summary>
   /// <param name="__instance">The Character that received damage (target).</param>
@@ -55,6 +62,9 @@ public static class MagicDamageMePatch
     // Skip if not relevant to player's group
     if (RelevanceChecker != null && !RelevanceChecker.IsRelevantCombat(_attacker, __instance))
       return;
+
+    // Ensure session exists before emitting event
+    SessionManager?.EnsureSessionStarted(EventType.DamageMagic);
 
     // Skip non-loggable results (dead, invulnerable, mining node, treasure chest)
     if (DamageResult.ShouldSkip(__result))
