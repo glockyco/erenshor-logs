@@ -1,22 +1,12 @@
 repos:
-  # Prettier - Format web files (auto-fix)
+  # Web: Format and lint staged files
   - repo: local
     hooks:
-      - id: prettier
-        name: prettier
-        entry: pnpm --dir web run format
+      - id: lint-staged-web
+        name: lint-staged (web)
+        entry: bash -c 'cd web && pnpm lint-staged'
         language: system
-        files: ^web/.*\.(js|ts|svelte|json|md|yaml|css|html)$
-        pass_filenames: false
-
-  # ESLint - Lint TypeScript/Svelte (auto-fix)
-  - repo: local
-    hooks:
-      - id: eslint
-        name: eslint
-        entry: pnpm --dir web run lint:fix
-        language: system
-        files: ^web/.*\.(js|ts|svelte)$
+        files: ^web/
         pass_filenames: false
 
   # CSharpier - Format C# (auto-fix)
@@ -34,13 +24,13 @@ repos:
     hooks:
       - id: ruff-format
         name: ruff format
-        entry: uv run --directory cli ruff format
+        entry: bash -c 'uv run --directory cli ruff format && git add -u cli/'
         language: system
         files: ^cli/.*\.py$
         pass_filenames: false
       - id: ruff-lint
         name: ruff lint
-        entry: uv run --directory cli ruff check --fix
+        entry: bash -c 'uv run --directory cli ruff check --fix && git add -u cli/'
         language: system
         files: ^cli/.*\.py$
         pass_filenames: false
