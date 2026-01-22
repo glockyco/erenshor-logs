@@ -26,11 +26,6 @@ Combat logs are stored as gzipped JSON files (`.json.gz`). This document specifi
     "startTime": 1704067200000,
     "endTime": 1704067260000,
     "duration": 60000,
-    "player": {
-      "name": "Valdris",
-      "class": "Duelist",
-      "level": 35
-    },
     "gameVersion": "1.2.3",
     "modVersion": "1.0.0"
   }
@@ -43,9 +38,10 @@ Combat logs are stored as gzipped JSON files (`.json.gz`). This document specifi
 | `startTime` | number | Unix timestamp (ms) of first event |
 | `endTime` | number | Unix timestamp (ms) of last event |
 | `duration` | number | Session duration in milliseconds |
-| `player` | object | Player information |
 | `gameVersion` | string | Erenshor version |
 | `modVersion` | string | Combat Logger mod version |
+
+**Note**: Player identity is not stored in session metadata. The player is identified through combat events via `ActorRef` where `type: "player"`.
 
 ## Summary Statistics
 
