@@ -52,5 +52,7 @@
   });
 </script>
 
-<Header />
-{@render children()}
+<div class="min-h-screen bg-slate-950 text-slate-100">
+  <Header />
+  {@render children()}
+</div>
