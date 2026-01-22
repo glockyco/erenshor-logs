@@ -17,9 +17,6 @@ public sealed record SessionMetadata
   /// <summary>Session duration in milliseconds.</summary>
   public required long Duration { get; init; }
 
-  /// <summary>Player information.</summary>
-  public required PlayerInfo Player { get; init; }
-
   /// <summary>Erenshor game version.</summary>
   public required string GameVersion { get; init; }
 

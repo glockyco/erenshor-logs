@@ -141,10 +141,10 @@ public sealed class Plugin : BaseUnityPlugin
     ));
 
     // Session management
-    services.AddSingleton<IPlayerInfoProvider, PlayerInfoProvider>();
+    services.AddSingleton<IGameVersionProvider, GameVersionProvider>();
     services.AddSingleton<ISessionManager>(sp => new SessionManager(
       sp.GetRequiredService<IEventEmitter>(),
-      sp.GetRequiredService<IPlayerInfoProvider>(),
+      sp.GetRequiredService<IGameVersionProvider>(),
       PluginInfo.Version,
       log: (level, msg) =>
       {

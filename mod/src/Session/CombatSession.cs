@@ -23,11 +23,6 @@ public sealed class CombatSession
   public long? EndTime { get; private set; }
 
   /// <summary>
-  /// Player information captured at session start.
-  /// </summary>
-  public PlayerInfo Player { get; }
-
-  /// <summary>
   /// Game version at session start.
   /// </summary>
   public string GameVersion { get; }
@@ -50,11 +45,10 @@ public sealed class CombatSession
   /// <summary>
   /// Creates a new combat session.
   /// </summary>
-  public CombatSession(PlayerInfo player, string gameVersion, string modVersion)
+  public CombatSession(string gameVersion, string modVersion)
   {
     Id = Guid.NewGuid().ToString();
     StartTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-    Player = player;
     GameVersion = gameVersion;
     ModVersion = modVersion;
   }
@@ -82,7 +76,6 @@ public sealed class CombatSession
       StartTime = StartTime,
       EndTime = endTime,
       Duration = endTime - StartTime,
-      Player = Player,
       GameVersion = GameVersion,
       ModVersion = ModVersion,
     };

@@ -9,7 +9,7 @@ namespace ErenshorLogs.Session;
 public sealed class SessionManager : ISessionManager
 {
   private readonly IEventEmitter _emitter;
-  private readonly IPlayerInfoProvider _playerInfoProvider;
+  private readonly IGameVersionProvider _gameVersionProvider;
   private readonly string _modVersion;
   private readonly Action<LogLevel, string>? _log;
 
@@ -32,18 +32,18 @@ public sealed class SessionManager : ISessionManager
   /// Creates a new SessionManager.
   /// </summary>
   /// <param name="emitter">Event emitter for CombatStart/CombatEnd events.</param>
-  /// <param name="playerInfoProvider">Provider for player information.</param>
+  /// <param name="gameVersionProvider">Provider for game version information.</param>
   /// <param name="modVersion">Current mod version string.</param>
   /// <param name="log">Optional logging callback.</param>
   public SessionManager(
     IEventEmitter emitter,
-    IPlayerInfoProvider playerInfoProvider,
+    IGameVersionProvider gameVersionProvider,
     string modVersion,
     Action<LogLevel, string>? log = null
   )
   {
     _emitter = emitter;
-    _playerInfoProvider = playerInfoProvider;
+    _gameVersionProvider = gameVersionProvider;
     _modVersion = modVersion;
     _log = log;
   }
@@ -72,22 +72,10 @@ public sealed class SessionManager : ISessionManager
 
   private void StartSession()
   {
-    var playerInfo = _playerInfoProvider.GetCurrentPlayerInfo();
-    if (playerInfo == null)
-    {
-      // Can't start session without player info - game not fully initialized
-      _log?.Invoke(LogLevel.Warning, "Cannot start combat session - player info not available");
-      return;
-    }
+    var gameVersion = _gameVersionProvider.GetGameVersion();
+    _currentSession = new CombatSession(gameVersion, _modVersion);
 
-    var gameVersion = _playerInfoProvider.GetGameVersion();
-    _currentSession = new CombatSession(playerInfo, gameVersion, _modVersion);
-
-    _log?.Invoke(
-      LogLevel.Info,
-      $"Combat session started: {_currentSession.Id} "
-        + $"(Player: {playerInfo.Name}, Class: {playerInfo.Class}, Level: {playerInfo.Level})"
-    );
+    _log?.Invoke(LogLevel.Info, $"Combat session started: {_currentSession.Id}");
 
     EmitCombatEvent(EventType.CombatStart);
     SessionStarted?.Invoke(_currentSession);

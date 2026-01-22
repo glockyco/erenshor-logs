@@ -19,12 +19,6 @@ public class CombatLogTests
         StartTime = 1704067200000,
         EndTime = 1704067260000,
         Duration = 60000,
-        Player = new PlayerInfo
-        {
-          Name = "Valdris",
-          Class = "Duelist",
-          Level = 35,
-        },
         GameVersion = "1.2.3",
         ModVersion = "0.1.0",
       },
