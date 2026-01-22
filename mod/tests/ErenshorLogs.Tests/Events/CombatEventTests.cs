@@ -37,7 +37,7 @@ public class CombatEventTests
 
     var json = JsonConvert.SerializeObject(evt, JsonSettings.Default);
 
-    Assert.Contains("\"eventType\":\"damage_skill\"", json);
+    Assert.Contains("\"eventType\":\"damageSkill\"", json);
     Assert.Contains("\"amount\":1500", json);
     Assert.Contains("\"damageType\":\"physical\"", json);
     Assert.Contains("\"critical\":true", json);

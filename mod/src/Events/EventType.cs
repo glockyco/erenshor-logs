@@ -2,7 +2,7 @@ namespace ErenshorLogs.Events;
 
 /// <summary>
 /// Types of combat events that can be logged.
-/// Serializes to snake_case (e.g. DamageMelee -> "damage_melee").
+/// Serializes to camelCase (e.g. DamageMelee -> "damageMelee").
 /// </summary>
 public enum EventType
 {

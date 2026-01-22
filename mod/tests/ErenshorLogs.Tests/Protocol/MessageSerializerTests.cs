@@ -154,7 +154,7 @@ public class MessageSerializerTests
 
     Assert.Contains("\"event-1\"", json);
     Assert.Contains("\"event-2\"", json);
-    Assert.Contains("\"damage_physical\"", json); // EventType serializes as snake_case
-    Assert.Contains("\"combat_start\"", json);
+    Assert.Contains("\"damagePhysical\"", json); // EventType serializes as camelCase
+    Assert.Contains("\"combatStart\"", json);
   }
 }

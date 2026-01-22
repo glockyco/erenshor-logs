@@ -11,7 +11,7 @@ public static class JsonSettings
 {
   /// <summary>
   /// Default JSON serializer settings.
-  /// Properties use camelCase, enums use snake_case, nulls are omitted.
+  /// Properties and enums use camelCase, nulls are omitted.
   /// </summary>
   public static JsonSerializerSettings Default { get; } =
     new()
@@ -22,7 +22,7 @@ public static class JsonSettings
       },
       Converters =
       {
-        new Newtonsoft.Json.Converters.StringEnumConverter(new SnakeCaseNamingStrategy()),
+        new Newtonsoft.Json.Converters.StringEnumConverter(new CamelCaseNamingStrategy()),
       },
       NullValueHandling = NullValueHandling.Ignore,
       Formatting = Formatting.None,
@@ -40,7 +40,7 @@ public static class JsonSettings
       },
       Converters =
       {
-        new Newtonsoft.Json.Converters.StringEnumConverter(new SnakeCaseNamingStrategy()),
+        new Newtonsoft.Json.Converters.StringEnumConverter(new CamelCaseNamingStrategy()),
       },
       NullValueHandling = NullValueHandling.Ignore,
       Formatting = Formatting.Indented,

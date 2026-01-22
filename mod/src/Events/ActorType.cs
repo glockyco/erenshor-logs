@@ -2,7 +2,7 @@ namespace ErenshorLogs.Events;
 
 /// <summary>
 /// Types of actors that can participate in combat.
-/// Serializes to snake_case (e.g. SimPlayer -> "sim_player").
+/// Serializes to camelCase (e.g. SimPlayer -> "simPlayer").
 /// </summary>
 public enum ActorType
 {

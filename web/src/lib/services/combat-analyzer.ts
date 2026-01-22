@@ -5,24 +5,19 @@ import type { CombatEvent, EventType, SessionStats, ActorStats, AbilityStats } f
 const MS_PER_SECOND = 1000;
 
 const DAMAGE_EVENTS: Set<EventType> = new Set([
-  "damage_physical",
-  "damage_magic",
-  "damage_melee",
-  "damage_skill",
-  "damage_spell",
-  "damage_dot",
-  "damage_proc",
-  "damage_pet",
-  "damage_reflect",
-  "damage_environmental",
+  "damagePhysical",
+  "damageMagic",
+  "damageMelee",
+  "damageSkill",
+  "damageSpell",
+  "damageDot",
+  "damageProc",
+  "damagePet",
+  "damageReflect",
+  "damageEnvironmental",
 ]);
 
-const HEAL_EVENTS: Set<EventType> = new Set([
-  "heal_spell",
-  "heal_hot",
-  "heal_lifesteal",
-  "heal_regen",
-]);
+const HEAL_EVENTS: Set<EventType> = new Set(["healSpell", "healHot", "healLifesteal", "healRegen"]);
 
 function isDamageEvent(eventType: EventType): boolean {
   return DAMAGE_EVENTS.has(eventType);
