@@ -2,6 +2,7 @@
   import type { Session } from "$lib/types";
   import { formatTime, formatDuration, formatNumber, formatDps } from "$lib/utils";
   import { calculateSessionStats } from "$lib/services";
+  import { now, subscribeToClock } from "$lib/state";
   import { clsx } from "clsx";
   import { X } from "@lucide/svelte";
 
@@ -14,21 +15,36 @@
 
   let { session, isActive = false, onclick, ondelete }: Props = $props();
 
+  // Subscribe to clock only for active sessions (no endTime)
+  $effect(() => {
+    if (!session.endTime) {
+      return subscribeToClock();
+    }
+  });
+
   const duration = $derived(
-    session.endTime ? session.endTime - session.startTime : Date.now() - session.startTime
+    session.endTime ? session.endTime - session.startTime : now.value - session.startTime
   );
 
   const stats = $derived(calculateSessionStats(session.events, duration));
 </script>
 
-<button
+<div
+  role="button"
+  tabindex="0"
   class={clsx(
-    "group relative w-full rounded-lg border bg-slate-900 p-4 text-left transition-all",
+    "group relative w-full rounded-lg border bg-slate-900 p-4 text-left transition-all cursor-pointer",
     isActive
       ? "border-cyan-500/50 shadow-[0_0_20px_rgb(6_182_212_/_0.3)]"
       : "border-slate-700 hover:border-slate-600"
   )}
   {onclick}
+  onkeydown={(e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onclick?.();
+    }
+  }}
 >
   <div class="flex items-start justify-between">
     <div class="flex-1">
@@ -39,25 +55,17 @@
       </p>
     </div>
     {#if ondelete}
-      <div
-        role="button"
-        tabindex="0"
+      <button
+        type="button"
         onclick={(e) => {
           e.stopPropagation();
           ondelete?.();
-        }}
-        onkeydown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            e.stopPropagation();
-            ondelete?.();
-          }
         }}
         class="cursor-pointer text-slate-600 opacity-0 transition hover:text-rose-400 group-hover:opacity-100"
         aria-label="Delete session"
       >
         <X class="h-4 w-4" />
-      </div>
+      </button>
     {/if}
   </div>
-</button>
+</div>
