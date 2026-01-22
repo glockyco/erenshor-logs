@@ -136,6 +136,20 @@ Follow **shadcn/ui conventions** even before using shadcn components:
 Default port **38729** (configurable via BepInEx config). This port was chosen
 as a random high port unlikely to conflict with other services.
 
+### Session Lifecycle (Mod)
+Sessions start **lazily** when the first combat event occurs rather than
+waiting for combat state confirmation. This ensures all events are captured,
+including the first attack which was historically lost.
+
+**Timeout Behavior**: Sessions awaiting confirmation timeout after 1 second.
+This prevents false positives from non-combat events while trusting the game's
+combat state determination. Confirmed sessions proceed normally with no timeout.
+
+**Environmental Damage**: Does not trigger session creation as it is not combat.
+Fall damage and other environmental sources are logged but do not start sessions.
+
+The `CheckForTrueCombat` hook confirms combat state rather than initiating it.
+
 ## Available Skills
 
 Load these for specialized guidance:
