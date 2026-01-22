@@ -4,7 +4,14 @@ using ErenshorLogs.Logging;
 namespace ErenshorLogs.Session;
 
 /// <summary>
-/// Manages combat session lifecycle, emitting events on state transitions.
+/// Manages combat session lifecycle with lazy session creation.
+///
+/// Sessions start when the first combat event occurs (lazy start) rather than
+/// waiting for the game's combat state confirmation. This ensures all events,
+/// including the first attack, are captured within a session context.
+///
+/// Unconfirmed sessions timeout after 1 second and are automatically cleaned up
+/// to prevent false positives from non-combat events.
 /// </summary>
 public sealed class SessionManager : ISessionManager
 {
@@ -15,6 +22,18 @@ public sealed class SessionManager : ISessionManager
 
   private bool _inCombat;
   private CombatSession? _currentSession;
+
+  /// <summary>
+  /// Timeout duration for pending sessions awaiting combat confirmation.
+  /// If CheckForTrueCombat doesn't confirm within this time, session is ended.
+  /// </summary>
+  private const float PENDING_SESSION_TIMEOUT_SECONDS = 1.0f;
+
+  /// <summary>
+  /// Unity Time.time when pending session was created.
+  /// Null when session is confirmed or no session exists.
+  /// </summary>
+  private float? _pendingSessionStartTime;
 
   /// <inheritdoc />
   public CombatSession? CurrentSession => _currentSession;
@@ -49,24 +68,86 @@ public sealed class SessionManager : ISessionManager
   }
 
   /// <inheritdoc />
-  public void OnCombatStateChanged(bool inCombat)
+  public void EnsureSessionStarted(EventType eventType)
   {
-    if (inCombat == _inCombat)
+    // Don't start sessions for environmental damage (fall damage, etc.)
+    if (eventType == EventType.DamageEnvironmental)
       return;
 
-    _inCombat = inCombat;
-    _log?.Invoke(
-      LogLevel.Debug,
-      $"Combat state changed: {(inCombat ? "entering combat" : "exiting combat")}"
-    );
+    // Idempotent - session already exists
+    if (_currentSession != null)
+      return;
 
+    _log?.Invoke(LogLevel.Debug, "Starting session from combat event (lazy start)");
+
+    StartSession();
+
+    // Start timeout timer - will be cleared when combat state confirms
+    _pendingSessionStartTime = UnityEngine.Time.time;
+
+    // Emit CombatStart immediately for clean event ordering
+    EmitCombatEvent(EventType.CombatStart);
+  }
+
+  /// <inheritdoc />
+  public void CheckPendingSessionTimeout(float currentTime)
+  {
+    // No pending session to check
+    if (_pendingSessionStartTime == null)
+      return;
+
+    // Session doesn't exist anymore (shouldn't happen, defensive)
+    if (_currentSession == null)
+    {
+      _pendingSessionStartTime = null;
+      return;
+    }
+
+    // Check if timeout elapsed
+    float elapsed = currentTime - _pendingSessionStartTime.Value;
+    if (elapsed >= PENDING_SESSION_TIMEOUT_SECONDS)
+    {
+      _log?.Invoke(
+        LogLevel.Warning,
+        $"Session {_currentSession.Id} timed out without combat confirmation, ending"
+      );
+
+      _pendingSessionStartTime = null;
+      EndSession();
+    }
+  }
+
+  /// <inheritdoc />
+  public void OnCombatStateChanged(bool inCombat)
+  {
     if (inCombat)
     {
-      StartSession();
+      // Create session if it doesn't exist (shouldn't happen with lazy start)
+      if (_currentSession == null)
+      {
+        _log?.Invoke(LogLevel.Warning, "Session started from combat state (expected lazy start)");
+        StartSession();
+        EmitCombatEvent(EventType.CombatStart);
+      }
+      else
+      {
+        // Session exists (lazy start) - this is the confirmation
+        _log?.Invoke(LogLevel.Debug, "Combat state confirmed lazy-started session");
+      }
+
+      // Clear pending timeout - session is confirmed
+      _pendingSessionStartTime = null;
+      _inCombat = true;
     }
     else
     {
-      EndSession();
+      // Combat ended - clean up session if exists
+      if (_currentSession != null)
+      {
+        _inCombat = false;
+        _pendingSessionStartTime = null;
+        EndSession();
+      }
     }
   }
 
@@ -77,7 +158,6 @@ public sealed class SessionManager : ISessionManager
 
     _log?.Invoke(LogLevel.Info, $"Combat session started: {_currentSession.Id}");
 
-    EmitCombatEvent(EventType.CombatStart);
     SessionStarted?.Invoke(_currentSession);
   }
 
