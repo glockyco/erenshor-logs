@@ -1,12 +1,13 @@
 // Session state management with localStorage persistence
 // Uses Svelte 5 runes for reactive state
 
-import type { Session } from "$lib/types/session";
-import type { SessionInfo } from "$lib/types/protocol";
-import type { CombatEvent } from "$lib/types/events";
+import { z } from "zod";
 import { SvelteMap } from "svelte/reactivity";
-import { calculateSessionStats } from "$lib/services/combat-analyzer";
+import type { Session, SessionInfo, CombatEvent } from "$lib/types";
+import { StoredSessionsSchema } from "$lib/types/schemas";
+import { calculateSessionStats } from "$lib/services";
 import { STORAGE_KEYS } from "$lib/utils/constants";
+import { loadFromStorage, saveToStorage, removeFromStorage } from "$lib/utils/storage";
 
 // State
 export const sessions = new SvelteMap<string, Session>();
@@ -28,47 +29,33 @@ export const activeSessionStats = $derived.by(() => {
   return calculateSessionStats(activeSession.events, durationMs);
 });
 
-// SSR-safe initialization from localStorage
-if (typeof window !== "undefined") {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEYS.SESSIONS);
-    if (stored) {
-      const parsed: Array<[string, Session]> = JSON.parse(stored);
-      parsed.forEach(([id, session]) => {
-        sessions.set(id, session);
-      });
+const ACTIVE_SESSION_KEY = `${STORAGE_KEYS.SESSIONS}-active`;
 
-      // Validate activeSessionId exists
-      const storedActiveId = localStorage.getItem(`${STORAGE_KEYS.SESSIONS}-active`);
-      if (storedActiveId && sessions.has(storedActiveId)) {
-        activeSessionId = storedActiveId;
-      }
-    }
-  } catch (error) {
-    console.error("Failed to load sessions from localStorage:", error);
+// SSR-safe initialization from localStorage
+const storedSessions = loadFromStorage(STORAGE_KEYS.SESSIONS, StoredSessionsSchema);
+if (storedSessions) {
+  storedSessions.forEach(([id, session]) => {
+    sessions.set(id, session);
+  });
+
+  // Validate activeSessionId exists
+  const storedActiveId = loadFromStorage(ACTIVE_SESSION_KEY, z.string());
+  if (storedActiveId && sessions.has(storedActiveId)) {
+    activeSessionId = storedActiveId;
   }
 }
 
 // Persist to localStorage on changes
 $effect(() => {
-  if (typeof window === "undefined") return;
-
-  try {
-    const serialized = JSON.stringify(Array.from(sessions.entries()));
-    localStorage.setItem(STORAGE_KEYS.SESSIONS, serialized);
-  } catch (error) {
-    console.error("Failed to save sessions to localStorage:", error);
-  }
+  saveToStorage(STORAGE_KEYS.SESSIONS, Array.from(sessions.entries()));
 });
 
 // Persist active session ID separately
 $effect(() => {
-  if (typeof window === "undefined") return;
-
   if (activeSessionId) {
-    localStorage.setItem(`${STORAGE_KEYS.SESSIONS}-active`, activeSessionId);
+    saveToStorage(ACTIVE_SESSION_KEY, activeSessionId);
   } else {
-    localStorage.removeItem(`${STORAGE_KEYS.SESSIONS}-active`);
+    removeFromStorage(ACTIVE_SESSION_KEY);
   }
 });
 
