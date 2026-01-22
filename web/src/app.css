@@ -15,4 +15,17 @@
   /* Custom glow effects for Cyberpunk theme */
   --shadow-glow-cyan: 0 0 20px rgb(6 182 212 / 0.5);
   --shadow-glow-cyan-lg: 0 0 30px rgb(6 182 212 / 0.6);
+
+  /* Custom animations */
+  --animate-pulse-slow: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-slow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }

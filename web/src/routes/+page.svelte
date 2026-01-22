@@ -1,14 +1,19 @@
 <script lang="ts">
+  import { fade } from "svelte/transition";
   import ResponsiveLayout from "$lib/components/layout/ResponsiveLayout.svelte";
   import SessionList from "$lib/components/session/SessionList.connected.svelte";
   import SessionStatsPanel from "$lib/components/dashboard/SessionStatsPanel.svelte";
   import ActorBreakdownTable from "$lib/components/dashboard/ActorBreakdownTable.svelte";
+  import DashboardPreview from "$lib/components/empty/DashboardPreview.svelte";
   import Card from "$lib/components/ui/Card.svelte";
 
-  import { activeSession, activeSessionStats } from "$lib/state/sessions.svelte";
+  import { sessions, activeSession, activeSessionStats } from "$lib/state/sessions.svelte";
   import { sortBy, sortDirection, setSortBy, setSortDirection } from "$lib/state/ui.svelte";
   import { now, subscribeToClock } from "$lib/state/clock.svelte";
   import type { SortBy } from "$lib/types";
+
+  // Check if any sessions exist
+  const hasSessions = $derived(sessions.size > 0);
 
   // Active session
   const session = $derived(activeSession.value);
@@ -71,29 +76,39 @@
   }
 </script>
 
-<ResponsiveLayout>
-  {#snippet sidebar()}
-    <SessionList />
-  {/snippet}
+{#if !hasSessions}
+  <!-- Full-width preview when no sessions exist -->
+  <div transition:fade={{ duration: 300 }}>
+    <DashboardPreview />
+  </div>
+{:else}
+  <!-- Dashboard layout with sidebar when sessions exist -->
+  <div transition:fade={{ duration: 300 }}>
+    <ResponsiveLayout>
+      {#snippet sidebar()}
+        <SessionList />
+      {/snippet}
 
-  {#snippet main()}
-    {#if session}
-      <div class="space-y-6 p-6">
-        <!-- Session Stats Panel -->
-        <SessionStatsPanel {stats} {isLive} {duration} />
+      {#snippet main()}
+        {#if session}
+          <div class="space-y-6 p-6">
+            <!-- Session Stats Panel -->
+            <SessionStatsPanel {stats} {isLive} {duration} />
 
-        <!-- Actor Breakdown Table -->
-        {#if stats && sortedActors.length > 0}
-          <Card title="Actor Breakdown">
-            <ActorBreakdownTable
-              actors={sortedActors}
-              sortBy={sortBy.value}
-              sortDirection={sortDirection.value}
-              onSort={handleSort}
-            />
-          </Card>
+            <!-- Actor Breakdown Table -->
+            {#if stats && sortedActors.length > 0}
+              <Card title="Actor Breakdown">
+                <ActorBreakdownTable
+                  actors={sortedActors}
+                  sortBy={sortBy.value}
+                  sortDirection={sortDirection.value}
+                  onSort={handleSort}
+                />
+              </Card>
+            {/if}
+          </div>
         {/if}
-      </div>
-    {/if}
-  {/snippet}
-</ResponsiveLayout>
+      {/snippet}
+    </ResponsiveLayout>
+  </div>
+{/if}
