@@ -32,3 +32,6 @@ export {
   createLongSession,
   resetSessionCounter,
 } from "./sessions";
+
+// Stats factories
+export { createActorStats, createSessionStats, createAbilityStats } from "./stats";
