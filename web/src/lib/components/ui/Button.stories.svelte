@@ -1,6 +1,7 @@
 <script module>
   import { defineMeta } from "@storybook/addon-svelte-csf";
   import Button from "./Button.svelte";
+  import { X, Trash2 } from "@lucide/svelte";
 
   const { Story } = defineMeta({
     title: "UI/Button",
@@ -82,6 +83,39 @@
       <Button variant="primary">Primary</Button>
       <Button variant="ghost">Ghost</Button>
       <Button variant="danger">Danger</Button>
+    </div>
+  {/snippet}
+</Story>
+
+<Story name="Submit Button">
+  {#snippet template(_args)}
+    <form onsubmit={(e) => e.preventDefault()}>
+      <div class="flex items-center gap-4">
+        <Button type="button" variant="ghost">Cancel</Button>
+        <Button type="submit" variant="primary">Submit Form</Button>
+      </div>
+    </form>
+  {/snippet}
+</Story>
+
+<Story name="With ARIA Label">
+  {#snippet template(_args)}
+    <div class="flex items-center gap-4">
+      <Button variant="ghost" aria-label="Close dialog">
+        <X class="h-4 w-4" />
+      </Button>
+      <Button variant="danger" aria-label="Delete item">
+        <Trash2 class="h-4 w-4" />
+      </Button>
+    </div>
+  {/snippet}
+</Story>
+
+<Story name="With Custom Classes">
+  {#snippet template(_args)}
+    <div class="space-y-4">
+      <Button class="w-full" variant="primary">Full Width Button</Button>
+      <Button class="w-32" variant="default">Fixed Width</Button>
     </div>
   {/snippet}
 </Story>

@@ -1,15 +1,22 @@
 <script lang="ts">
   import { clsx } from "clsx";
+  import type { HTMLButtonAttributes } from "svelte/elements";
 
-  interface Props {
+  interface Props extends HTMLButtonAttributes {
     variant?: "primary" | "default" | "ghost" | "danger";
     size?: "sm" | "md" | "lg";
-    disabled?: boolean;
-    onclick?: () => void;
     children: import("svelte").Snippet;
   }
 
-  let { variant = "default", size = "md", disabled = false, onclick, children }: Props = $props();
+  let {
+    variant = "default",
+    size = "md",
+    type = "button",
+    disabled = false,
+    class: className,
+    children,
+    ...restProps
+  }: Props = $props();
 
   const classes = $derived(
     clsx(
@@ -30,11 +37,14 @@
       variant === "danger" && "bg-red-500 text-white hover:bg-red-600",
 
       // Disabled state
-      disabled && "opacity-50 cursor-not-allowed pointer-events-none"
+      disabled && "opacity-50 cursor-not-allowed pointer-events-none",
+
+      // Custom classes from caller
+      className
     )
   );
 </script>
 
-<button class={classes} {disabled} {onclick}>
+<button {type} class={classes} {disabled} {...restProps}>
   {@render children()}
 </button>
