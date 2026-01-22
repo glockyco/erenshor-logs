@@ -68,6 +68,36 @@ Prioritize accuracy over agreement. Avoid sycophantic behavior.
 7. **Atomic Commits**: One concept per commit. Conventional commits format.
 8. **Fix All Errors**: Don't ignore errors discovered during testing.
 9. **Modern Dependencies**: Use latest stable versions.
+10. **Clean, Robust, Maintainable**: Strive for the highest quality standards.
+
+## Quality Standards
+
+All code must be **clean**, **robust**, and **maintainable**. No shortcuts.
+
+### Component Design (Web)
+- **Testable in isolation**: Components must work in Storybook without global state side effects
+- **Props over state access**: Use callback props; avoid direct global state mutation in components
+- **Pure presentation**: Separate presentation components from `.connected.svelte` wrappers that bind to state
+- **Required props**: No fallbacks to global state that hide missing data
+- **Callback props**: All actions (delete, select, etc.) should be callbacks that can be intercepted in tests
+
+### Accessibility (a11y)
+- **Semantic HTML**: Use proper elements (`<button>`, `<ul>/<li>`, `<dl>/<dt>/<dd>`)
+- **ARIA attributes**: All interactive elements must have proper roles, labels, and states
+- **Keyboard navigation**: All interactive elements must be keyboard accessible
+- **Focus management**: Visible focus indicators, logical tab order
+- **Screen readers**: Decorative elements must have `aria-hidden="true"`
+
+### Type Safety
+- **No `any` types**: All data must be properly typed
+- **Mock data factories**: Use typed factory functions in `src/lib/testing/`, not inline objects with JSDoc
+- **Zod validation**: Leverage existing schemas for type safety
+
+### Testing & Storybook
+- **Story coverage**: Every component variant must have a story
+- **Mock isolation**: Stories must not depend on or mutate global state
+- **Factory functions**: Use `$lib/testing` factories for all mock data
+- **Connected wrappers**: Production components use `.connected.svelte` wrappers that bind to global state
 
 ## Project Constraints
 
