@@ -3,7 +3,7 @@
   import DashboardPreview from "./DashboardPreview.svelte";
 
   const { Story } = defineMeta({
-    title: "Empty States/DashboardPreview",
+    title: "Features/DashboardPreview",
     component: DashboardPreview,
     tags: ["autodocs"],
   });

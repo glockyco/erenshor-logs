@@ -3,7 +3,7 @@
   import NoSessions from "./NoSessions.svelte";
 
   const { Story } = defineMeta({
-    title: "Empty/NoSessions",
+    title: "Empty States/NoSessions",
     component: NoSessions,
     tags: ["autodocs"],
   });

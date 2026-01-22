@@ -3,7 +3,7 @@
   import StatBlock from "./StatBlock.svelte";
 
   const { Story } = defineMeta({
-    title: "UI/StatBlock",
+    title: "Data Display/StatBlock",
     component: StatBlock,
     tags: ["autodocs"],
   });

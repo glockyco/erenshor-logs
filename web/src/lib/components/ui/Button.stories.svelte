@@ -4,7 +4,7 @@
   import { X, Trash2 } from "@lucide/svelte";
 
   const { Story } = defineMeta({
-    title: "UI/Button",
+    title: "Foundation/Button",
     component: Button,
     tags: ["autodocs"],
     argTypes: {

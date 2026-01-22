@@ -62,7 +62,7 @@
   const singleActor = [mockActors[0]];
 
   const { Story } = defineMeta({
-    title: "Dashboard/ActorBreakdownTable",
+    title: "Data Display/ActorBreakdownTable",
     component: ActorBreakdownTable,
     tags: ["autodocs"],
   });

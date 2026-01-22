@@ -14,7 +14,7 @@
   });
 
   const { Story } = defineMeta({
-    title: "Session/SessionCard",
+    title: "Features/SessionCard",
     component: SessionCard,
     tags: ["autodocs"],
   });

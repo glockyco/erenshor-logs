@@ -26,7 +26,7 @@
   const noop = () => {};
 
   const { Story } = defineMeta({
-    title: "Session/SessionList",
+    title: "Features/SessionList",
     component: SessionList,
     tags: ["autodocs"],
   });

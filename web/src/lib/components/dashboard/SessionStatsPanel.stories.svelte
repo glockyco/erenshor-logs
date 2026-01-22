@@ -55,7 +55,7 @@
   const lowStats = calculateSessionStats(lowSession.events, lowDuration);
 
   const { Story } = defineMeta({
-    title: "Dashboard/SessionStatsPanel",
+    title: "Data Display/SessionStatsPanel",
     component: SessionStatsPanel,
     tags: ["autodocs"],
   });

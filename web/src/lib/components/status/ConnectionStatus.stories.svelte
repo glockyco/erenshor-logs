@@ -3,7 +3,7 @@
   import ConnectionStatus from "./ConnectionStatus.svelte";
 
   const { Story } = defineMeta({
-    title: "Status/ConnectionStatus",
+    title: "Features/ConnectionStatus",
     component: ConnectionStatus,
     tags: ["autodocs"],
   });
