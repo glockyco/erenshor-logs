@@ -33,10 +33,10 @@
   role="button"
   tabindex="0"
   class={clsx(
-    "group relative w-full rounded-lg border bg-slate-900 p-4 text-left transition-all cursor-pointer",
+    "group relative w-full rounded-lg border p-4 text-left transition-all cursor-pointer",
     isActive
-      ? "border-cyan-500/50 shadow-[0_0_20px_rgb(6_182_212_/_0.3)]"
-      : "border-slate-700 hover:border-slate-600"
+      ? "border-cyan-400 bg-slate-800"
+      : "border-slate-700 bg-slate-900 hover:border-slate-600"
   )}
   {onclick}
   onkeydown={(e) => {
