@@ -37,6 +37,9 @@ dotnet test tests/ErenshorLogs.Tests  # Run tests
 # Pre-commit
 pre-commit install                    # Install git hooks
 pre-commit run --all-files            # Run all checks
+
+# Storybook (component development)
+cd web && pnpm storybook              # Dev server (port 6006)
 ```
 
 ## Collaboration Expectations
@@ -81,8 +84,12 @@ System.Text.Json fails at runtime in Unity's Mono environment with VTable
 errors. This is non-negotiable.
 
 ### State Management (Web)
-Use **Svelte 5 runes** (`$state`, `$derived`, `$effect`) in `.svelte.ts` files.
-Traditional Svelte stores are deprecated. Never create writable/readable stores.
+Use **Svelte 5 runes** in `.svelte.ts` files. Traditional stores are deprecated.
+
+**Module-level constraints:**
+- Export state/derived via getter objects (`.value` pattern)
+- Use `$effect.root()` for persistence, init from components
+- See `svelte-web-development` skill for patterns
 
 ### Visual Design
 **Cyberpunk Analyst** theme - dark slate backgrounds with cyan accents, neon
@@ -112,6 +119,7 @@ Load these for specialized guidance:
 | `creating-issues` | Creating GitHub issues |
 | `csharp-conventions` | Writing C# code, especially DI or JSON |
 | `debugging` | Troubleshooting mod or web app issues |
+| `storybook` | Creating or updating component stories |
 | `svelte-web-development` | Working on web app structure or state |
 | `ui-design-system` | Building UI components or styling screens |
 | `writing-skills` | Creating new agent skills for this project |
