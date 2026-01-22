@@ -1,26 +1,24 @@
-// Barrel export for all type definitions
+// Barrel export for all types and schemas
 
+export * from "./events";
+export * from "./protocol";
+export * from "./session";
+
+// Additional types from schemas not covered by domain files
 export type {
-  EventType,
-  ActorType,
-  DamageType,
-  AbilityType,
-  ActorRef,
-  AbilityRef,
-  EffectRef,
-  EventFlags,
-  CombatEvent,
-  PlayerInfo,
-} from "./events";
+  ConnectionError,
+  ConnectionErrorCode,
+  ConnectionStatus,
+  SortBy,
+  SortDirection,
+  UIPreferences,
+} from "./schemas";
 
-export type {
-  SessionInfo,
-  HandshakeMessage,
-  SessionStartMessage,
-  SessionEndMessage,
-  CombatEventsMessage,
-  WebSocketMessage,
-  ParseError,
-} from "./protocol";
-
-export type { Session, SessionStats, ActorStats, AbilityStats } from "./session";
+export {
+  ConnectionErrorSchema,
+  ConnectionErrorCodeSchema,
+  ConnectionStatusSchema,
+  SortBySchema,
+  SortDirectionSchema,
+  UIPreferencesSchema,
+} from "./schemas";
