@@ -8,6 +8,7 @@ import { StoredSessionsSchema } from "$lib/types/schemas";
 import { calculateSessionStats } from "$lib/services";
 import { STORAGE_KEYS } from "$lib/utils/constants";
 import { loadFromStorage, saveToStorage, removeFromStorage } from "$lib/utils/storage";
+import { now } from "./clock.svelte";
 
 // State
 export const sessions = new SvelteMap<string, Session>();
@@ -39,7 +40,7 @@ const _activeSessionStats = $derived.by(() => {
 
   const durationMs = _activeSession.endTime
     ? _activeSession.endTime - _activeSession.startTime
-    : Date.now() - _activeSession.startTime;
+    : now.value - _activeSession.startTime;
 
   return calculateSessionStats(_activeSession.events, durationMs);
 });
