@@ -1,9 +1,10 @@
 // Pure functions for aggregating combat event statistics
 
-import type { CombatEvent, EventType } from "$lib/types/events";
-import type { SessionStats, ActorStats, AbilityStats } from "$lib/types/session";
+import type { CombatEvent, EventType, SessionStats, ActorStats, AbilityStats } from "$lib/types";
 
-const DAMAGE_EVENTS: EventType[] = [
+const MS_PER_SECOND = 1000;
+
+const DAMAGE_EVENTS: Set<EventType> = new Set([
   "damage_physical",
   "damage_magic",
   "damage_melee",
@@ -14,16 +15,29 @@ const DAMAGE_EVENTS: EventType[] = [
   "damage_pet",
   "damage_reflect",
   "damage_environmental",
-];
+]);
 
-const HEAL_EVENTS: EventType[] = ["heal_spell", "heal_hot", "heal_lifesteal", "heal_regen"];
+const HEAL_EVENTS: Set<EventType> = new Set([
+  "heal_spell",
+  "heal_hot",
+  "heal_lifesteal",
+  "heal_regen",
+]);
 
 function isDamageEvent(eventType: EventType): boolean {
-  return DAMAGE_EVENTS.includes(eventType);
+  return DAMAGE_EVENTS.has(eventType);
 }
 
 function isHealEvent(eventType: EventType): boolean {
-  return HEAL_EVENTS.includes(eventType);
+  return HEAL_EVENTS.has(eventType);
+}
+
+function calculateRate(total: number, durationMs: number): number {
+  return durationMs > 0 ? (total / durationMs) * MS_PER_SECOND : 0;
+}
+
+function calculatePercentage(part: number, whole: number): number {
+  return whole > 0 ? (part / whole) * 100 : 0;
 }
 
 /**
@@ -38,8 +52,8 @@ export function calculateSessionStats(events: CombatEvent[], durationMs: number)
     .filter((e) => isHealEvent(e.eventType))
     .reduce((sum, e) => sum + (e.amount ?? 0), 0);
 
-  const dps = durationMs > 0 ? (totalDamage / durationMs) * 1000 : 0;
-  const hps = durationMs > 0 ? (totalHealing / durationMs) * 1000 : 0;
+  const dps = calculateRate(totalDamage, durationMs);
+  const hps = calculateRate(totalHealing, durationMs);
 
   const actorBreakdown = aggregateByActor(events, durationMs);
 
@@ -87,23 +101,21 @@ export function aggregateByActor(events: CombatEvent[], durationMs: number): Act
     }
   }
 
-  // Calculate per-actor DPS/HPS
-  for (const actor of actorMap.values()) {
-    actor.dps = durationMs > 0 ? (actor.totalDamage / durationMs) * 1000 : 0;
-    actor.hps = durationMs > 0 ? (actor.totalHealing / durationMs) * 1000 : 0;
-  }
+  // Calculate totals for percentage calculation
+  const actors = Array.from(actorMap.values());
+  const totalDamage = actors.reduce((sum, a) => sum + a.totalDamage, 0);
+  const totalHealing = actors.reduce((sum, a) => sum + a.totalHealing, 0);
 
-  // Calculate percentages
-  const totalDamage = Array.from(actorMap.values()).reduce((sum, a) => sum + a.totalDamage, 0);
-  const totalHealing = Array.from(actorMap.values()).reduce((sum, a) => sum + a.totalHealing, 0);
-
-  for (const actor of actorMap.values()) {
-    actor.percentOfTotalDamage = totalDamage > 0 ? (actor.totalDamage / totalDamage) * 100 : 0;
-    actor.percentOfTotalHealing = totalHealing > 0 ? (actor.totalHealing / totalHealing) * 100 : 0;
+  // Calculate per-actor DPS/HPS and percentages
+  for (const actor of actors) {
+    actor.dps = calculateRate(actor.totalDamage, durationMs);
+    actor.hps = calculateRate(actor.totalHealing, durationMs);
+    actor.percentOfTotalDamage = calculatePercentage(actor.totalDamage, totalDamage);
+    actor.percentOfTotalHealing = calculatePercentage(actor.totalHealing, totalHealing);
     actor.abilityBreakdown = aggregateByAbility(events, actor.actorId);
   }
 
-  return Array.from(actorMap.values());
+  return actors;
 }
 
 /**
@@ -153,13 +165,14 @@ export function aggregateByAbility(events: CombatEvent[], actorId: string): Abil
   }
 
   // Calculate averages and rates
-  for (const ability of abilityMap.values()) {
+  const abilities = Array.from(abilityMap.values());
+  for (const ability of abilities) {
     const totalAttempts = ability.hits + ability.misses;
     ability.avgDamage = ability.hits > 0 ? ability.damage / ability.hits : 0;
     ability.avgHealing = ability.hits > 0 ? ability.healing / ability.hits : 0;
-    ability.critRate = ability.hits > 0 ? (ability.crits / ability.hits) * 100 : 0;
-    ability.missRate = totalAttempts > 0 ? (ability.misses / totalAttempts) * 100 : 0;
+    ability.critRate = calculatePercentage(ability.crits, ability.hits);
+    ability.missRate = calculatePercentage(ability.misses, totalAttempts);
   }
 
-  return Array.from(abilityMap.values());
+  return abilities;
 }
