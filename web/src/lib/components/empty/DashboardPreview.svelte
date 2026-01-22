@@ -63,8 +63,12 @@
       <Card title="Actor Breakdown">
         <ActorBreakdownTable
           actors={previewActors}
+          activeTab="damageDealt"
+          factionFilter="all"
           sortBy="dps"
           sortDirection="desc"
+          onTabChange={() => {}}
+          onFactionChange={() => {}}
           onSort={() => {}}
         />
       </Card>
