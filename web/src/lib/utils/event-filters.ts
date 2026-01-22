@@ -1,37 +1,22 @@
 // Event filtering utilities for bidirectional combat analytics
 // Used to filter events by perspective (dealt vs taken) and faction
 
-import type { CombatEvent, EventType } from "$lib/types";
+import type { CombatEvent } from "$lib/types";
 import { getActorFaction } from "./actor-utils";
-
-// Event type classification
-const DAMAGE_EVENTS: Set<EventType> = new Set([
-  "damagePhysical",
-  "damageMagic",
-  "damageMelee",
-  "damageSkill",
-  "damageSpell",
-  "damageDot",
-  "damageProc",
-  "damagePet",
-  "damageReflect",
-  "damageEnvironmental",
-]);
-
-const HEAL_EVENTS: Set<EventType> = new Set(["healSpell", "healHot", "healLifesteal", "healRegen"]);
+import { isDamageEventType, isHealEventType } from "./event-constants";
 
 /**
  * Check if an event type represents damage.
  */
-export function isDamageEvent(eventType: EventType): boolean {
-  return DAMAGE_EVENTS.has(eventType);
+export function isDamageEvent(event: CombatEvent): boolean {
+  return isDamageEventType(event.eventType);
 }
 
 /**
  * Check if an event type represents healing.
  */
-export function isHealEvent(eventType: EventType): boolean {
-  return HEAL_EVENTS.has(eventType);
+export function isHealEvent(event: CombatEvent): boolean {
+  return isHealEventType(event.eventType);
 }
 
 /**
@@ -49,7 +34,7 @@ export function isPlayerPerspectiveEvent(event: CombatEvent): boolean {
  */
 export function isDamageDealtByPlayer(event: CombatEvent): boolean {
   return (
-    isDamageEvent(event.eventType) &&
+    isDamageEvent(event) &&
     getActorFaction(event.source) === "friendly" &&
     getActorFaction(event.target) === "hostile"
   );
@@ -60,7 +45,7 @@ export function isDamageDealtByPlayer(event: CombatEvent): boolean {
  */
 export function isDamageTakenByPlayer(event: CombatEvent): boolean {
   return (
-    isDamageEvent(event.eventType) &&
+    isDamageEvent(event) &&
     getActorFaction(event.source) === "hostile" &&
     getActorFaction(event.target) === "friendly"
   );
@@ -70,12 +55,12 @@ export function isDamageTakenByPlayer(event: CombatEvent): boolean {
  * Check if event represents healing done BY player faction.
  */
 export function isHealingDoneByPlayer(event: CombatEvent): boolean {
-  return isHealEvent(event.eventType) && getActorFaction(event.source) === "friendly";
+  return isHealEvent(event) && getActorFaction(event.source) === "friendly";
 }
 
 /**
  * Check if event represents healing received BY player faction.
  */
 export function isHealingReceivedByPlayer(event: CombatEvent): boolean {
-  return isHealEvent(event.eventType) && getActorFaction(event.target) === "friendly";
+  return isHealEvent(event) && getActorFaction(event.target) === "friendly";
 }

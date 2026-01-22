@@ -1,37 +1,15 @@
 // Pure functions for aggregating combat event statistics
 
-import type { CombatEvent, EventType, SessionStats, ActorStats, AbilityStats } from "$lib/types";
+import type { CombatEvent, SessionStats, ActorStats, AbilityStats } from "$lib/types";
 import {
   isDamageDealtByPlayer,
   isDamageTakenByPlayer,
   isHealingDoneByPlayer,
   isHealingReceivedByPlayer,
 } from "$lib/utils/event-filters";
+import { isDamageEventType, isHealEventType } from "$lib/utils/event-constants";
 
 const MS_PER_SECOND = 1000;
-
-const DAMAGE_EVENTS: Set<EventType> = new Set([
-  "damagePhysical",
-  "damageMagic",
-  "damageMelee",
-  "damageSkill",
-  "damageSpell",
-  "damageDot",
-  "damageProc",
-  "damagePet",
-  "damageReflect",
-  "damageEnvironmental",
-]);
-
-const HEAL_EVENTS: Set<EventType> = new Set(["healSpell", "healHot", "healLifesteal", "healRegen"]);
-
-function isDamageEvent(eventType: EventType): boolean {
-  return DAMAGE_EVENTS.has(eventType);
-}
-
-function isHealEvent(eventType: EventType): boolean {
-  return HEAL_EVENTS.has(eventType);
-}
 
 function calculateRate(total: number, durationMs: number): number {
   return durationMs > 0 ? (total / durationMs) * MS_PER_SECOND : 0;
@@ -153,9 +131,9 @@ export function aggregateByActor(events: CombatEvent[], durationMs: number): Act
     // Track damage/healing DEALT by source
     if (event.source && actorMap.has(event.source.id)) {
       const actor = actorMap.get(event.source.id)!;
-      if (isDamageEvent(event.eventType)) {
+      if (isDamageEventType(event.eventType)) {
         actor.totalDamage += event.amount ?? 0;
-      } else if (isHealEvent(event.eventType)) {
+      } else if (isHealEventType(event.eventType)) {
         actor.totalHealing += event.amount ?? 0;
       }
     }
@@ -163,7 +141,7 @@ export function aggregateByActor(events: CombatEvent[], durationMs: number): Act
     // Track damage/healing TAKEN by target
     if (event.target && actorMap.has(event.target.id)) {
       const actor = actorMap.get(event.target.id)!;
-      if (isDamageEvent(event.eventType)) {
+      if (isDamageEventType(event.eventType)) {
         const mitigated = event.mitigated ?? 0;
         const isMiss = event.flags?.missed ?? false;
 
@@ -181,7 +159,7 @@ export function aggregateByActor(events: CombatEvent[], durationMs: number): Act
           actor.damageTaken += event.amount ?? 0;
           actor.totalMitigated += mitigated;
         }
-      } else if (isHealEvent(event.eventType)) {
+      } else if (isHealEventType(event.eventType)) {
         actor.healingReceived += event.amount ?? 0;
       }
     }
@@ -276,9 +254,9 @@ export function aggregateByAbility(
       ability.hits++;
       if (isCrit) ability.crits++;
 
-      if (isDamageEvent(event.eventType)) {
+      if (isDamageEventType(event.eventType)) {
         ability.damage += event.amount ?? 0;
-      } else if (isHealEvent(event.eventType)) {
+      } else if (isHealEventType(event.eventType)) {
         ability.healing += event.amount ?? 0;
       }
     }
