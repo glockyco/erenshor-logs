@@ -1,7 +1,13 @@
 <script lang="ts">
   import { X, Download } from "@lucide/svelte";
   import type { Session } from "$lib/types";
-  import { formatNumber, formatDps, formatDuration, formatTime } from "$lib/utils";
+  import {
+    formatNumber,
+    formatDps,
+    formatDuration,
+    formatTime,
+    getSessionEnemies,
+  } from "$lib/utils";
   import { calculateSessionStats } from "$lib/services";
 
   interface Props {
@@ -24,6 +30,9 @@
   const stats = $derived(calculateSessionStats(session.events, duration));
   const totalDamage = $derived(stats.totalDamage);
   const dps = $derived(stats.dps);
+
+  // Calculate enemy info
+  const enemyInfo = $derived(getSessionEnemies(session));
 </script>
 
 <div
@@ -44,14 +53,21 @@
   <!-- Timestamp -->
   <p class="text-xs text-stone-400">{formatTime(session.startTime)}</p>
 
-  <!-- Total Damage (Hero Number) -->
-  <p class="mt-1 font-mono text-2xl font-bold text-amber-500">
-    {formatNumber(totalDamage)}
+  <!-- Enemy Name (Hero) -->
+  <p class="mt-2 text-2xl font-bold text-stone-300">
+    {enemyInfo.primaryEnemy}
   </p>
 
-  <!-- DPS · Duration -->
-  <p class="mt-1 font-mono text-xs text-stone-500">
-    {formatDps(dps)} DPS · {formatDuration(duration)}
+  <!-- Enemy Count (if multiple) -->
+  {#if enemyInfo.totalEnemies > 1}
+    <p class="mt-1 text-xs text-stone-500">
+      +{enemyInfo.totalEnemies - 1} other enemies
+    </p>
+  {/if}
+
+  <!-- Stats Footer -->
+  <p class="mt-2 font-mono text-xs text-stone-500">
+    {formatNumber(totalDamage)} dmg · {formatDps(dps)} DPS · {formatDuration(duration)}
   </p>
 
   <!-- Action Buttons (appear on hover) -->
