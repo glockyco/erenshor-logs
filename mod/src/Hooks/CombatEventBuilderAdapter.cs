@@ -31,9 +31,10 @@ public sealed class CombatEventBuilderAdapter : ICombatEventBuilder
     Character? source,
     int amount,
     DamageType damageType,
+    AbilityRef? ability = null,
     EventFlags? flags = null
   )
   {
-    return _inner.CreateDamageEvent(eventType, target, source, amount, damageType, flags);
+    return _inner.CreateDamageEvent(eventType, target, source, amount, damageType, ability, flags);
   }
 }
