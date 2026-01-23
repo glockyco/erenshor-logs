@@ -67,7 +67,7 @@ public class SessionManagerTests
   }
 
   [Fact]
-  public void OnCombatStateChanged_ToFalse_EndsSession()
+  public void OnCombatStateChanged_ToFalse_DoesNotEndSessionImmediately()
   {
     var emitter = new FakeEventEmitter();
     var provider = new FakeGameVersionProvider();
@@ -76,12 +76,13 @@ public class SessionManagerTests
 
     manager.OnCombatStateChanged(false);
 
-    Assert.Null(manager.CurrentSession);
+    // Session should still exist (not ended immediately)
+    Assert.NotNull(manager.CurrentSession);
     Assert.False(manager.InCombat);
   }
 
   [Fact]
-  public void OnCombatStateChanged_ToFalse_EmitsCombatEndEvent()
+  public void OnCombatStateChanged_ToFalse_DoesNotEmitCombatEndImmediately()
   {
     var emitter = new FakeEventEmitter();
     var provider = new FakeGameVersionProvider();
@@ -91,12 +92,12 @@ public class SessionManagerTests
 
     manager.OnCombatStateChanged(false);
 
-    Assert.Single(emitter.EmittedEvents);
-    Assert.Equal(EventType.CombatEnd, emitter.EmittedEvents[0].EventType);
+    // No immediate combatEnd event - waits for inactivity timeout
+    Assert.Empty(emitter.EmittedEvents);
   }
 
   [Fact]
-  public void OnCombatStateChanged_ToFalse_RaisesSessionEndedEvent()
+  public void OnCombatStateChanged_ToFalse_DoesNotRaiseSessionEndedImmediately()
   {
     var emitter = new FakeEventEmitter();
     var provider = new FakeGameVersionProvider();
@@ -108,9 +109,9 @@ public class SessionManagerTests
 
     manager.OnCombatStateChanged(false);
 
-    Assert.NotNull(endedSession);
-    Assert.Same(startedSession, endedSession);
-    Assert.NotNull(endedSession!.EndTime);
+    // Session not ended immediately - waits for inactivity timeout
+    Assert.Null(endedSession);
+    Assert.Same(startedSession, manager.CurrentSession);
   }
 
   [Fact]
@@ -157,7 +158,7 @@ public class SessionManagerTests
   }
 
   [Fact]
-  public void MultipleTransitions_CreatesNewSessionEachTime()
+  public void MultipleTransitions_SessionPersistsAcrossCombatStateChanges()
   {
     var emitter = new FakeEventEmitter();
     var provider = new FakeGameVersionProvider();
@@ -166,11 +167,16 @@ public class SessionManagerTests
     manager.OnCombatStateChanged(true);
     var firstSessionId = manager.CurrentSession!.Id;
 
+    // Combat ends - but session continues (no immediate end)
     manager.OnCombatStateChanged(false);
+    Assert.NotNull(manager.CurrentSession);
+
+    // Combat starts again - session is reused (not ended)
     manager.OnCombatStateChanged(true);
     var secondSessionId = manager.CurrentSession!.Id;
 
-    Assert.NotEqual(firstSessionId, secondSessionId);
+    // Same session (inactivity timeout hasn't triggered without events)
+    Assert.Equal(firstSessionId, secondSessionId);
   }
 
   [Fact]
@@ -184,5 +190,41 @@ public class SessionManagerTests
     manager.OnCombatStateChanged(false);
 
     Assert.Empty(emitter.EmittedEvents);
+  }
+
+  [Fact]
+  public void CheckSessionTimeouts_SessionWithoutEvents_DoesNotTimeout()
+  {
+    var emitter = new FakeEventEmitter();
+    var provider = new FakeGameVersionProvider();
+    var manager = new SessionManager(emitter, provider, "0.1.0");
+
+    // Start session via combat state (no events, so no _lastEventTime)
+    manager.OnCombatStateChanged(true);
+
+    // Check at t=10s - session won't timeout without _lastEventTime
+    manager.CheckSessionTimeouts(10.0f);
+
+    // Session remains open (inactivity timeout requires events)
+    Assert.NotNull(manager.CurrentSession);
+  }
+
+  [Fact]
+  public void CheckSessionTimeouts_CombatEndDoesNotEndSessionImmediately()
+  {
+    var emitter = new FakeEventEmitter();
+    var provider = new FakeGameVersionProvider();
+    var manager = new SessionManager(emitter, provider, "0.1.0");
+
+    // Start session
+    manager.OnCombatStateChanged(true);
+    var startedSession = manager.CurrentSession;
+
+    // Combat ends - session continues (no immediate end)
+    manager.OnCombatStateChanged(false);
+
+    Assert.NotNull(manager.CurrentSession);
+    Assert.Same(startedSession, manager.CurrentSession);
+    Assert.False(manager.InCombat);
   }
 }

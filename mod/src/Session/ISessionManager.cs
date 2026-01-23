@@ -32,11 +32,11 @@ public interface ISessionManager
   void EnsureSessionStarted(EventType eventType);
 
   /// <summary>
-  /// Checks if pending session has timed out and ends it if needed.
+  /// Checks for session timeouts (both pending and inactivity) and ends sessions if needed.
   /// Should be called from Plugin.Update() with Time.time.
   /// </summary>
   /// <param name="currentTime">Current Unity Time.time value.</param>
-  void CheckPendingSessionTimeout(float currentTime);
+  void CheckSessionTimeouts(float currentTime);
 
   /// <summary>
   /// Raised when a new combat session starts.

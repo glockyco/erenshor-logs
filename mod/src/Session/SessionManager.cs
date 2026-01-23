@@ -31,10 +31,23 @@ public sealed class SessionManager : ISessionManager
   private const float PENDING_SESSION_TIMEOUT_SECONDS = 1.0f;
 
   /// <summary>
+  /// Timeout for active sessions with no events.
+  /// Sessions end after this duration of inactivity regardless of combat state.
+  /// Set to 5 seconds to capture final DoT ticks (which occur every 3 seconds).
+  /// </summary>
+  private const float INACTIVITY_TIMEOUT_SECONDS = 5.0f;
+
+  /// <summary>
   /// Unity Time.time when pending session was created.
   /// Null when session is confirmed or no session exists.
   /// </summary>
   private float? _pendingSessionStartTime;
+
+  /// <summary>
+  /// Unity Time.time of the last event added to this session.
+  /// Updated each time EnsureSessionStarted() is called.
+  /// </summary>
+  private float? _lastEventTime;
 
   /// <inheritdoc />
   public CombatSession? CurrentSession => _currentSession;
@@ -75,6 +88,9 @@ public sealed class SessionManager : ISessionManager
     if (eventType == EventType.DamageEnvironmental)
       return;
 
+    // Update last event time for inactivity tracking
+    _lastEventTime = UnityEngine.Time.time;
+
     // Idempotent - session already exists
     if (_currentSession != null)
       return;
@@ -91,30 +107,39 @@ public sealed class SessionManager : ISessionManager
   }
 
   /// <inheritdoc />
-  public void CheckPendingSessionTimeout(float currentTime)
+  public void CheckSessionTimeouts(float currentTime)
   {
-    // No pending session to check
-    if (_pendingSessionStartTime == null)
+    if (_currentSession == null)
       return;
 
-    // Session doesn't exist anymore (shouldn't happen, defensive)
-    if (_currentSession == null)
+    // Check 1: Pending session timeout (unconfirmed sessions only)
+    if (_pendingSessionStartTime != null)
     {
-      _pendingSessionStartTime = null;
-      return;
+      float pendingElapsed = currentTime - _pendingSessionStartTime.Value;
+      if (pendingElapsed >= PENDING_SESSION_TIMEOUT_SECONDS)
+      {
+        _log?.Invoke(
+          LogLevel.Warning,
+          $"Session {_currentSession.Id} timed out without combat confirmation"
+        );
+        EndSession();
+        return;
+      }
     }
 
-    // Check if timeout elapsed
-    float elapsed = currentTime - _pendingSessionStartTime.Value;
-    if (elapsed >= PENDING_SESSION_TIMEOUT_SECONDS)
+    // Check 2: Inactivity timeout (all sessions)
+    if (_lastEventTime != null)
     {
-      _log?.Invoke(
-        LogLevel.Warning,
-        $"Session {_currentSession.Id} timed out without combat confirmation, ending"
-      );
-
-      _pendingSessionStartTime = null;
-      EndSession();
+      float inactiveElapsed = currentTime - _lastEventTime.Value;
+      if (inactiveElapsed >= INACTIVITY_TIMEOUT_SECONDS)
+      {
+        _log?.Invoke(
+          LogLevel.Info,
+          $"Session {_currentSession.Id} ended after {inactiveElapsed:F1}s of inactivity"
+        );
+        EndSession();
+        return;
+      }
     }
   }
 
@@ -141,13 +166,12 @@ public sealed class SessionManager : ISessionManager
     }
     else
     {
-      // Combat ended - clean up session if exists
-      if (_currentSession != null)
-      {
-        _inCombat = false;
-        _pendingSessionStartTime = null;
-        EndSession();
-      }
+      // Combat ended by game state - don't end session immediately!
+      // Let inactivity timeout handle it to capture final DoT ticks
+      _inCombat = false;
+      _pendingSessionStartTime = null;
+
+      _log?.Invoke(LogLevel.Debug, "Combat state ended, session will close on inactivity");
     }
   }
 
@@ -175,7 +199,11 @@ public sealed class SessionManager : ISessionManager
 
     EmitCombatEvent(EventType.CombatEnd);
     SessionEnded?.Invoke(_currentSession);
+
+    // Clear all state
     _currentSession = null;
+    _lastEventTime = null;
+    _pendingSessionStartTime = null;
   }
 
   private void EmitCombatEvent(EventType eventType)

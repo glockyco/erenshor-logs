@@ -51,10 +51,10 @@ public sealed class Plugin : BaseUnityPlugin
       _broadcaster.Tick(UnityEngine.Time.deltaTime);
     }
 
-    // Check for pending session timeout
+    // Check for session timeouts (pending and inactivity)
     if (_sessionManager != null)
     {
-      _sessionManager.CheckPendingSessionTimeout(UnityEngine.Time.time);
+      _sessionManager.CheckSessionTimeouts(UnityEngine.Time.time);
     }
   }
 
