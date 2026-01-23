@@ -19,7 +19,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "cf-deploy": "wrangler deploy"
   },
   "lint-staged": {
     "*.{js,ts,svelte}": [
@@ -62,7 +63,8 @@
     "typescript": "^5.9.0",
     "typescript-eslint": "^8.53.0",
     "vite": "^7.3.0",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "wrangler": "^4.51.0"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",

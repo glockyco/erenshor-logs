@@ -48,6 +48,9 @@ __pycache__/
 # Game DLLs (not distributable - see mod/lib/README.md)
 mod/lib/*.dll
 
+# Deployed mod DLL (copied to web/static/mods/ during deployment)
+web/static/mods/*.dll
+
 # Temporary files
 *.tmp
 *.temp

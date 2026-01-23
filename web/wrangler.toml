@@ -1,0 +1,5 @@
+name = "erenshor-logs"
+compatibility_date = "2025-01-23"
+
+[assets]
+directory = "./build"

@@ -1,0 +1,3 @@
+# This directory will contain ErenshorLogs.dll during deployment
+# The DLL is copied here before building the web app
+# DLL files are gitignored
