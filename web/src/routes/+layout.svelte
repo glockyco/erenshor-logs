@@ -12,19 +12,22 @@
     appendEvents,
     initSessionsPersistence,
     initUiPersistence,
+    subscribeToClock,
   } from "$lib/state";
   import { untrack } from "svelte";
 
   let { children } = $props();
 
-  // Initialize state persistence
+  // Initialize state persistence and clock
   $effect(() => {
     const cleanupSessions = initSessionsPersistence();
     const cleanupUi = initUiPersistence();
+    const cleanupClock = subscribeToClock();
 
     return () => {
       cleanupSessions();
       cleanupUi();
+      cleanupClock();
     };
   });
 
