@@ -56,7 +56,9 @@
   });
 </script>
 
-<div class="min-h-screen bg-slate-950 text-slate-100">
+<div class="flex h-screen flex-col bg-slate-950 text-slate-100">
   <Header />
-  {@render children()}
+  <div class="flex-1 overflow-hidden">
+    {@render children()}
+  </div>
 </div>

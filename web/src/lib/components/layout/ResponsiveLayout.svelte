@@ -55,7 +55,7 @@
 </script>
 
 <!-- Mobile/Tablet: Tab navigation -->
-<div class="lg:hidden">
+<div class="h-full lg:hidden">
   <!-- svelte-ignore a11y_interactive_supports_focus -->
   <div
     class="flex border-b border-slate-800"
@@ -117,11 +117,11 @@
 </div>
 
 <!-- Desktop: Two-column layout -->
-<div class="hidden lg:grid lg:grid-cols-[320px_1fr] lg:gap-6 lg:p-6">
-  <aside class="self-start max-h-[calc(100vh-80px)] overflow-y-auto pr-3">
+<div class="hidden lg:grid lg:h-full lg:grid-cols-[320px_1fr] lg:grid-rows-[1fr] lg:gap-6 lg:p-6">
+  <aside class="h-full overflow-y-auto pr-3">
     {@render sidebar()}
   </aside>
-  <main class="max-h-[calc(100vh-80px)] overflow-y-auto">
+  <main class="h-full overflow-y-auto">
     {@render main()}
   </main>
 </div>

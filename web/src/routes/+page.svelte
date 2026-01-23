@@ -86,12 +86,12 @@
 
 {#if !hasSessions}
   <!-- Full-width preview when no sessions exist -->
-  <div transition:fade={{ duration: 300 }}>
+  <div class="h-full" transition:fade={{ duration: 300 }}>
     <DashboardPreview />
   </div>
 {:else}
   <!-- Dashboard layout with sidebar when sessions exist -->
-  <div transition:fade={{ duration: 300 }}>
+  <div class="h-full" transition:fade={{ duration: 300 }}>
     <ResponsiveLayout>
       {#snippet sidebar()}
         <SessionList />

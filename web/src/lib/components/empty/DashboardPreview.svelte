@@ -54,7 +54,7 @@
   const previewActors: ActorStats[] = previewStats.actorBreakdown;
 </script>
 
-<div class="relative min-h-[calc(100vh-80px)] p-6">
+<div class="relative h-full p-6">
   <!-- Ghost Dashboard (30% opacity, unclickable) -->
   <div class="pointer-events-none select-none opacity-30" aria-hidden="true">
     <div class="space-y-6">
