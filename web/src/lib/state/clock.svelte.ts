@@ -57,6 +57,13 @@ export function tickClock(): void {
 }
 
 /**
+ * Set clock to specific time. For testing only.
+ */
+export function setNow(timestamp: number): void {
+  state.now = timestamp;
+}
+
+/**
  * Reset clock state to initial values. For testing only.
  * Stops any running interval and resets subscriber count.
  */
