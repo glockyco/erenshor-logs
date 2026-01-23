@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { SessionStats } from "$lib/types";
-  import { formatDps, formatNumber, formatDuration, formatPercent } from "$lib/utils";
+  import { formatDps, formatNumber, formatDuration } from "$lib/utils";
 
   interface Props {
     stats: SessionStats | null;
@@ -60,8 +60,8 @@
         </div>
       </div>
 
-      <!-- Supporting Stats: 2-column Grid -->
-      <div class="grid grid-cols-2 gap-x-6 gap-y-4">
+      <!-- Supporting Stats: Single Row -->
+      <div class="grid grid-cols-4 gap-6">
         <div class="space-y-1">
           <div class="text-xs uppercase tracking-wider text-stone-400">Total Damage</div>
           <div class="text-base font-mono font-semibold text-stone-200">
@@ -84,13 +84,6 @@
         </div>
 
         <div class="space-y-1">
-          <div class="text-xs uppercase tracking-wider text-stone-400">Mitigation</div>
-          <div class="text-base font-mono font-semibold text-stone-200">
-            {formatPercent(stats.mitigationRate / 100)}
-          </div>
-        </div>
-
-        <div class="col-span-2 space-y-1">
           <div class="text-xs uppercase tracking-wider text-stone-400">Duration</div>
           <div class="text-base font-mono font-semibold text-stone-200">
             {formatDuration(duration)}
