@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Download, Upload } from "@lucide/svelte";
+  import { Download, Upload, Trash2 } from "@lucide/svelte";
   import SessionCardConnected from "./SessionCard.connected.svelte";
   import FileDropzone from "./FileDropzone.svelte";
   import {
@@ -86,8 +86,10 @@
         <button
           type="button"
           onclick={clearAllSessions}
-          class="text-xs text-stone-400 hover:text-amber-500 transition cursor-pointer"
+          class="flex items-center gap-1 text-xs text-stone-400 hover:text-rose-400 transition cursor-pointer"
+          aria-label="Clear all sessions"
         >
+          <Trash2 class="h-3 w-3" />
           Clear All
         </button>
       {/if}
