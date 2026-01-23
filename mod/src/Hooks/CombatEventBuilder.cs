@@ -39,7 +39,7 @@ public sealed class CombatEventBuilder<TCharacter>
   /// <param name="source">The character dealing damage (null for environmental).</param>
   /// <param name="amount">The final damage amount after mitigation.</param>
   /// <param name="damageType">The type of damage dealt.</param>
-  /// <param name="ability">The ability that caused the damage (null for generic).</param>
+  /// <param name="ability">The ability that caused the damage.</param>
   /// <param name="flags">Event flags (critical, missed, etc.).</param>
   /// <returns>A new CombatEvent, or null if target cannot be resolved.</returns>
   public CombatEvent? CreateDamageEvent(
@@ -48,7 +48,7 @@ public sealed class CombatEventBuilder<TCharacter>
     TCharacter? source,
     int amount,
     DamageType damageType,
-    AbilityRef? ability = null,
+    AbilityRef ability,
     EventFlags? flags = null
   )
   {

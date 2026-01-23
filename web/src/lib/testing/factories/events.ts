@@ -92,6 +92,7 @@ export function createBuffEvent(overrides: Partial<CombatEvent> = {}): CombatEve
     eventType: "buffApply",
     source: createPlayer(),
     target: createPlayer(),
+    ability: createAbilityRef({ name: "Blessed Quiver", type: "spell" }),
     effect: createEffectRef({ name: "Blessed Quiver", duration: 30000 }),
     ...overrides,
   };

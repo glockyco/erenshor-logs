@@ -20,8 +20,8 @@ public sealed record CombatEvent
   /// <summary>Actor that received the event.</summary>
   public ActorRef? Target { get; init; }
 
-  /// <summary>Ability used (null for auto-attacks without named ability).</summary>
-  public AbilityRef? Ability { get; init; }
+  /// <summary>Ability used. Always present; uses "Unknown" when attribution fails.</summary>
+  public required AbilityRef Ability { get; init; }
 
   /// <summary>Final amount after mitigation.</summary>
   public int? Amount { get; init; }

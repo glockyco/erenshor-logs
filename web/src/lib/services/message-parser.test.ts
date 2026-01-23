@@ -185,11 +185,13 @@ describe("parseMessage", () => {
             id: "event-1",
             timestamp: 1000,
             eventType: "damagePhysical",
+            ability: { name: "Auto Attack", type: "auto" },
           },
           {
             id: "event-2",
             timestamp: 2000,
             eventType: "healSpell",
+            ability: { name: "Heal", type: "spell" },
           },
         ],
       });

@@ -31,7 +31,7 @@ public sealed class CombatEventBuilderAdapter : ICombatEventBuilder
     Character? source,
     int amount,
     DamageType damageType,
-    AbilityRef? ability = null,
+    AbilityRef ability,
     EventFlags? flags = null
   )
   {

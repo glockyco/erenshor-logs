@@ -117,7 +117,7 @@ export const CombatEventSchema = z.object({
   eventType: EventTypeSchema,
   source: ActorRefSchema.optional(),
   target: ActorRefSchema.optional(),
-  ability: AbilityRefSchema.optional(),
+  ability: AbilityRefSchema, // Always present; uses "Unknown" when attribution fails
   amount: z.number().optional(),
   rawAmount: z.number().optional(),
   mitigated: z.number().optional(),

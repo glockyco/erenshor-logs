@@ -185,6 +185,12 @@ public sealed class SessionManager : ISessionManager
       Id = Guid.NewGuid().ToString(),
       Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
       EventType = eventType,
+      Ability = new AbilityRef
+      {
+        Name = eventType == EventType.CombatStart ? "Combat Start" : "Combat End",
+        Type = AbilityType.Unknown,
+        StableKey = null,
+      },
     };
     _emitter.Emit(evt);
   }
