@@ -1,26 +1,39 @@
 <script lang="ts">
-  import type { ConnectionStatus } from "$lib/types";
-  import { clsx } from "clsx";
+  import type { ConnectionStatus as Status } from "$lib/types";
 
   interface Props {
-    status: ConnectionStatus;
+    status: Status;
   }
 
   let { status }: Props = $props();
 
-  const statusConfig = {
-    connected: { color: "bg-emerald-500", label: "Connected", pulse: true },
-    connecting: { color: "bg-yellow-500", label: "Connecting", pulse: false },
-    disconnected: { color: "bg-red-500", label: "Disconnected", pulse: false },
-  };
-
-  const config = $derived(statusConfig[status]);
+  const statusConfig = $derived(
+    {
+      connected: {
+        label: "Connected",
+        color: "bg-lime-500",
+        textColor: "text-lime-400",
+      },
+      connecting: {
+        label: "Connecting...",
+        color: "bg-amber-500",
+        textColor: "text-amber-400",
+      },
+      disconnected: {
+        label: "Disconnected",
+        color: "bg-rose-500",
+        textColor: "text-rose-400",
+      },
+    }[status]
+  );
 </script>
 
 <div class="flex items-center gap-2" role="status" aria-live="polite">
   <span
-    class={clsx("h-2 w-2 rounded-full", config.color, config.pulse && "animate-pulse")}
+    class={`h-2 w-2 rounded-full ${statusConfig.color} ${status === "connecting" ? "animate-pulse" : ""}`}
     aria-hidden="true"
   ></span>
-  <span class="text-sm text-slate-400">{config.label}</span>
+  <span class={`text-sm font-medium ${statusConfig.textColor}`}>
+    {statusConfig.label}
+  </span>
 </div>

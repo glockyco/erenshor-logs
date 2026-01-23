@@ -1,39 +1,35 @@
 <script lang="ts">
-  import type { Session } from "$lib/types";
-  import SessionCard from "./SessionCard.svelte";
-  import NoSessions from "$lib/components/empty/NoSessions.svelte";
-  import { Button } from "$lib/components/ui";
+  import SessionCardConnected from "./SessionCard.connected.svelte";
+  import { sessions, clearAllSessions } from "$lib/state/sessions.svelte";
 
-  interface Props {
-    sessions: Session[];
-    activeSessionId: string | null;
-    onSessionSelect: (id: string) => void;
-    onSessionDelete: (id: string) => void;
-    onClearAll: () => void;
-  }
-
-  let { sessions, activeSessionId, onSessionSelect, onSessionDelete, onClearAll }: Props = $props();
+  const sessionsList = $derived(Array.from(sessions.values()));
+  const sortedSessions = $derived([...sessionsList].sort((a, b) => b.startTime - a.startTime));
 </script>
 
-<div class="flex flex-col gap-4">
-  {#if sessions.length === 0}
-    <NoSessions />
+<div class="space-y-3">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-sm font-semibold uppercase tracking-wider text-amber-600">
+      Sessions ({sessionsList.length})
+    </h2>
+    {#if sessionsList.length > 0}
+      <button
+        type="button"
+        onclick={clearAllSessions}
+        class="text-xs text-stone-400 hover:text-amber-500 transition cursor-pointer"
+      >
+        Clear All
+      </button>
+    {/if}
+  </div>
+
+  {#if sessionsList.length === 0}
+    <div class="py-12 text-center">
+      <p class="text-sm text-stone-500">No sessions recorded</p>
+      <p class="mt-1 text-xs text-stone-600">Combat data will appear here</p>
+    </div>
   {:else}
-    <div class="flex items-center justify-between">
-      <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300">
-        Sessions ({sessions.length})
-      </h2>
-      <Button variant="ghost" size="sm" onclick={onClearAll}>Clear All</Button>
-    </div>
-    <div class="space-y-2">
-      {#each sessions as session (session.id)}
-        <SessionCard
-          {session}
-          isActive={session.id === activeSessionId}
-          onclick={() => onSessionSelect(session.id)}
-          ondelete={() => onSessionDelete(session.id)}
-        />
-      {/each}
-    </div>
+    {#each sortedSessions as session (session.id)}
+      <SessionCardConnected {session} />
+    {/each}
   {/if}
 </div>

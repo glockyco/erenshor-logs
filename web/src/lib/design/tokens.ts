@@ -1,5 +1,5 @@
 /**
- * Design Tokens - Cyberpunk Analyst Theme
+ * Design Tokens - Classic MMO Theme
  *
  * Semantic design tokens that enforce consistency across the application.
  * These tokens define spacing, typography, and visual effects with meaningful
@@ -36,7 +36,7 @@ export const spacing = {
  * Typography Scale
  *
  * Standardized typography tokens for all text hierarchies.
- * Numbers use JetBrains Mono, UI text uses Inter.
+ * Numbers use JetBrains Mono, headings use Cinzel (fantasy serif), UI text uses Inter.
  */
 export const typography = {
   /** Hero numbers: Massive display values (DPS in hero sections) */
@@ -45,14 +45,14 @@ export const typography = {
   /** Hero stats: Large prominent numbers */
   hero: "text-4xl font-mono font-bold",
 
-  /** Section titles and page headers */
-  h1: "text-3xl font-bold",
+  /** Section titles and page headers - Fantasy serif for MMO feel */
+  h1: "text-3xl font-fantasy font-bold",
 
   /** Large numbers: Session totals */
   large: "text-2xl font-mono font-bold",
 
-  /** Subsection headers */
-  h2: "text-xl font-semibold uppercase tracking-wider",
+  /** Subsection headers - Fantasy serif for emphasis */
+  h2: "text-xl font-fantasy font-semibold uppercase tracking-wider",
 
   /** Card titles and section labels */
   h3: "text-sm font-semibold uppercase tracking-wider",
@@ -61,29 +61,32 @@ export const typography = {
   body: "text-base font-semibold",
 
   /** Stat labels and form labels */
-  label: "text-sm uppercase tracking-wider text-slate-400",
+  label: "text-sm uppercase tracking-wider text-stone-400",
 
   /** Small text: Secondary information */
   small: "text-sm",
 
   /** Metadata: Timestamps, session IDs, tiny details */
-  metadata: "text-xs font-mono text-slate-500",
+  metadata: "text-xs font-mono text-stone-500",
 } as const;
 
 /**
  * Visual Effects
  *
- * Cyberpunk aesthetic effects: glows, transitions, borders.
+ * Classic MMO aesthetic effects: subtle shadows, smooth transitions, stone borders.
  */
 export const effects = {
-  /** Cyan glow effect for active/interactive elements */
-  glow: "shadow-[0_0_20px_rgb(34_211_238_/_0.6)]",
+  /** Subtle shadow for cards and elevated elements */
+  shadow: "shadow-lg",
 
-  /** Stronger glow for primary actions and focus states */
-  glowStrong: "shadow-[0_0_30px_rgb(34_211_238_/_0.8)]",
+  /** Stronger shadow for active/focused elements */
+  shadowStrong: "shadow-xl",
 
   /** Border with hover transition for interactive cards */
-  border: "border border-slate-700 hover:border-cyan-500/60 transition-all",
+  border: "border border-stone-700 hover:border-amber-600/50 transition-all",
+
+  /** Active/selected border for cards */
+  borderActive: "border-2 border-amber-600",
 
   /** Standard transition timing for all animations */
   transition: "transition-all duration-200 ease-out",
@@ -93,12 +96,31 @@ export const effects = {
  * Color Tokens
  *
  * Actor type colors for consistent visual coding.
+ * Classic MMO palette: warm amber, vibrant lime, soft rose, mystical violet.
  */
 export const colors = {
   actor: {
-    player: "rgb(34 211 238)", // cyan-400
-    simPlayer: "rgb(52 211 153)", // emerald-400
+    player: "rgb(245 158 11)", // amber-500
+    simPlayer: "rgb(132 204 22)", // lime-500
     npc: "rgb(251 113 133)", // rose-400
     pet: "rgb(167 139 250)", // violet-400
+  },
+  primary: {
+    /** Primary accent color - warm amber gold */
+    main: "rgb(217 119 6)", // amber-600
+    light: "rgb(245 158 11)", // amber-500
+    dark: "rgb(180 83 9)", // amber-700
+  },
+  background: {
+    /** Main background - deep stone */
+    main: "rgb(28 25 23)", // stone-900
+    card: "rgb(41 37 36)", // stone-800
+    elevated: "rgb(68 64 60)", // stone-700
+  },
+  text: {
+    /** Primary text - light stone */
+    primary: "rgb(245 245 244)", // stone-100
+    secondary: "rgb(168 162 158)", // stone-400
+    muted: "rgb(120 113 108)", // stone-500
   },
 } as const;
