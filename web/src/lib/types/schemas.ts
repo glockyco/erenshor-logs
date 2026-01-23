@@ -214,7 +214,7 @@ export const HandshakeMessageSchema = z.object({
   type: z.literal("handshake"),
   protocolVersion: z.string(),
   modVersion: z.string(),
-  session: SessionInfoSchema.nullable(),
+  session: SessionInfoSchema.optional(),
 });
 export type HandshakeMessage = z.infer<typeof HandshakeMessageSchema>;
 
