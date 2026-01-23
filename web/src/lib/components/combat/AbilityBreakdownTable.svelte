@@ -2,24 +2,37 @@
   import { formatDps, formatNumber } from "$lib/utils";
   import type { AbilityStats } from "$lib/types";
 
+  type Perspective = "damageDealt" | "damageTaken" | "healingDone" | "healingReceived";
+
   interface Props {
     abilities: AbilityStats[];
     actorTotal: number;
     durationMs: number;
-    mode: "damage" | "healing";
+    perspective: Perspective;
   }
 
-  let { abilities, actorTotal, durationMs, mode }: Props = $props();
+  let { abilities, actorTotal, durationMs, perspective }: Props = $props();
 
-  // Filter and sort abilities based on mode
-  const relevantAbilities = $derived(
-    abilities
-      .filter((a) => (mode === "damage" ? a.damage > 0 : a.healing > 0))
-      .sort((a, b) => {
-        const aVal = mode === "damage" ? a.damage : a.healing;
-        const bVal = mode === "damage" ? b.damage : b.healing;
-        return bVal - aVal; // Descending order
-      })
+  // Abilities already filtered in ActorTable, just sort by amount
+  const sortedAbilities = $derived(
+    [...abilities].sort((a, b) => {
+      const aVal =
+        perspective === "damageDealt" || perspective === "damageTaken" ? a.damage : a.healing;
+      const bVal =
+        perspective === "damageDealt" || perspective === "damageTaken" ? b.damage : b.healing;
+      return bVal - aVal; // Descending
+    })
+  );
+
+  // Context-aware rate label
+  const rateLabel = $derived(
+    perspective === "damageDealt"
+      ? "DPS"
+      : perspective === "damageTaken"
+        ? "DTPS"
+        : perspective === "healingDone"
+          ? "HPS"
+          : "HRPS"
   );
 
   const calculateDps = (amount: number): number => {
@@ -31,7 +44,7 @@
   };
 </script>
 
-{#if relevantAbilities.length > 0}
+{#if sortedAbilities.length > 0}
   <div class="py-4 px-8">
     <h4 class="mb-3 text-xs font-semibold uppercase tracking-wider text-amber-600">
       Ability Breakdown
@@ -61,7 +74,7 @@
             Total
           </th>
           <th class="px-3 py-2 text-right text-[10px] uppercase tracking-wider text-stone-500">
-            DPS
+            {rateLabel}
           </th>
           <th class="px-3 py-2 text-right text-[10px] uppercase tracking-wider text-stone-500">
             %
@@ -69,9 +82,15 @@
         </tr>
       </thead>
       <tbody>
-        {#each relevantAbilities as ability (ability.abilityName)}
-          {@const amount = mode === "damage" ? ability.damage : ability.healing}
-          {@const avg = mode === "damage" ? ability.avgDamage : ability.avgHealing}
+        {#each sortedAbilities as ability (ability.abilityName)}
+          {@const amount =
+            perspective === "damageDealt" || perspective === "damageTaken"
+              ? ability.damage
+              : ability.healing}
+          {@const avg =
+            perspective === "damageDealt" || perspective === "damageTaken"
+              ? ability.avgDamage
+              : ability.avgHealing}
           {@const uses = ability.hits + ability.crits + ability.misses}
           {@const dps = calculateDps(amount)}
           {@const percentage = calculatePercentage(amount)}

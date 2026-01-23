@@ -21,31 +21,45 @@
   let sortDirection = $state<"asc" | "desc">("desc");
   let expandedActors = new SvelteSet<string>();
 
-  // Get actors based on active tab - include ability breakdown
+  // Get actors based on active tab - filter abilities by relevance
   const actors = $derived(
     stats
-      ? stats.actorBreakdown.map((a) => ({
-          actorId: a.actorId,
-          actorName: a.actorName,
-          actorType: a.actorType,
-          total:
-            activeTab === "damageDealt"
-              ? a.totalDamage
-              : activeTab === "damageTaken"
-                ? a.damageTaken
-                : activeTab === "healingDone"
-                  ? a.totalHealing
-                  : a.healingReceived,
-          dps:
-            activeTab === "damageDealt"
-              ? a.dps
-              : activeTab === "damageTaken"
-                ? (a.damageTaken / (stats?.durationMs || 1)) * 1000
-                : activeTab === "healingDone"
-                  ? a.hps
-                  : (a.healingReceived / (stats?.durationMs || 1)) * 1000,
-          abilityBreakdown: a.abilityBreakdown,
-        }))
+      ? stats.actorBreakdown.map((a) => {
+          // Select base array based on perspective (dealt vs received)
+          const baseAbilities =
+            activeTab === "damageDealt" || activeTab === "healingDone"
+              ? a.abilityBreakdown
+              : a.abilitiesReceivedFrom;
+
+          // Filter to only relevant abilities for this tab
+          const filteredAbilities =
+            activeTab === "damageDealt" || activeTab === "damageTaken"
+              ? baseAbilities.filter((ab) => ab.damage > 0)
+              : baseAbilities.filter((ab) => ab.healing > 0);
+
+          return {
+            actorId: a.actorId,
+            actorName: a.actorName,
+            actorType: a.actorType,
+            total:
+              activeTab === "damageDealt"
+                ? a.totalDamage
+                : activeTab === "damageTaken"
+                  ? a.damageTaken
+                  : activeTab === "healingDone"
+                    ? a.totalHealing
+                    : a.healingReceived,
+            dps:
+              activeTab === "damageDealt"
+                ? a.dps
+                : activeTab === "damageTaken"
+                  ? (a.damageTaken / (stats?.durationMs || 1)) * 1000
+                  : activeTab === "healingDone"
+                    ? a.hps
+                    : (a.healingReceived / (stats?.durationMs || 1)) * 1000,
+            abilityBreakdown: filteredAbilities,
+          };
+        })
       : []
   );
 
@@ -89,11 +103,6 @@
       expandedActors.add(actorId);
     }
   };
-
-  // Determine mode based on active tab
-  const mode = $derived<"damage" | "healing">(
-    activeTab === "damageDealt" || activeTab === "damageTaken" ? "damage" : "healing"
-  );
 </script>
 
 <div class="bg-stone-800 border-2 border-stone-700 rounded-lg shadow-lg">
@@ -197,7 +206,7 @@
               rank={i + 1}
               {maxValue}
               durationMs={stats?.durationMs || 1}
-              {mode}
+              perspective={activeTab}
               expanded={expandedActors.has(actor.actorId)}
               onToggleExpand={() => toggleExpanded(actor.actorId)}
             />

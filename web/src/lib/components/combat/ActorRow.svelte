@@ -3,6 +3,8 @@
   import AbilityBreakdownTable from "./AbilityBreakdownTable.svelte";
   import type { AbilityStats } from "$lib/types";
 
+  type Perspective = "damageDealt" | "damageTaken" | "healingDone" | "healingReceived";
+
   interface ActorBreakdown {
     actorName: string;
     actorType: "player" | "simPlayer" | "npc" | "pet";
@@ -16,12 +18,13 @@
     rank: number;
     maxValue: number;
     durationMs: number;
-    mode: "damage" | "healing";
+    perspective: Perspective;
     expanded: boolean;
     onToggleExpand: () => void;
   }
 
-  let { actor, rank, maxValue, durationMs, mode, expanded, onToggleExpand }: Props = $props();
+  let { actor, rank, maxValue, durationMs, perspective, expanded, onToggleExpand }: Props =
+    $props();
 
   const percentage = $derived(maxValue > 0 ? (actor.total / maxValue) * 100 : 0);
 
@@ -116,7 +119,7 @@
         abilities={actor.abilityBreakdown}
         actorTotal={actor.total}
         {durationMs}
-        {mode}
+        {perspective}
       />
     </td>
   </tr>
