@@ -32,6 +32,12 @@ export default tseslint.config(
     },
   },
   {
+    files: ["**/components/ui/**/*.svelte"],
+    rules: {
+      "svelte/no-navigation-without-resolve": "off",
+    },
+  },
+  {
     ignores: [".svelte-kit/", "build/", "dist/", "node_modules/", "storybook-static/"],
   },
   storybook.configs["flat/recommended"]
