@@ -29,3 +29,11 @@
     opacity: 0.3;
   }
 }
+
+/* Global styles - prevent white background on overscroll */
+html,
+body {
+  background-color: rgb(2 6 23); /* slate-950 - matches bg-slate-950 */
+  margin: 0;
+  padding: 0;
+}
