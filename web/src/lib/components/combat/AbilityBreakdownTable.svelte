@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { formatDps, formatNumber } from "$lib/utils";
+  import { formatDps, formatNumber, formatPercent } from "$lib/utils";
   import type { AbilityStats } from "$lib/types";
 
   type Perspective = "damageDealt" | "damageTaken" | "healingDone" | "healingReceived";
@@ -104,7 +104,8 @@
               <td class="px-3 py-2 text-right font-mono text-stone-300">{formatNumber(avg)}</td>
               <td class="px-3 py-2 text-right font-mono text-stone-300">{formatNumber(amount)}</td>
               <td class="px-3 py-2 text-right font-mono text-amber-500">{formatDps(dps)}</td>
-              <td class="px-3 py-2 text-right font-mono text-stone-300">{percentage.toFixed(1)}%</td
+              <td class="px-3 py-2 text-right font-mono text-stone-300"
+                >{formatPercent(percentage / 100)}</td
               >
             </tr>
           {/each}

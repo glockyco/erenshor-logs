@@ -264,8 +264,8 @@ export function aggregateByAbility(
   const abilities = Array.from(abilityMap.values());
   for (const ability of abilities) {
     const totalAttempts = ability.hits + ability.misses;
-    ability.avgDamage = ability.hits > 0 ? ability.damage / ability.hits : 0;
-    ability.avgHealing = ability.hits > 0 ? ability.healing / ability.hits : 0;
+    ability.avgDamage = ability.hits > 0 ? Math.round(ability.damage / ability.hits) : 0;
+    ability.avgHealing = ability.hits > 0 ? Math.round(ability.healing / ability.hits) : 0;
     ability.critRate = calculatePercentage(ability.crits, ability.hits);
     ability.missRate = calculatePercentage(ability.misses, totalAttempts);
   }

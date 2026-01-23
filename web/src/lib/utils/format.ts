@@ -3,10 +3,14 @@
 
 /**
  * Format number with locale-aware thousands separators.
+ * Rounds to nearest integer.
  * en-US: 12,458 | de-DE: 12.458
  */
 export function formatNumber(value: number): string {
-  return new Intl.NumberFormat().format(value);
+  return new Intl.NumberFormat(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
 /**
@@ -45,13 +49,13 @@ export function formatTime(timestamp: number): string {
 }
 
 /**
- * Format DPS/HPS with 1 decimal place, locale-aware.
- * en-US: 156.3 | de-DE: 156,3
+ * Format DPS/HPS rates, rounded to nearest integer.
+ * en-US: 156 | de-DE: 156
  */
 export function formatDps(dps: number): string {
   return new Intl.NumberFormat(undefined, {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(dps);
 }
 

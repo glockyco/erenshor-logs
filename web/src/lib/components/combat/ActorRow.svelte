@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { formatDps, formatNumber } from "$lib/utils";
+  import { formatDps, formatNumber, formatPercent } from "$lib/utils";
   import AbilityBreakdownTable from "./AbilityBreakdownTable.svelte";
   import type { AbilityStats } from "$lib/types";
 
@@ -106,7 +106,7 @@
   <td class="px-4 py-3 relative">
     <div class="absolute inset-y-0 right-0 bg-amber-500/20" style:width="{percentage}%"></div>
     <div class="relative text-right font-mono text-stone-200">
-      {percentage.toFixed(1)}%
+      {formatPercent(percentage / 100)}
     </div>
   </td>
 </tr>
