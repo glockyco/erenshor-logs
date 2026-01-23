@@ -1,27 +1,23 @@
 import type { AbilityRef, EffectRef, CombatEvent } from "$lib/types";
 import { createPlayer, createNpc } from "./actors";
 
-let eventCounter = 0;
-let abilityCounter = 0;
-let effectCounter = 0;
-
 /**
- * Creates an AbilityRef with sequential naming.
+ * Creates an AbilityRef with default values.
  */
 export function createAbilityRef(overrides: Partial<AbilityRef> = {}): AbilityRef {
   return {
-    name: `Ability ${++abilityCounter}`,
+    name: "Ability",
     type: "skill",
     ...overrides,
   };
 }
 
 /**
- * Creates an EffectRef with sequential naming.
+ * Creates an EffectRef with default values.
  */
 export function createEffectRef(overrides: Partial<EffectRef> = {}): EffectRef {
   return {
-    name: `Effect ${++effectCounter}`,
+    name: "Effect",
     duration: 10000,
     stacks: 1,
     ...overrides,
@@ -29,13 +25,13 @@ export function createEffectRef(overrides: Partial<EffectRef> = {}): EffectRef {
 }
 
 /**
- * Creates a generic CombatEvent with sequential IDs and relative timestamps.
+ * Creates a generic CombatEvent with unique ID and deterministic timestamp.
  * For specific event types, use createDamageEvent or createHealEvent.
  */
 export function createCombatEvent(overrides: Partial<CombatEvent> = {}): CombatEvent {
   return {
-    id: `event-${++eventCounter}`,
-    timestamp: Date.now(),
+    id: crypto.randomUUID(),
+    timestamp: 0,
     eventType: "damagePhysical",
     ...overrides,
   };
@@ -46,8 +42,8 @@ export function createCombatEvent(overrides: Partial<CombatEvent> = {}): CombatE
  */
 export function createDamageEvent(overrides: Partial<CombatEvent> = {}): CombatEvent {
   return {
-    id: `event-${++eventCounter}`,
-    timestamp: Date.now(),
+    id: crypto.randomUUID(),
+    timestamp: 0,
     eventType: "damagePhysical",
     source: createPlayer(),
     target: createNpc(),
@@ -63,8 +59,8 @@ export function createDamageEvent(overrides: Partial<CombatEvent> = {}): CombatE
  */
 export function createHealEvent(overrides: Partial<CombatEvent> = {}): CombatEvent {
   return {
-    id: `event-${++eventCounter}`,
-    timestamp: Date.now(),
+    id: crypto.randomUUID(),
+    timestamp: 0,
     eventType: "healSpell",
     source: createPlayer(),
     target: createPlayer(),
@@ -90,8 +86,8 @@ export function createCriticalDamageEvent(overrides: Partial<CombatEvent> = {}):
  */
 export function createBuffEvent(overrides: Partial<CombatEvent> = {}): CombatEvent {
   return {
-    id: `event-${++eventCounter}`,
-    timestamp: Date.now(),
+    id: crypto.randomUUID(),
+    timestamp: 0,
     eventType: "buffApply",
     source: createPlayer(),
     target: createPlayer(),
@@ -101,22 +97,13 @@ export function createBuffEvent(overrides: Partial<CombatEvent> = {}): CombatEve
 }
 
 /**
- * Resets the event counter. Useful for deterministic test snapshots.
+ * Creates multiple combat events with sequential timestamps.
+ * Useful for testing time-based logic like DPS calculations.
+ *
+ * @param count Number of events to create
+ * @param intervalMs Time interval between events in milliseconds
+ * @returns Array of combat events with sequential timestamps
  */
-export function resetEventCounter(): void {
-  eventCounter = 0;
-}
-
-/**
- * Resets the ability counter. Useful for deterministic test snapshots.
- */
-export function resetAbilityCounter(): void {
-  abilityCounter = 0;
-}
-
-/**
- * Resets the effect counter. Useful for deterministic test snapshots.
- */
-export function resetEffectCounter(): void {
-  effectCounter = 0;
+export function createTimedEvents(count: number, intervalMs: number): CombatEvent[] {
+  return Array.from({ length: count }, (_, i) => createCombatEvent({ timestamp: i * intervalMs }));
 }

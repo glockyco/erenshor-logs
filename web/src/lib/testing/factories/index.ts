@@ -1,12 +1,5 @@
 // Actor factories
-export {
-  createActorRef,
-  createPlayer,
-  createSimPlayer,
-  createNpc,
-  createPet,
-  resetActorCounter,
-} from "./actors";
+export { createActorRef, createPlayer, createSimPlayer, createNpc, createPet } from "./actors";
 
 // Event factories
 export {
@@ -17,9 +10,7 @@ export {
   createHealEvent,
   createCriticalDamageEvent,
   createBuffEvent,
-  resetEventCounter,
-  resetAbilityCounter,
-  resetEffectCounter,
+  createTimedEvents,
 } from "./events";
 
 // Session factories
@@ -30,7 +21,7 @@ export {
   createCompletedSession,
   createShortSession,
   createLongSession,
-  resetSessionCounter,
+  createSessionWithDuration,
 } from "./sessions";
 
 // Stats factories

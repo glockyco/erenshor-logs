@@ -1,14 +1,12 @@
 import type { ActorRef } from "$lib/types";
 
-let actorCounter = 0;
-
 /**
- * Creates a generic ActorRef with sequential IDs.
+ * Creates a generic ActorRef with a unique ID.
  * Use specific factory functions (createPlayer, createNpc, etc.) for common actor types.
  */
 export function createActorRef(overrides: Partial<ActorRef> = {}): ActorRef {
   return {
-    id: `actor-${++actorCounter}`,
+    id: crypto.randomUUID(),
     name: "Actor",
     type: "player",
     ...overrides,
@@ -20,7 +18,7 @@ export function createActorRef(overrides: Partial<ActorRef> = {}): ActorRef {
  */
 export function createPlayer(overrides: Partial<ActorRef> = {}): ActorRef {
   return {
-    id: `player-${++actorCounter}`,
+    id: crypto.randomUUID(),
     name: "Player",
     type: "player",
     class: "Duelist",
@@ -34,7 +32,7 @@ export function createPlayer(overrides: Partial<ActorRef> = {}): ActorRef {
  */
 export function createSimPlayer(overrides: Partial<ActorRef> = {}): ActorRef {
   return {
-    id: `sim-${++actorCounter}`,
+    id: crypto.randomUUID(),
     name: "Aeryn",
     type: "simPlayer",
     class: "Arcanist",
@@ -48,7 +46,7 @@ export function createSimPlayer(overrides: Partial<ActorRef> = {}): ActorRef {
  */
 export function createNpc(overrides: Partial<ActorRef> = {}): ActorRef {
   return {
-    id: `npc-${++actorCounter}`,
+    id: crypto.randomUUID(),
     name: "A Brittle Skeleton",
     type: "npc",
     level: 30,
@@ -61,18 +59,11 @@ export function createNpc(overrides: Partial<ActorRef> = {}): ActorRef {
  */
 export function createPet(overrides: Partial<ActorRef> = {}): ActorRef {
   return {
-    id: `pet-${++actorCounter}`,
+    id: crypto.randomUUID(),
     name: "Summoned Dire Wolf",
     type: "pet",
     level: 30,
     masterId: "player-1",
     ...overrides,
   };
-}
-
-/**
- * Resets the actor counter. Useful for deterministic test snapshots.
- */
-export function resetActorCounter(): void {
-  actorCounter = 0;
 }
