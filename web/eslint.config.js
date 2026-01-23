@@ -32,7 +32,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ["**/components/ui/**/*.svelte"],
+    files: ["**/components/ui/**/*.svelte", "**/components/empty/**/*.svelte"],
     rules: {
       "svelte/no-navigation-without-resolve": "off",
     },

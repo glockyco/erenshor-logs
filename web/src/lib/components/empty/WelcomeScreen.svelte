@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Swords } from "@lucide/svelte";
+  import { Swords, Download } from "@lucide/svelte";
   import FileDropzone from "../session/FileDropzone.svelte";
   import { sessions, addSession, setActiveSession } from "$lib/state/sessions.svelte";
   import type { Session } from "$lib/types";
@@ -59,6 +59,18 @@
     <p class="mb-6 text-center text-stone-400">
       The dashboard will appear here<br />once you enter combat in-game.
     </p>
+
+    <!-- Download Button -->
+    <div class="mb-6 flex justify-center">
+      <a
+        href="/mods/ErenshorLogs.dll"
+        download="ErenshorLogs.dll"
+        class="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-6 py-3 font-semibold text-stone-900 transition-all hover:bg-amber-400 active:scale-95"
+      >
+        <Download class="h-5 w-5" aria-hidden="true" />
+        <span>Download Mod</span>
+      </a>
+    </div>
 
     <!-- Steps -->
     <div class="mb-6 space-y-3 rounded-md bg-stone-900/50 p-4">
