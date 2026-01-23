@@ -4,9 +4,45 @@ Version: 1.0.0
 
 ## Overview
 
-Combat logs are stored as gzipped JSON files (`.json.gz`). This document specifies the complete format.
+Combat logs are stored as JSON files (`.json`). This document specifies the complete format.
 
-## File Structure
+## Export Formats
+
+### Web App Export (Current Implementation)
+
+The web app exports sessions in a simplified format for debugging and data sharing:
+
+**Single Session:**
+```json
+{
+  "version": "1.0.0",
+  "exportedAt": 1704067200000,
+  "session": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "startTime": 1704067200000,
+    "endTime": 1704067260000,
+    "events": [ ... ]
+  }
+}
+```
+
+**Multiple Sessions:**
+```json
+{
+  "version": "1.0.0",
+  "exportedAt": 1704067200000,
+  "sessions": [
+    { "id": "...", "startTime": ..., "events": [...] },
+    { "id": "...", "startTime": ..., "events": [...] }
+  ]
+}
+```
+
+This format contains the raw session data without computed summaries. Statistics can be computed on import.
+
+### Full Format (Future: Mod Export)
+
+When the mod implements JSON export, it will use the full format with pre-computed statistics:
 
 ```json
 {
@@ -214,12 +250,14 @@ For `buff_apply`, `buff_refresh`, `buff_fade`, `debuff_apply`, `debuff_refresh`,
 
 ## File Size Estimates
 
-| Session Type | Duration | Uncompressed | Gzipped |
-|--------------|----------|--------------|---------|
-| Training Dummy | 1 min | ~70 KB | ~10 KB |
-| Solo Farming | 10 min | ~1 MB | ~150 KB |
-| Group Content | 10 min | ~3 MB | ~450 KB |
-| Extended Session | 1 hour | ~20 MB | ~3 MB |
+| Session Type | Duration | File Size |
+|--------------|----------|-----------|
+| Training Dummy | 1 min | ~70 KB |
+| Solo Farming | 10 min | ~1 MB |
+| Group Content | 10 min | ~3 MB |
+| Extended Session | 1 hour | ~20 MB |
+
+**Note**: Files are exported as uncompressed JSON. Users can manually compress files if needed for sharing or archival.
 
 ## Versioning
 
