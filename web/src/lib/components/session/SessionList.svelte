@@ -23,10 +23,20 @@
   };
 
   const handleImport = (importedSessions: import("$lib/types").Session[]) => {
+    // Filter out empty sessions before processing
+    const validSessions = importedSessions.filter((s) => s.events.length > 0);
+    const emptyCount = importedSessions.length - validSessions.length;
+
+    if (emptyCount > 0) {
+      console.log(
+        `Filtered out ${emptyCount} empty session${emptyCount === 1 ? "" : "s"} during import`
+      );
+    }
+
     let addedCount = 0;
     let skippedCount = 0;
 
-    for (const session of importedSessions) {
+    for (const session of validSessions) {
       if (sessions.has(session.id)) {
         skippedCount++;
         continue;
@@ -37,10 +47,23 @@
       addedCount++;
     }
 
+    // Build success message with all relevant counts
     if (addedCount > 0) {
+      let message = `Imported ${addedCount} session${addedCount === 1 ? "" : "s"}`;
+      const notes = [];
+      if (skippedCount > 0) {
+        notes.push(`${skippedCount} skipped - already exists`);
+      }
+      if (emptyCount > 0) {
+        notes.push(`${emptyCount} empty session${emptyCount === 1 ? "" : "s"} filtered`);
+      }
+      if (notes.length > 0) {
+        message += ` (${notes.join(", ")})`;
+      }
+
       // Set the first imported session as active
-      setActiveSession(importedSessions[0].id);
-      importSuccess = `Imported ${addedCount} session${addedCount === 1 ? "" : "s"}${skippedCount > 0 ? ` (${skippedCount} skipped - already exists)` : ""}`;
+      setActiveSession(validSessions[0].id);
+      importSuccess = message;
       importError = null;
       showImport = false;
 
@@ -49,7 +72,12 @@
         importSuccess = null;
       }, 3000);
     } else {
-      importError = "All sessions already exist";
+      // No sessions were added - determine why
+      if (emptyCount === importedSessions.length) {
+        importError = "All sessions are empty (0 events)";
+      } else {
+        importError = "All sessions already exist";
+      }
     }
   };
 

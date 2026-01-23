@@ -112,6 +112,7 @@ describe("sessions state", () => {
     it("sets endTime on session", () => {
       const info = createSessionInfo({ id: "test-1" });
       addSession(info);
+      appendEvents("test-1", [createCombatEvent({ id: "e1" })]);
 
       endSession("test-1", 5000);
 
@@ -137,6 +138,81 @@ describe("sessions state", () => {
       endSession("unknown-session", 5000);
 
       expect(sessions.has("unknown-session")).toBe(false);
+    });
+  });
+
+  describe("endSession with empty sessions", () => {
+    it("deletes session if it has no events", () => {
+      const info = createSessionInfo({ id: "test-1" });
+      addSession(info);
+
+      endSession("test-1", 5000);
+
+      expect(sessions.has("test-1")).toBe(false);
+    });
+
+    it("keeps session if it has events", () => {
+      const info = createSessionInfo({ id: "test-1" });
+      addSession(info);
+      appendEvents("test-1", [createCombatEvent({ id: "e1" })]);
+
+      endSession("test-1", 5000);
+
+      expect(sessions.has("test-1")).toBe(true);
+      expect(sessions.get("test-1")!.endTime).toBe(5000);
+    });
+
+    it("switches active to most recent when deleting active empty session", () => {
+      const info1 = createSessionInfo({ id: "test-1", startTime: 1000 });
+      const info2 = createSessionInfo({ id: "test-2", startTime: 2000 });
+      addSession(info1);
+      addSession(info2);
+      appendEvents("test-2", [createCombatEvent({ id: "e1" })]);
+      setActiveSession("test-1");
+
+      endSession("test-1", 3000);
+
+      expect(sessions.has("test-1")).toBe(false);
+      expect(activeSessionId.value).toBe("test-2");
+    });
+
+    it("clears active when deleting last remaining session", () => {
+      const info = createSessionInfo({ id: "test-1" });
+      addSession(info);
+      setActiveSession("test-1");
+
+      endSession("test-1", 5000);
+
+      expect(sessions.size).toBe(0);
+      expect(activeSessionId.value).toBeNull();
+    });
+
+    it("does not affect non-active empty session deletion", () => {
+      const info1 = createSessionInfo({ id: "test-1" });
+      const info2 = createSessionInfo({ id: "test-2", startTime: 2000 });
+      addSession(info1);
+      addSession(info2);
+      appendEvents("test-2", [createCombatEvent({ id: "e1" })]);
+      setActiveSession("test-2");
+
+      endSession("test-1", 3000);
+
+      expect(sessions.has("test-1")).toBe(false);
+      expect(activeSessionId.value).toBe("test-2");
+    });
+
+    it("preserves session order when switching active", () => {
+      addSession(createSessionInfo({ id: "test-1", startTime: 1000 }));
+      addSession(createSessionInfo({ id: "test-2", startTime: 3000 }));
+      addSession(createSessionInfo({ id: "test-3", startTime: 2000 }));
+      appendEvents("test-2", [createCombatEvent()]);
+      appendEvents("test-3", [createCombatEvent()]);
+      setActiveSession("test-1");
+
+      endSession("test-1", 4000);
+
+      // Should switch to test-2 (startTime: 3000) not test-3 (startTime: 2000)
+      expect(activeSessionId.value).toBe("test-2");
     });
   });
 
@@ -289,6 +365,8 @@ describe("sessions state", () => {
     it("recalculates stats when events are appended", () => {
       const info = createSessionInfo({ id: "test-1", startTime: 0 });
       addSession(info);
+      const initialEvent = createCombatEvent({ id: "e0", timestamp: 0 });
+      appendEvents("test-1", [initialEvent]);
       endSession("test-1", 1000);
 
       const initialStats = activeSessionStats.value;
@@ -310,6 +388,7 @@ describe("sessions state", () => {
     it("uses endTime when session is ended", () => {
       const info = createSessionInfo({ id: "test-1", startTime: 1000 });
       addSession(info);
+      appendEvents("test-1", [createCombatEvent({ id: "e1" })]);
       endSession("test-1", 3000);
 
       const stats = activeSessionStats.value;
@@ -320,6 +399,7 @@ describe("sessions state", () => {
     it("returns null when active session has no events", () => {
       const info = createSessionInfo({ id: "test-1", startTime: 1000 });
       addSession(info);
+      appendEvents("test-1", [createCombatEvent({ id: "e1" })]);
       endSession("test-1", 2000);
 
       const stats = activeSessionStats.value;

@@ -210,6 +210,7 @@ export function appendEvents(sessionId: string, events: CombatEvent[]): void {
 
 /**
  * Mark a session as ended.
+ * Automatically deletes sessions with no events to prevent UI clutter.
  */
 export function endSession(sessionId: string, endTime: number): void {
   const session = sessions.get(sessionId);
@@ -219,7 +220,23 @@ export function endSession(sessionId: string, endTime: number): void {
     return;
   }
 
-  // Create new object to trigger SvelteMap reactivity and persistence
+  // Auto-delete if session has no events
+  if (session.events.length === 0) {
+    console.log(`Auto-deleting empty session ${sessionId}`);
+    sessions.delete(sessionId);
+
+    // Switch active session if we just deleted it
+    if (state.activeSessionId === sessionId) {
+      const remainingSessions = Array.from(sessions.values()).sort(
+        (a, b) => b.startTime - a.startTime
+      );
+      state.activeSessionId = remainingSessions.length > 0 ? remainingSessions[0].id : null;
+    }
+
+    return; // Early return - session deleted, nothing more to do
+  }
+
+  // Session has events - mark as ended normally
   sessions.set(sessionId, {
     ...session,
     endTime,
