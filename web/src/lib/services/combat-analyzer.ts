@@ -81,12 +81,18 @@ export function aggregateByActor(events: CombatEvent[], durationMs: number): Act
   const actorMap = new Map<string, ActorStats>();
 
   // Helper to ensure actor exists in map
-  const ensureActor = (actorId: string, actorName: string, actorType: string) => {
+  const ensureActor = (
+    actorId: string,
+    actorName: string,
+    actorType: string,
+    actorClass?: string
+  ) => {
     if (!actorMap.has(actorId)) {
       actorMap.set(actorId, {
         actorId,
         actorName,
         actorType: actorType as ActorStats["actorType"],
+        actorClass,
         // Outgoing
         totalDamage: 0,
         totalHealing: 0,
@@ -116,10 +122,10 @@ export function aggregateByActor(events: CombatEvent[], durationMs: number): Act
   // First pass: collect all unique actors (from both source and target)
   for (const event of events) {
     if (event.source) {
-      ensureActor(event.source.id, event.source.name, event.source.type);
+      ensureActor(event.source.id, event.source.name, event.source.type, event.source.class);
     }
     if (event.target) {
-      ensureActor(event.target.id, event.target.name, event.target.type);
+      ensureActor(event.target.id, event.target.name, event.target.type, event.target.class);
     }
   }
 

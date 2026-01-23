@@ -184,6 +184,7 @@ export const ActorStatsSchema = z.object({
   actorId: z.string(),
   actorName: z.string(),
   actorType: ActorTypeSchema,
+  actorClass: z.string().optional(), // Class name (e.g., "Arcanist", "Duelist") for players
   // Outgoing metrics (damage/healing dealt by this actor)
   totalDamage: z.number(),
   totalHealing: z.number(),

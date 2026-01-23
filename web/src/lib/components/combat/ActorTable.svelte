@@ -41,6 +41,7 @@
             actorId: a.actorId,
             actorName: a.actorName,
             actorType: a.actorType,
+            actorClass: a.actorClass,
             total:
               activeTab === "damageDealt"
                 ? a.totalDamage

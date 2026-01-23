@@ -11,6 +11,7 @@ export function createActorStats(overrides: Partial<ActorStats> = {}): ActorStat
     actorId: "actor-1",
     actorName: "Actor",
     actorType: "player",
+    actorClass: undefined,
     // Outgoing
     totalDamage: 0,
     totalHealing: 0,

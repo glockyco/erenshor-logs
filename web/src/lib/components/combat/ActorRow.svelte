@@ -1,5 +1,6 @@
 <script lang="ts">
   import { formatDps, formatNumber, formatPercent } from "$lib/utils";
+  import { getActorIcon } from "$lib/utils/actor-icons";
   import AbilityBreakdownTable from "./AbilityBreakdownTable.svelte";
   import type { AbilityStats } from "$lib/types";
 
@@ -8,6 +9,7 @@
   interface ActorBreakdown {
     actorName: string;
     actorType: "player" | "simPlayer" | "npc" | "pet";
+    actorClass?: string;
     total: number;
     dps: number;
     percentage: number;
@@ -54,6 +56,7 @@
   };
 
   const colors = $derived(badgeColors[actor.actorType]);
+  const IconComponent = $derived(getActorIcon(actor.actorType, actor.actorClass));
 </script>
 
 <!-- Main Actor Row -->
@@ -77,13 +80,13 @@
     {rank}
   </td>
 
-  <!-- Actor Name with Badge -->
+  <!-- Actor Name with Icon Badge -->
   <td class="px-4 py-3">
     <div class="flex items-center gap-2">
       <span
-        class={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${colors.bg} ${colors.text} border ${colors.border}`}
+        class={`inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-full ${colors.bg} ${colors.text} border ${colors.border}`}
       >
-        <span class={`w-1.5 h-1.5 rounded-full ${colors.dot}`}></span>
+        <IconComponent class="h-4 w-4" />
       </span>
       <span class="font-medium text-stone-200">{actor.actorName}</span>
     </div>
