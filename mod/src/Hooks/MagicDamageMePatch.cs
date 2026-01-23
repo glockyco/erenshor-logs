@@ -98,6 +98,17 @@ public static class MagicDamageMePatch
         ProcSource = context.ProcSource,
       };
     }
+    else
+    {
+      // No context available - attribution failed
+      // Tracked in Issue #93 for improved attribution
+      ability = new AbilityRef
+      {
+        Name = "Unknown",
+        Type = AbilityType.Unknown,
+        StableKey = null,
+      };
+    }
 
     // Create and emit the event
     var evt = EventBuilder.CreateDamageEvent(

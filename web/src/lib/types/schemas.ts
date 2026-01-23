@@ -51,7 +51,15 @@ export const DamageTypeSchema = z.enum([
 ]);
 export type DamageType = z.infer<typeof DamageTypeSchema>;
 
-export const AbilityTypeSchema = z.enum(["skill", "spell", "auto", "dot", "hot"]);
+export const AbilityTypeSchema = z.enum([
+  "skill",
+  "spell",
+  "auto",
+  "dot",
+  "hot",
+  "unknown",
+  "environmental",
+]);
 export type AbilityType = z.infer<typeof AbilityTypeSchema>;
 
 export const ProcSourceSchema = z.enum(["weapon", "wand", "bow", "buff", "skill"]);

@@ -103,11 +103,12 @@ public static class DamageMePatch
     }
     else
     {
-      // No context = auto-attack
+      // No context available - attribution failed
+      // Tracked in Issue #93 for improved attribution
       ability = new AbilityRef
       {
-        Name = "Auto Attack",
-        Type = AbilityType.Auto,
+        Name = "Unknown",
+        Type = AbilityType.Unknown,
         StableKey = null,
       };
     }

@@ -19,4 +19,10 @@ public enum AbilityType
 
   /// <summary>Heal over time effect.</summary>
   Hot,
+
+  /// <summary>Attribution failed - source ability could not be determined.</summary>
+  Unknown,
+
+  /// <summary>Environmental damage (fall, fire, drowning, etc.).</summary>
+  Environmental,
 }

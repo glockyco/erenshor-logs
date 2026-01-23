@@ -218,8 +218,6 @@ export function aggregateByAbility(
   const abilityMap = new Map<string, AbilityStats>();
 
   for (const event of events) {
-    if (!event.ability) continue;
-
     // Filter by perspective
     const matchesActor =
       perspective === "dealt" ? event.source?.id === actorId : event.target?.id === actorId;

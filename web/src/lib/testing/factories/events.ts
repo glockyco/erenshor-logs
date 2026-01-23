@@ -33,6 +33,7 @@ export function createCombatEvent(overrides: Partial<CombatEvent> = {}): CombatE
     id: crypto.randomUUID(),
     timestamp: 0,
     eventType: "damagePhysical",
+    ability: createAbilityRef({ name: "Unknown", type: "unknown" }),
     ...overrides,
   };
 }
