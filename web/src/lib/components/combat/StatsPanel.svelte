@@ -61,7 +61,7 @@
       </div>
 
       <!-- Supporting Stats: Single Row -->
-      <div class="grid grid-cols-4 gap-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
         <div class="space-y-1">
           <div class="text-xs uppercase tracking-wider text-stone-400">Total Damage</div>
           <div class="text-base font-mono font-semibold text-stone-200">

@@ -122,12 +122,12 @@
 </script>
 
 <div class="bg-stone-800 border-2 border-stone-700 rounded-lg shadow-lg">
-  <div class="border-b border-stone-700 px-6 py-4">
-    <div class="flex items-center justify-between mb-4">
+  <div class="border-b border-stone-700 px-4 py-4 md:px-6">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <h3 class="font-fantasy text-lg font-semibold text-amber-500">Actor Breakdown</h3>
 
       <!-- Faction Filter Buttons -->
-      <div class="flex gap-2">
+      <div class="flex flex-wrap gap-2">
         <button
           type="button"
           class={`rounded px-3 py-1.5 text-xs font-medium uppercase tracking-wider transition-colors cursor-pointer ${
@@ -168,13 +168,13 @@
     <FactionTabs {activeTab} onTabChange={(tab) => (activeTab = tab)} />
   </div>
 
-  <div class="p-6">
+  <div class="p-4 md:p-6">
     {#if !stats || sortedActors.length === 0}
       <div class="py-12 text-center text-stone-500">
         <p>No actor data available</p>
       </div>
     {:else}
-      <div class="overflow-x-auto">
+      <div class="overflow-x-auto -mx-4 md:mx-0">
         <table class="w-full text-sm min-w-[700px]">
           <thead class="border-b border-stone-700">
             <tr>

@@ -68,11 +68,11 @@
 </script>
 
 <div class="space-y-3">
-  <div class="flex items-center justify-between mb-4">
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
     <h2 class="text-sm font-semibold uppercase tracking-wider text-amber-600">
       Sessions ({sessionsList.length})
     </h2>
-    <div class="flex gap-2">
+    <div class="flex flex-wrap gap-2">
       {#if sessionsList.length > 0}
         <button
           type="button"
@@ -81,7 +81,8 @@
           aria-label="Export all sessions"
         >
           <Download class="h-3 w-3" />
-          Export All
+          <span class="hidden sm:inline">Export All</span>
+          <span class="sm:hidden">Export</span>
         </button>
         <button
           type="button"
@@ -90,7 +91,8 @@
           aria-label="Clear all sessions"
         >
           <Trash2 class="h-3 w-3" />
-          Clear All
+          <span class="hidden sm:inline">Clear All</span>
+          <span class="sm:hidden">Clear</span>
         </button>
       {/if}
       <button

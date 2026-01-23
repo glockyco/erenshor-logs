@@ -91,32 +91,34 @@
 {#if hasUnknown}
   <div class="bg-stone-800 border-2 border-stone-700 rounded-lg shadow-lg">
     <!-- Header -->
-    <div class="border-b border-stone-700 px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <AlertTriangle class="w-5 h-5 text-amber-500" />
-        <h3 class="font-fantasy text-lg font-semibold text-amber-500">Attribution Debug Panel</h3>
-      </div>
-      <div class="flex gap-2">
-        <button
-          onclick={downloadCSV}
-          class="flex items-center gap-1 px-3 py-1.5 text-sm text-stone-300 hover:text-stone-100 border border-stone-600 hover:border-stone-500 rounded transition"
-        >
-          <Download class="w-4 h-4" />
-          CSV
-        </button>
-        <button
-          onclick={downloadJSON}
-          class="flex items-center gap-1 px-3 py-1.5 text-sm text-stone-300 hover:text-stone-100 border border-stone-600 hover:border-stone-500 rounded transition"
-        >
-          <Download class="w-4 h-4" />
-          JSON
-        </button>
+    <div class="border-b border-stone-700 px-4 py-4 md:px-6">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <AlertTriangle class="w-5 h-5 text-amber-500 flex-shrink-0" />
+          <h3 class="font-fantasy text-lg font-semibold text-amber-500">Attribution Debug Panel</h3>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button
+            onclick={downloadCSV}
+            class="flex items-center gap-1 px-3 py-1.5 text-sm text-stone-300 hover:text-stone-100 border border-stone-600 hover:border-stone-500 rounded transition"
+          >
+            <Download class="w-4 h-4 flex-shrink-0" />
+            CSV
+          </button>
+          <button
+            onclick={downloadJSON}
+            class="flex items-center gap-1 px-3 py-1.5 text-sm text-stone-300 hover:text-stone-100 border border-stone-600 hover:border-stone-500 rounded transition"
+          >
+            <Download class="w-4 h-4 flex-shrink-0" />
+            JSON
+          </button>
+        </div>
       </div>
     </div>
 
     <div class="p-6 space-y-6">
       <!-- Attribution Summary -->
-      <div class="grid grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="space-y-1">
           <div class="text-xs uppercase tracking-wider text-stone-400">Total Events</div>
           <div class="text-2xl font-mono font-bold text-stone-200">
