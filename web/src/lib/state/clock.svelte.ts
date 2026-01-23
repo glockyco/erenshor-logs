@@ -55,3 +55,16 @@ export function subscribeToClock(intervalMs = 1000): () => void {
 export function tickClock(): void {
   state.now = Date.now();
 }
+
+/**
+ * Reset clock state to initial values. For testing only.
+ * Stops any running interval and resets subscriber count.
+ */
+export function resetClockState(): void {
+  if (intervalId !== null) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+  subscriberCount = 0;
+  state.now = Date.now();
+}

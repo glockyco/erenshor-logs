@@ -141,3 +141,14 @@ export function setActorBreakdownTab(tab: ActorBreakdownTab): void {
 export function setFactionFilter(filter: FactionFilter): void {
   uiState.factionFilter = filter;
 }
+
+/**
+ * Reset UI state to initial values. For testing only.
+ */
+export function resetUiState(): void {
+  collapsedActors.clear();
+  uiState.sortBy = "damage";
+  uiState.sortDirection = "desc";
+  uiState.actorBreakdownTab = "damageDealt";
+  uiState.factionFilter = "all";
+}

@@ -193,3 +193,11 @@ export function setActiveSession(sessionId: string | null): void {
 
   state.activeSessionId = sessionId;
 }
+
+/**
+ * Reset sessions state to initial values. For testing only.
+ */
+export function resetSessionsState(): void {
+  sessions.clear();
+  state.activeSessionId = null;
+}
