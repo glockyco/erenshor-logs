@@ -1,5 +1,6 @@
 <script lang="ts">
   import { formatDps, formatNumber, formatPercent } from "$lib/utils";
+  import { calculateRate, calculatePercentage } from "$lib/services/combat-analyzer";
   import type { AbilityStats } from "$lib/types";
 
   type Perspective = "damageDealt" | "damageTaken" | "healingDone" | "healingReceived";
@@ -34,14 +35,6 @@
           ? "HPS"
           : "HRPS"
   );
-
-  const calculateDps = (amount: number): number => {
-    return durationMs > 0 ? (amount / durationMs) * 1000 : 0;
-  };
-
-  const calculatePercentage = (amount: number): number => {
-    return actorTotal > 0 ? (amount / actorTotal) * 100 : 0;
-  };
 </script>
 
 {#if sortedAbilities.length > 0}
@@ -93,8 +86,8 @@
                 ? ability.avgDamage
                 : ability.avgHealing}
             {@const uses = ability.hits + ability.crits + ability.misses}
-            {@const dps = calculateDps(amount)}
-            {@const percentage = calculatePercentage(amount)}
+            {@const dps = calculateRate(amount, durationMs)}
+            {@const percentage = calculatePercentage(amount, actorTotal)}
             <tr class="border-b border-stone-800 hover:bg-stone-800/30">
               <td class="px-3 py-2 text-stone-200">{ability.abilityName}</td>
               <td class="px-3 py-2 text-right font-mono text-stone-300">{uses}</td>

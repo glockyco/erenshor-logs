@@ -10,23 +10,20 @@
     actorType: "player" | "simPlayer" | "npc" | "pet";
     total: number;
     dps: number;
+    percentage: number;
     abilityBreakdown: AbilityStats[];
   }
 
   interface Props {
     actor: ActorBreakdown;
     rank: number;
-    maxValue: number;
     durationMs: number;
     perspective: Perspective;
     expanded: boolean;
     onToggleExpand: () => void;
   }
 
-  let { actor, rank, maxValue, durationMs, perspective, expanded, onToggleExpand }: Props =
-    $props();
-
-  const percentage = $derived(maxValue > 0 ? (actor.total / maxValue) * 100 : 0);
+  let { actor, rank, durationMs, perspective, expanded, onToggleExpand }: Props = $props();
 
   // Badge color mapping
   const badgeColors = {
@@ -104,9 +101,9 @@
 
   <!-- Percentage Bar -->
   <td class="px-4 py-3 relative">
-    <div class="absolute inset-y-0 right-0 bg-amber-500/20" style:width="{percentage}%"></div>
+    <div class="absolute inset-y-0 right-0 bg-amber-500/20" style:width="{actor.percentage}%"></div>
     <div class="relative text-right font-mono text-stone-200">
-      {formatPercent(percentage / 100)}
+      {formatPercent(actor.percentage / 100)}
     </div>
   </td>
 </tr>

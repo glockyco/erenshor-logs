@@ -11,11 +11,11 @@ import { isDamageEventType, isHealEventType } from "$lib/utils/event-constants";
 
 const MS_PER_SECOND = 1000;
 
-function calculateRate(total: number, durationMs: number): number {
+export function calculateRate(total: number, durationMs: number): number {
   return durationMs > 0 ? (total / durationMs) * MS_PER_SECOND : 0;
 }
 
-function calculatePercentage(part: number, whole: number): number {
+export function calculatePercentage(part: number, whole: number): number {
   return whole > 0 ? (part / whole) * 100 : 0;
 }
 
@@ -248,9 +248,16 @@ export function aggregateByAbility(
 
     if (isMiss) {
       ability.misses++;
+    } else if (isCrit) {
+      ability.crits++;
+
+      if (isDamageEventType(event.eventType)) {
+        ability.damage += event.amount ?? 0;
+      } else if (isHealEventType(event.eventType)) {
+        ability.healing += event.amount ?? 0;
+      }
     } else {
       ability.hits++;
-      if (isCrit) ability.crits++;
 
       if (isDamageEventType(event.eventType)) {
         ability.damage += event.amount ?? 0;
@@ -263,10 +270,13 @@ export function aggregateByAbility(
   // Calculate averages and rates
   const abilities = Array.from(abilityMap.values());
   for (const ability of abilities) {
-    const totalAttempts = ability.hits + ability.misses;
-    ability.avgDamage = ability.hits > 0 ? Math.round(ability.damage / ability.hits) : 0;
-    ability.avgHealing = ability.hits > 0 ? Math.round(ability.healing / ability.hits) : 0;
-    ability.critRate = calculatePercentage(ability.crits, ability.hits);
+    const totalSuccessfulHits = ability.hits + ability.crits;
+    const totalAttempts = totalSuccessfulHits + ability.misses;
+    ability.avgDamage =
+      totalSuccessfulHits > 0 ? Math.round(ability.damage / totalSuccessfulHits) : 0;
+    ability.avgHealing =
+      totalSuccessfulHits > 0 ? Math.round(ability.healing / totalSuccessfulHits) : 0;
+    ability.critRate = calculatePercentage(ability.crits, totalSuccessfulHits);
     ability.missRate = calculatePercentage(ability.misses, totalAttempts);
   }
 

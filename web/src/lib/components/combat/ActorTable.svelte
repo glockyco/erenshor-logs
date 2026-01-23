@@ -53,10 +53,18 @@
               activeTab === "damageDealt"
                 ? a.dps
                 : activeTab === "damageTaken"
-                  ? (a.damageTaken / (stats?.durationMs || 1)) * 1000
+                  ? a.dtps
                   : activeTab === "healingDone"
                     ? a.hps
-                    : (a.healingReceived / (stats?.durationMs || 1)) * 1000,
+                    : a.hrps,
+            percentage:
+              activeTab === "damageDealt"
+                ? a.percentOfTotalDamage
+                : activeTab === "damageTaken"
+                  ? a.percentOfTotalDamageTaken
+                  : activeTab === "healingDone"
+                    ? a.percentOfTotalHealing
+                    : a.percentOfTotalHealingReceived,
             abilityBreakdown: filteredAbilities,
           };
         })
@@ -81,10 +89,6 @@
       const bVal = sortBy === "dps" ? b.dps : b.total;
       return sortDirection === "desc" ? bVal - aVal : aVal - bVal;
     })
-  );
-
-  const maxValue = $derived(
-    sortedActors.length > 0 ? Math.max(...sortedActors.map((a) => a.total)) : 0
   );
 
   const toggleSort = (field: SortField) => {
@@ -218,7 +222,6 @@
               <ActorRow
                 {actor}
                 rank={i + 1}
-                {maxValue}
                 durationMs={stats?.durationMs || 1}
                 perspective={activeTab}
                 expanded={expandedActors.has(actor.actorId)}

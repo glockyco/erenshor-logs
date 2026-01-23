@@ -2,6 +2,7 @@
   import { X, Download } from "@lucide/svelte";
   import type { Session } from "$lib/types";
   import { formatNumber, formatDps, formatDuration, formatTime } from "$lib/utils";
+  import { calculateSessionStats } from "$lib/services";
 
   interface Props {
     session: Session;
@@ -20,14 +21,9 @@
       : Date.now() - new Date(session.startTime).getTime()
   );
 
-  const totalDamage = $derived(
-    session.events.reduce(
-      (sum, e) => (e.eventType.startsWith("damage") && e.amount ? sum + e.amount : sum),
-      0
-    )
-  );
-
-  const dps = $derived(totalDamage / (duration / 1000));
+  const stats = $derived(calculateSessionStats(session.events, duration));
+  const totalDamage = $derived(stats.totalDamage);
+  const dps = $derived(stats.dps);
 </script>
 
 <div
