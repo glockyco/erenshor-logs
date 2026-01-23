@@ -46,28 +46,18 @@ export const modVersion = {
  * Set connection status to connecting.
  */
 export function setConnecting(): void {
-  console.log("[Connection] setConnecting called, current status:", state.connectionStatus);
   state.connectionStatus = "connecting";
   state.connectionError = null;
-  console.log("[Connection] Status updated to:", state.connectionStatus);
 }
 
 /**
  * Set connection status to connected with handshake data.
  */
 export function setConnected(handshake: HandshakeMessage): void {
-  console.log("[Connection] setConnected called");
-  console.log("[Connection] Current status:", state.connectionStatus);
-  console.log("[Connection] Handshake data:", {
-    protocolVersion: handshake.protocolVersion,
-    modVersion: handshake.modVersion,
-    hasSession: !!handshake.session,
-  });
   state.connectionStatus = "connected";
   state.connectionError = null;
   state.protocolVersion = handshake.protocolVersion;
   state.modVersion = handshake.modVersion;
-  console.log("[Connection] Status updated to:", state.connectionStatus);
 }
 
 /**
