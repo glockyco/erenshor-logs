@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { ChevronDown, ChevronRight } from "@lucide/svelte";
   import { formatDps, formatNumber, formatPercent } from "$lib/utils";
   import { getActorIcon } from "$lib/utils/actor-icons";
   import AbilityBreakdownTable from "./AbilityBreakdownTable.svelte";
@@ -70,7 +71,11 @@
         onclick={onToggleExpand}
         aria-label={expanded ? "Collapse abilities" : "Expand abilities"}
       >
-        {expanded ? "▼" : "▶"}
+        {#if expanded}
+          <ChevronDown class="w-4 h-4" />
+        {:else}
+          <ChevronRight class="w-4 h-4" />
+        {/if}
       </button>
     {/if}
   </td>
