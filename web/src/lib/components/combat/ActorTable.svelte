@@ -103,6 +103,17 @@
       expandedActors.add(actorId);
     }
   };
+
+  // Context-aware rate label for main table header
+  const rateLabel = $derived(
+    activeTab === "damageDealt"
+      ? "DPS"
+      : activeTab === "damageTaken"
+        ? "DTPS"
+        : activeTab === "healingDone"
+          ? "HPS"
+          : "HRPS"
+  );
 </script>
 
 <div class="bg-stone-800 border-2 border-stone-700 rounded-lg shadow-lg">
@@ -172,7 +183,7 @@
                 class="inline-flex items-center gap-1 hover:text-amber-500 cursor-pointer"
                 onclick={() => toggleSort("dps")}
               >
-                DPS
+                {rateLabel}
                 {#if sortBy === "dps"}
                   <ChevronDown
                     class={`h-3 w-3 transition-transform ${sortDirection === "asc" ? "rotate-180" : ""}`}
