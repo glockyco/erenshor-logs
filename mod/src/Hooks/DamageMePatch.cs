@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ErenshorLogs.Context;
 using ErenshorLogs.Events;
 using ErenshorLogs.Session;
@@ -36,6 +37,18 @@ public static class DamageMePatch
   /// Set by Plugin during initialization.
   /// </summary>
   internal static ISessionManager? SessionManager { get; set; }
+
+  /// <summary>
+  /// Configuration for debug capture settings.
+  /// Set by Plugin during initialization.
+  /// </summary>
+  internal static bool CaptureDebugForUnknown { get; set; } = true;
+
+  /// <summary>
+  /// Configuration for capturing debug info for all events.
+  /// Set by Plugin during initialization.
+  /// </summary>
+  internal static bool CaptureDebugForAll { get; set; } = false;
 
   /// <summary>
   /// Postfix hook that captures damage events after DamageMe completes.
@@ -91,6 +104,23 @@ public static class DamageMePatch
     // Resolve ability from context with smart fallback
     var ability = AbilityResolver.ResolveWithFallback(_dmgType);
 
+    // Capture debug info if enabled
+    var debugInfo = AbilityResolver.CaptureDebugInfoIfEnabled(
+      "Character.DamageMe",
+      new Dictionary<string, string>
+      {
+        ["damageType"] = _dmgType.ToString(),
+        ["amount"] = __result.ToString(),
+        ["incdmg"] = _incdmg.ToString(),
+        ["critical"] = _criticalHit.ToString(),
+        ["fromPlayer"] = _fromPlayer.ToString(),
+      },
+      ability,
+      CaptureDebugForUnknown,
+      CaptureDebugForAll,
+      LogDebug
+    );
+
     // Create and emit the event
     var evt = EventBuilder.CreateDamageEvent(
       EventType.DamagePhysical,
@@ -99,7 +129,8 @@ public static class DamageMePatch
       amount: amount,
       damageType: damageType,
       ability: ability,
-      flags: flags
+      flags: flags,
+      debugInfo: debugInfo
     );
 
     if (evt != null)

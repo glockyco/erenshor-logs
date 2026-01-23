@@ -41,6 +41,7 @@ public sealed class CombatEventBuilder<TCharacter>
   /// <param name="damageType">The type of damage dealt.</param>
   /// <param name="ability">The ability that caused the damage.</param>
   /// <param name="flags">Event flags (critical, missed, etc.).</param>
+  /// <param name="debugInfo">Optional debug information for attribution troubleshooting.</param>
   /// <returns>A new CombatEvent, or null if target cannot be resolved.</returns>
   public CombatEvent? CreateDamageEvent(
     EventType eventType,
@@ -49,7 +50,8 @@ public sealed class CombatEventBuilder<TCharacter>
     int amount,
     DamageType damageType,
     AbilityRef ability,
-    EventFlags? flags = null
+    EventFlags? flags = null,
+    AttributionDebugInfo? debugInfo = null
   )
   {
     var targetRef = _resolveActor(target);
@@ -69,6 +71,7 @@ public sealed class CombatEventBuilder<TCharacter>
       DamageType = damageType,
       Ability = ability,
       Flags = flags,
+      DebugInfo = debugInfo,
     };
   }
 }

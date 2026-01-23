@@ -18,6 +18,7 @@ public interface ICombatEventBuilder
   /// <param name="damageType">The type of damage dealt.</param>
   /// <param name="ability">The ability that caused the damage.</param>
   /// <param name="flags">Event flags (critical, missed, etc.).</param>
+  /// <param name="debugInfo">Optional debug information for attribution troubleshooting.</param>
   /// <returns>A new CombatEvent, or null if target cannot be resolved.</returns>
   CombatEvent? CreateDamageEvent(
     EventType eventType,
@@ -26,6 +27,7 @@ public interface ICombatEventBuilder
     int amount,
     DamageType damageType,
     AbilityRef ability,
-    EventFlags? flags = null
+    EventFlags? flags = null,
+    AttributionDebugInfo? debugInfo = null
   );
 }

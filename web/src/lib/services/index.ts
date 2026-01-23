@@ -10,6 +10,14 @@ export {
 export { parseMessage, isParseError } from "./message-parser";
 export { createWebSocketClient, type WebSocketCallbacks, type WebSocketClient } from "./websocket";
 export {
+  analyzeUnknownEvents,
+  exportSignaturesToCSV,
+  exportSignaturesToJSON,
+  type UnknownSignature,
+  type AttributionSummary,
+  type DebugAnalysis,
+} from "./debug-analyzer";
+export {
   exportSession,
   exportSessions,
   type ExportedSession,

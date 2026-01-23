@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ErenshorLogs.Context;
 using ErenshorLogs.Events;
 using ErenshorLogs.Session;
@@ -36,6 +37,18 @@ public static class BleedDamageMePatch
   /// Set by Plugin during initialization.
   /// </summary>
   internal static ISessionManager? SessionManager { get; set; }
+
+  /// <summary>
+  /// Configuration for debug capture settings.
+  /// Set by Plugin during initialization.
+  /// </summary>
+  internal static bool CaptureDebugForUnknown { get; set; } = true;
+
+  /// <summary>
+  /// Configuration for capturing debug info for all events.
+  /// Set by Plugin during initialization.
+  /// </summary>
+  internal static bool CaptureDebugForAll { get; set; } = false;
 
   /// <summary>
   /// Postfix hook that captures DoT tick events after BleedDamageMe completes.
@@ -79,6 +92,21 @@ public static class BleedDamageMePatch
     var ability =
       AbilityResolver.FromContext() ?? AbilityResolver.CreateFixed("DoT Tick", AbilityType.Dot);
 
+    // Capture debug info if enabled
+    var debugInfo = AbilityResolver.CaptureDebugInfoIfEnabled(
+      "Character.BleedDamageMe",
+      new Dictionary<string, string>
+      {
+        ["amount"] = __result.ToString(),
+        ["incdmg"] = _incdmg.ToString(),
+        ["fromPlayer"] = _fromPlayer.ToString(),
+      },
+      ability,
+      CaptureDebugForUnknown,
+      CaptureDebugForAll,
+      LogDebug
+    );
+
     // Create and emit the event
     var evt = EventBuilder.CreateDamageEvent(
       EventType.DamageDot,
@@ -87,7 +115,8 @@ public static class BleedDamageMePatch
       amount: __result,
       damageType: DamageType.Physical,
       ability: ability,
-      flags: flags
+      flags: flags,
+      debugInfo: debugInfo
     );
 
     if (evt != null)

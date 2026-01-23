@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ErenshorLogs.Context;
 using ErenshorLogs.Events;
 using ErenshorLogs.Session;
@@ -38,6 +39,18 @@ public static class EnvironmentalDamageMePatch
   internal static ISessionManager? SessionManager { get; set; }
 
   /// <summary>
+  /// Configuration for debug capture settings.
+  /// Set by Plugin during initialization.
+  /// </summary>
+  internal static bool CaptureDebugForUnknown { get; set; } = true;
+
+  /// <summary>
+  /// Configuration for capturing debug info for all events.
+  /// Set by Plugin during initialization.
+  /// </summary>
+  internal static bool CaptureDebugForAll { get; set; } = false;
+
+  /// <summary>
   /// Postfix hook that captures environmental damage after EnvironmentalDamageMe completes.
   /// </summary>
   /// <param name="__instance">The Character that received damage (target).</param>
@@ -65,6 +78,20 @@ public static class EnvironmentalDamageMePatch
     // Environmental damage has no source actor and is always physical
     var ability = AbilityResolver.CreateFixed("Environmental", AbilityType.Environmental);
 
+    // Capture debug info if enabled (unlikely for environmental but supports CaptureDebugForAll)
+    var debugInfo = AbilityResolver.CaptureDebugInfoIfEnabled(
+      "Character.EnvironmentalDamageMe",
+      new Dictionary<string, string>
+      {
+        ["amount"] = __result.ToString(),
+        ["dmg"] = _dmg.ToString(),
+      },
+      ability,
+      CaptureDebugForUnknown,
+      CaptureDebugForAll,
+      LogDebug
+    );
+
     var evt = EventBuilder.CreateDamageEvent(
       EventType.DamageEnvironmental,
       target: __instance,
@@ -72,7 +99,8 @@ public static class EnvironmentalDamageMePatch
       amount: __result,
       damageType: DamageType.Physical,
       ability: ability,
-      flags: null
+      flags: null,
+      debugInfo: debugInfo
     );
 
     if (evt != null)

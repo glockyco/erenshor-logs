@@ -14,6 +14,8 @@ export type {
   ActorBreakdownTab,
   FactionFilter,
   UIPreferences,
+  AttributionDebugInfo,
+  ContextSnapshot,
 } from "./schemas";
 
 export {
@@ -25,4 +27,6 @@ export {
   ActorBreakdownTabSchema,
   FactionFilterSchema,
   UIPreferencesSchema,
+  AttributionDebugInfoSchema,
+  ContextSnapshotSchema,
 } from "./schemas";

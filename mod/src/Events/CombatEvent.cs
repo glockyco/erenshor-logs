@@ -40,4 +40,10 @@ public sealed record CombatEvent
 
   /// <summary>Event flags.</summary>
   public EventFlags? Flags { get; init; }
+
+  /// <summary>
+  /// Debug information for attribution troubleshooting.
+  /// Only populated when debug capture is enabled and/or attribution fails.
+  /// </summary>
+  public AttributionDebugInfo? DebugInfo { get; init; }
 }

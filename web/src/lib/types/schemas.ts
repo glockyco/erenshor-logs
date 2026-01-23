@@ -107,6 +107,21 @@ export const EventFlagsSchema = z.object({
 });
 export type EventFlags = z.infer<typeof EventFlagsSchema>;
 
+export const ContextSnapshotSchema = z.object({
+  stackDepth: z.number(),
+  topContextName: z.string().optional(),
+  topContextType: AbilityTypeSchema.optional(),
+});
+export type ContextSnapshot = z.infer<typeof ContextSnapshotSchema>;
+
+export const AttributionDebugInfoSchema = z.object({
+  sourceMethod: z.string(),
+  parameters: z.record(z.string(), z.string()).optional(),
+  stackTrace: z.array(z.string()).optional(),
+  context: ContextSnapshotSchema.optional(),
+});
+export type AttributionDebugInfo = z.infer<typeof AttributionDebugInfoSchema>;
+
 // =============================================================================
 // Combat Event
 // =============================================================================
@@ -124,6 +139,7 @@ export const CombatEventSchema = z.object({
   damageType: DamageTypeSchema.optional(),
   effect: EffectRefSchema.optional(),
   flags: EventFlagsSchema.optional(),
+  debugInfo: AttributionDebugInfoSchema.optional(),
 });
 export type CombatEvent = z.infer<typeof CombatEventSchema>;
 

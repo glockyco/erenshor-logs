@@ -3,6 +3,7 @@
   import SessionList from "$lib/components/session/SessionList.svelte";
   import StatsPanel from "$lib/components/combat/StatsPanel.svelte";
   import ActorTable from "$lib/components/combat/ActorTable.svelte";
+  import DebugPanel from "$lib/components/debug/DebugPanel.svelte";
   import { sessions, activeSession, activeSessionStats } from "$lib/state/sessions.svelte";
 
   const hasSessions = $derived(sessions.size > 0);
@@ -31,6 +32,9 @@
     <div class="lg:col-span-2 space-y-6">
       <StatsPanel {stats} {isLive} {duration} />
       <ActorTable {stats} />
+      {#if session}
+        <DebugPanel {session} {duration} />
+      {/if}
     </div>
   </div>
 {/if}

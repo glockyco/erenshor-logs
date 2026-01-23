@@ -64,6 +64,7 @@ public sealed class Plugin : BaseUnityPlugin
     var emitter = services.GetRequiredService<IEventEmitter>();
     var eventBuilder = services.GetRequiredService<ICombatEventBuilder>();
     var sessionManager = services.GetRequiredService<ISessionManager>();
+    var config = services.GetRequiredService<ModConfig>();
 
     // Create and store relevance checker
     _relevanceChecker = new CombatRelevanceCheckerAdapter();
@@ -73,24 +74,32 @@ public sealed class Plugin : BaseUnityPlugin
     DamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
     DamageMePatch.RelevanceChecker = _relevanceChecker;
     DamageMePatch.SessionManager = sessionManager;
+    DamageMePatch.CaptureDebugForUnknown = config.CaptureDebugForUnknown.Value;
+    DamageMePatch.CaptureDebugForAll = config.CaptureDebugForAll.Value;
 
     MagicDamageMePatch.Emitter = emitter;
     MagicDamageMePatch.EventBuilder = eventBuilder;
     MagicDamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
     MagicDamageMePatch.RelevanceChecker = _relevanceChecker;
     MagicDamageMePatch.SessionManager = sessionManager;
+    MagicDamageMePatch.CaptureDebugForUnknown = config.CaptureDebugForUnknown.Value;
+    MagicDamageMePatch.CaptureDebugForAll = config.CaptureDebugForAll.Value;
 
     BleedDamageMePatch.Emitter = emitter;
     BleedDamageMePatch.EventBuilder = eventBuilder;
     BleedDamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
     BleedDamageMePatch.RelevanceChecker = _relevanceChecker;
     BleedDamageMePatch.SessionManager = sessionManager;
+    BleedDamageMePatch.CaptureDebugForUnknown = config.CaptureDebugForUnknown.Value;
+    BleedDamageMePatch.CaptureDebugForAll = config.CaptureDebugForAll.Value;
 
     EnvironmentalDamageMePatch.Emitter = emitter;
     EnvironmentalDamageMePatch.EventBuilder = eventBuilder;
     EnvironmentalDamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
     EnvironmentalDamageMePatch.RelevanceChecker = _relevanceChecker;
     EnvironmentalDamageMePatch.SessionManager = sessionManager;
+    EnvironmentalDamageMePatch.CaptureDebugForUnknown = config.CaptureDebugForUnknown.Value;
+    EnvironmentalDamageMePatch.CaptureDebugForAll = config.CaptureDebugForAll.Value;
 
     // Create and wire up EffectTracker for DoT/HoT attribution
     var effectTracker = new EffectTracker();
