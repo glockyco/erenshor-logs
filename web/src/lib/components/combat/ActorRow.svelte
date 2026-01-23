@@ -63,7 +63,7 @@
     {#if actor.abilityBreakdown && actor.abilityBreakdown.length > 0}
       <button
         type="button"
-        class="text-amber-500 hover:text-amber-400 transition-colors"
+        class="text-amber-500 hover:text-amber-400 transition-colors cursor-pointer"
         onclick={onToggleExpand}
         aria-label={expanded ? "Collapse abilities" : "Expand abilities"}
       >

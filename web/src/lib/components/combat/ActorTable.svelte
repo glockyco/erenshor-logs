@@ -1,5 +1,6 @@
 <script lang="ts">
   import { ChevronDown } from "@lucide/svelte";
+  import { SvelteSet } from "svelte/reactivity";
   import FactionTabs from "./FactionTabs.svelte";
   import ActorRow from "./ActorRow.svelte";
   import type { SessionStats } from "$lib/types";
@@ -18,7 +19,7 @@
   let factionFilter = $state<FactionFilter>("all");
   let sortBy = $state<SortField>("dps");
   let sortDirection = $state<"asc" | "desc">("desc");
-  let expandedActors = $state<Set<string>>(new Set());
+  let expandedActors = new SvelteSet<string>();
 
   // Get actors based on active tab - include ability breakdown
   const actors = $derived(
