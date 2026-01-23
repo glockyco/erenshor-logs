@@ -51,6 +51,12 @@ public static class DamageMePatch
   internal static bool CaptureDebugForAll { get; set; } = false;
 
   /// <summary>
+  /// Effect tracker for resolving DoT tick attribution.
+  /// Set by Plugin during initialization.
+  /// </summary>
+  internal static EffectTracker? EffectTracker { get; set; }
+
+  /// <summary>
   /// Postfix hook that captures damage events after DamageMe completes.
   /// </summary>
   /// <param name="__instance">The Character that received damage (target).</param>
@@ -101,8 +107,38 @@ public static class DamageMePatch
     // Convert game damage type to our enum
     var damageType = DamageTypeMapper.FromGame(_dmgType);
 
-    // Resolve ability from context with smart fallback
-    var ability = AbilityResolver.ResolveWithFallback(_dmgType);
+    // Resolve ability: try context first, then DoT slot tracking (if in TickEffects), then inference
+    var ability = AbilityResolver.FromContext();
+
+    if (ability == null && TickEffectsSlotTracker.IsInTickEffects())
+    {
+      // We're in TickEffects - try to identify the slot
+      var slot = TickEffectsSlotTracker.FindAndAdvanceSlot(
+        __instance,
+        _dmgType,
+        isBleed: false,
+        isHeal: false
+      );
+
+      if (slot.HasValue && EffectTracker != null)
+      {
+        // Query EffectTracker with exact slot index to get spell name
+        var context = EffectTracker.GetEffectContext(__instance, slot.Value);
+        if (context != null)
+        {
+          ability = new AbilityRef
+          {
+            Name = context.Name,
+            Type = context.Type,
+            StableKey = context.StableKey,
+            ProcSource = context.ProcSource,
+          };
+        }
+      }
+    }
+
+    // Fallback: infer from damage type (auto-attacks, unhooked spells, etc.)
+    ability ??= AbilityResolver.InferFromDamageType(_dmgType);
 
     // Capture debug info if enabled
     var debugInfo = AbilityResolver.CaptureDebugInfoIfEnabled(

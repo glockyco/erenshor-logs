@@ -132,8 +132,7 @@ public sealed class SessionManager : ISessionManager
       }
       else
       {
-        // Session exists (lazy start) - this is the confirmation
-        _log?.Invoke(LogLevel.Debug, "Combat state confirmed lazy-started session");
+        // Session exists (lazy start) - this is the confirmation (silent)
       }
 
       // Clear pending timeout - session is confirmed

@@ -69,6 +69,9 @@ public sealed class Plugin : BaseUnityPlugin
     // Create and store relevance checker
     _relevanceChecker = new CombatRelevanceCheckerAdapter();
 
+    // Create and wire up EffectTracker for DoT/HoT attribution
+    var effectTracker = new EffectTracker();
+
     DamageMePatch.Emitter = emitter;
     DamageMePatch.EventBuilder = eventBuilder;
     DamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
@@ -76,6 +79,7 @@ public sealed class Plugin : BaseUnityPlugin
     DamageMePatch.SessionManager = sessionManager;
     DamageMePatch.CaptureDebugForUnknown = config.CaptureDebugForUnknown.Value;
     DamageMePatch.CaptureDebugForAll = config.CaptureDebugForAll.Value;
+    DamageMePatch.EffectTracker = effectTracker;
 
     MagicDamageMePatch.Emitter = emitter;
     MagicDamageMePatch.EventBuilder = eventBuilder;
@@ -92,6 +96,7 @@ public sealed class Plugin : BaseUnityPlugin
     BleedDamageMePatch.SessionManager = sessionManager;
     BleedDamageMePatch.CaptureDebugForUnknown = config.CaptureDebugForUnknown.Value;
     BleedDamageMePatch.CaptureDebugForAll = config.CaptureDebugForAll.Value;
+    BleedDamageMePatch.EffectTracker = effectTracker;
 
     EnvironmentalDamageMePatch.Emitter = emitter;
     EnvironmentalDamageMePatch.EventBuilder = eventBuilder;
@@ -101,8 +106,7 @@ public sealed class Plugin : BaseUnityPlugin
     EnvironmentalDamageMePatch.CaptureDebugForUnknown = config.CaptureDebugForUnknown.Value;
     EnvironmentalDamageMePatch.CaptureDebugForAll = config.CaptureDebugForAll.Value;
 
-    // Create and wire up EffectTracker for DoT/HoT attribution
-    var effectTracker = new EffectTracker();
+    // Wire EffectTracker to effect lifecycle hooks
     AddStatusEffectPatch.Tracker = effectTracker;
     RemoveStatusEffectPatch.Tracker = effectTracker;
   }

@@ -51,6 +51,12 @@ public static class BleedDamageMePatch
   internal static bool CaptureDebugForAll { get; set; } = false;
 
   /// <summary>
+  /// Effect tracker for resolving DoT tick attribution.
+  /// Set by Plugin during initialization.
+  /// </summary>
+  internal static EffectTracker? EffectTracker { get; set; }
+
+  /// <summary>
   /// Postfix hook that captures DoT tick events after BleedDamageMe completes.
   /// </summary>
   /// <param name="__instance">The Character that received damage (target).</param>
@@ -86,11 +92,43 @@ public static class BleedDamageMePatch
     // DoT ticks are always physical damage, no critical hits
     var flags = new EventFlags { FromPlayer = _fromPlayer ? true : null };
 
-    // Try to resolve ability from context (if TickEffects hook provides it)
-    // Otherwise fall back to generic "DoT Tick"
-    // Issue #11 tracks full DoT attribution with EffectTracker integration
-    var ability =
-      AbilityResolver.FromContext() ?? AbilityResolver.CreateFixed("DoT Tick", AbilityType.Dot);
+    // Resolve ability: try context first, then DoT slot tracking (if in TickEffects)
+    var ability = AbilityResolver.FromContext();
+
+    if (ability == null && TickEffectsSlotTracker.IsInTickEffects())
+    {
+      // We're in TickEffects - try to identify the bleed slot
+      var slot = TickEffectsSlotTracker.FindAndAdvanceSlot(
+        __instance,
+        GameData.DamageType.Physical,
+        isBleed: true,
+        isHeal: false
+      );
+
+      if (slot.HasValue && EffectTracker != null)
+      {
+        // Query EffectTracker with exact slot index to get spell name
+        var context = EffectTracker.GetEffectContext(__instance, slot.Value);
+        if (context != null)
+        {
+          ability = new AbilityRef
+          {
+            Name = context.Name,
+            Type = context.Type,
+            StableKey = context.StableKey,
+            ProcSource = context.ProcSource,
+          };
+        }
+      }
+    }
+
+    // Fallback: if not in TickEffects or slot tracking failed, mark as Unknown
+    ability ??= new AbilityRef
+    {
+      Name = "Unknown",
+      Type = AbilityType.Unknown,
+      StableKey = null,
+    };
 
     // Capture debug info if enabled
     var debugInfo = AbilityResolver.CaptureDebugInfoIfEnabled(
