@@ -1,20 +1,27 @@
 <script lang="ts">
   import { formatDps, formatNumber } from "$lib/utils";
+  import AbilityBreakdownTable from "./AbilityBreakdownTable.svelte";
+  import type { AbilityStats } from "$lib/types";
 
   interface ActorBreakdown {
     actorName: string;
     actorType: "player" | "simPlayer" | "npc" | "pet";
     total: number;
     dps: number;
+    abilityBreakdown: AbilityStats[];
   }
 
   interface Props {
     actor: ActorBreakdown;
     rank: number;
     maxValue: number;
+    durationMs: number;
+    mode: "damage" | "healing";
+    expanded: boolean;
+    onToggleExpand: () => void;
   }
 
-  let { actor, rank, maxValue }: Props = $props();
+  let { actor, rank, maxValue, durationMs, mode, expanded, onToggleExpand }: Props = $props();
 
   const percentage = $derived(maxValue > 0 ? (actor.total / maxValue) * 100 : 0);
 
@@ -49,7 +56,22 @@
   const colors = $derived(badgeColors[actor.actorType]);
 </script>
 
-<tr class="border-b border-stone-700 hover:bg-stone-700/30">
+<!-- Main Actor Row -->
+<tr class={`border-b border-stone-700 ${expanded ? "bg-stone-800/50" : "hover:bg-stone-700/30"}`}>
+  <!-- Expand/Collapse Button -->
+  <td class="px-3 py-3">
+    {#if actor.abilityBreakdown && actor.abilityBreakdown.length > 0}
+      <button
+        type="button"
+        class="text-amber-500 hover:text-amber-400 transition-colors"
+        onclick={onToggleExpand}
+        aria-label={expanded ? "Collapse abilities" : "Expand abilities"}
+      >
+        {expanded ? "▼" : "▶"}
+      </button>
+    {/if}
+  </td>
+
   <!-- Rank -->
   <td class="px-3 py-3 font-mono text-stone-500">
     {rank}
@@ -85,3 +107,17 @@
     </div>
   </td>
 </tr>
+
+<!-- Ability Breakdown Row (conditionally rendered) -->
+{#if expanded && actor.abilityBreakdown && actor.abilityBreakdown.length > 0}
+  <tr class="bg-stone-900/50">
+    <td colspan="6" class="px-3 py-0">
+      <AbilityBreakdownTable
+        abilities={actor.abilityBreakdown}
+        actorTotal={actor.total}
+        {durationMs}
+        {mode}
+      />
+    </td>
+  </tr>
+{/if}

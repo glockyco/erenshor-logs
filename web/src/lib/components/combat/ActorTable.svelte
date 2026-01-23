@@ -18,11 +18,13 @@
   let factionFilter = $state<FactionFilter>("all");
   let sortBy = $state<SortField>("dps");
   let sortDirection = $state<"asc" | "desc">("desc");
+  let expandedActors = $state<Set<string>>(new Set());
 
-  // Get actors based on active tab - map to simplified structure
+  // Get actors based on active tab - include ability breakdown
   const actors = $derived(
     stats
       ? stats.actorBreakdown.map((a) => ({
+          actorId: a.actorId,
           actorName: a.actorName,
           actorType: a.actorType,
           total:
@@ -41,6 +43,7 @@
                 : activeTab === "healingDone"
                   ? a.hps
                   : (a.healingReceived / (stats?.durationMs || 1)) * 1000,
+          abilityBreakdown: a.abilityBreakdown,
         }))
       : []
   );
@@ -77,6 +80,19 @@
       sortDirection = "desc";
     }
   };
+
+  const toggleExpanded = (actorId: string) => {
+    if (expandedActors.has(actorId)) {
+      expandedActors.delete(actorId);
+    } else {
+      expandedActors.add(actorId);
+    }
+  };
+
+  // Determine mode based on active tab
+  const mode = $derived<"damage" | "healing">(
+    activeTab === "damageDealt" || activeTab === "damageTaken" ? "damage" : "healing"
+  );
 </script>
 
 <div class="bg-stone-800 border-2 border-stone-700 rounded-lg shadow-lg">
@@ -135,6 +151,7 @@
       <table class="w-full text-sm">
         <thead class="border-b border-stone-700">
           <tr>
+            <th class="px-3 py-3 text-left text-xs uppercase tracking-wider text-stone-400"></th>
             <th class="px-3 py-3 text-left text-xs uppercase tracking-wider text-stone-400"> # </th>
             <th class="px-4 py-3 text-left text-xs uppercase tracking-wider text-stone-400">
               Actor
@@ -173,8 +190,16 @@
           </tr>
         </thead>
         <tbody>
-          {#each sortedActors as actor, i (`${actor.actorName}-${actor.actorType}-${i}`)}
-            <ActorRow {actor} rank={i + 1} {maxValue} />
+          {#each sortedActors as actor, i (`${actor.actorId}-${i}`)}
+            <ActorRow
+              {actor}
+              rank={i + 1}
+              {maxValue}
+              durationMs={stats?.durationMs || 1}
+              {mode}
+              expanded={expandedActors.has(actor.actorId)}
+              onToggleExpand={() => toggleExpanded(actor.actorId)}
+            />
           {/each}
         </tbody>
       </table>
