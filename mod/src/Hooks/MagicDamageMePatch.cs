@@ -85,30 +85,8 @@ public static class MagicDamageMePatch
     // Convert game damage type to our enum
     var damageType = DamageTypeMapper.FromGame(_dmgType);
 
-    // Resolve ability from context (spells always have context from ResolveSpellPatch)
-    AbilityRef? ability = null;
-    var context = CombatContext.CurrentAbility();
-    if (context != null)
-    {
-      ability = new AbilityRef
-      {
-        Name = context.Name,
-        Type = context.Type,
-        StableKey = context.StableKey,
-        ProcSource = context.ProcSource,
-      };
-    }
-    else
-    {
-      // No context available - attribution failed
-      // Tracked in Issue #93 for improved attribution
-      ability = new AbilityRef
-      {
-        Name = "Unknown",
-        Type = AbilityType.Unknown,
-        StableKey = null,
-      };
-    }
+    // Resolve ability from context with smart fallback
+    var ability = AbilityResolver.ResolveWithFallback(_dmgType);
 
     // Create and emit the event
     var evt = EventBuilder.CreateDamageEvent(

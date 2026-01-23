@@ -1,3 +1,4 @@
+using ErenshorLogs.Context;
 using ErenshorLogs.Events;
 using ErenshorLogs.Session;
 using HarmonyLib;
@@ -72,14 +73,11 @@ public static class BleedDamageMePatch
     // DoT ticks are always physical damage, no critical hits
     var flags = new EventFlags { FromPlayer = _fromPlayer ? true : null };
 
-    // For DoTs, use generic "DoT Tick" for now
-    // Issue #94 tracks fine-grained attribution for concurrent DoTs
-    var ability = new AbilityRef
-    {
-      Name = "DoT Tick",
-      Type = AbilityType.Dot,
-      StableKey = null,
-    };
+    // Try to resolve ability from context (if TickEffects hook provides it)
+    // Otherwise fall back to generic "DoT Tick"
+    // Issue #11 tracks full DoT attribution with EffectTracker integration
+    var ability =
+      AbilityResolver.FromContext() ?? AbilityResolver.CreateFixed("DoT Tick", AbilityType.Dot);
 
     // Create and emit the event
     var evt = EventBuilder.CreateDamageEvent(

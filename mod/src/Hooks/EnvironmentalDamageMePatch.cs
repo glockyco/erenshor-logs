@@ -1,3 +1,4 @@
+using ErenshorLogs.Context;
 using ErenshorLogs.Events;
 using ErenshorLogs.Session;
 using HarmonyLib;
@@ -62,13 +63,7 @@ public static class EnvironmentalDamageMePatch
       return;
 
     // Environmental damage has no source actor and is always physical
-    // Use explicit Environmental ability type (null object pattern)
-    var ability = new AbilityRef
-    {
-      Name = "Environmental",
-      Type = AbilityType.Environmental,
-      StableKey = null,
-    };
+    var ability = AbilityResolver.CreateFixed("Environmental", AbilityType.Environmental);
 
     var evt = EventBuilder.CreateDamageEvent(
       EventType.DamageEnvironmental,
