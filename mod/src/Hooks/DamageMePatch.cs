@@ -1,3 +1,4 @@
+using ErenshorLogs.Context;
 using ErenshorLogs.Events;
 using ErenshorLogs.Session;
 using HarmonyLib;
@@ -87,6 +88,30 @@ public static class DamageMePatch
     // Convert game damage type to our enum
     var damageType = DamageTypeMapper.FromGame(_dmgType);
 
+    // Resolve ability from context
+    AbilityRef? ability = null;
+    var context = CombatContext.CurrentAbility();
+    if (context != null)
+    {
+      ability = new AbilityRef
+      {
+        Name = context.Name,
+        Type = context.Type,
+        StableKey = context.StableKey,
+        ProcSource = context.ProcSource,
+      };
+    }
+    else
+    {
+      // No context = auto-attack
+      ability = new AbilityRef
+      {
+        Name = "Auto Attack",
+        Type = AbilityType.Auto,
+        StableKey = null,
+      };
+    }
+
     // Create and emit the event
     var evt = EventBuilder.CreateDamageEvent(
       EventType.DamagePhysical,
@@ -94,6 +119,7 @@ public static class DamageMePatch
       source: _attacker,
       amount: amount,
       damageType: damageType,
+      ability: ability,
       flags: flags
     );
 

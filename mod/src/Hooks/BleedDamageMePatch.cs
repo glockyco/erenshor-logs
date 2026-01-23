@@ -72,6 +72,15 @@ public static class BleedDamageMePatch
     // DoT ticks are always physical damage, no critical hits
     var flags = new EventFlags { FromPlayer = _fromPlayer ? true : null };
 
+    // For DoTs, use generic "DoT Tick" for now
+    // Issue #94 tracks fine-grained attribution for concurrent DoTs
+    var ability = new AbilityRef
+    {
+      Name = "DoT Tick",
+      Type = AbilityType.Dot,
+      StableKey = null,
+    };
+
     // Create and emit the event
     var evt = EventBuilder.CreateDamageEvent(
       EventType.DamageDot,
@@ -79,6 +88,7 @@ public static class BleedDamageMePatch
       source: _attacker,
       amount: __result,
       damageType: DamageType.Physical,
+      ability: ability,
       flags: flags
     );
 

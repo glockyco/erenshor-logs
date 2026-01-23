@@ -62,12 +62,14 @@ public static class EnvironmentalDamageMePatch
       return;
 
     // Environmental damage has no source actor and is always physical
+    // No ability for environmental damage
     var evt = EventBuilder.CreateDamageEvent(
       EventType.DamageEnvironmental,
       target: __instance,
       source: null,
       amount: __result,
       damageType: DamageType.Physical,
+      ability: null,
       flags: null
     );
 
