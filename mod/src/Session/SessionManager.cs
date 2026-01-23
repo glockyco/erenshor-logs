@@ -33,9 +33,10 @@ public sealed class SessionManager : ISessionManager
   /// <summary>
   /// Timeout for active sessions with no events.
   /// Sessions end after this duration of inactivity regardless of combat state.
-  /// Set to 5 seconds to capture final DoT ticks (which occur every 3 seconds).
+  /// Set to 4.5 seconds to quickly end sessions while still capturing final
+  /// DoT ticks (which occur every 3 seconds). The web app uses 5s as a safety net.
   /// </summary>
-  private const float INACTIVITY_TIMEOUT_SECONDS = 5.0f;
+  private const float INACTIVITY_TIMEOUT_SECONDS = 4.5f;
 
   /// <summary>
   /// Unity Time.time when pending session was created.

@@ -18,11 +18,11 @@ import { now } from "./clock.svelte";
  * timestamp is older than this timeout. This handles cases where the mod
  * crashes or fails to send a combatEnd event.
  *
- * Set to 10 seconds to provide buffer for network/processing delays while
- * still detecting hung sessions quickly. The mod's inactivity timeout is 5s,
- * so under normal operation the mod will send combatEnd before this triggers.
+ * Set to 5 seconds to quickly end sessions after combat finishes. The mod's
+ * inactivity timeout is also 5s, so this acts as a safety net if the mod
+ * fails to send combatEnd.
  */
-const STALE_SESSION_TIMEOUT_MS = 10_000; // 10 seconds
+const STALE_SESSION_TIMEOUT_MS = 5_000; // 5 seconds
 
 // State
 export const sessions = new SvelteMap<string, Session>();
