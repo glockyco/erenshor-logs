@@ -37904,10 +37904,7 @@
               "dmg": "32",
               "fromPlayer": "False"
             },
-            "stackTrace": [
-              "Character.DMD<Character::MagicDamageMe>",
-              "AEEvent.Update"
-            ],
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
             "context": {
               "stackDepth": 0
             }
@@ -38514,10 +38511,7 @@
               "dmg": "32",
               "fromPlayer": "False"
             },
-            "stackTrace": [
-              "Character.DMD<Character::MagicDamageMe>",
-              "AEEvent.Update"
-            ],
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
             "context": {
               "stackDepth": 0
             }
@@ -38555,10 +38549,7 @@
               "dmg": "52",
               "fromPlayer": "False"
             },
-            "stackTrace": [
-              "Character.DMD<Character::MagicDamageMe>",
-              "AEEvent.Update"
-            ],
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
             "context": {
               "stackDepth": 0
             }
@@ -38596,10 +38587,7 @@
               "dmg": "45",
               "fromPlayer": "False"
             },
-            "stackTrace": [
-              "Character.DMD<Character::MagicDamageMe>",
-              "AEEvent.Update"
-            ],
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
             "context": {
               "stackDepth": 0
             }
@@ -38637,10 +38625,7 @@
               "dmg": "37",
               "fromPlayer": "False"
             },
-            "stackTrace": [
-              "Character.DMD<Character::MagicDamageMe>",
-              "AEEvent.Update"
-            ],
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
             "context": {
               "stackDepth": 0
             }
@@ -38678,10 +38663,7 @@
               "dmg": "37",
               "fromPlayer": "False"
             },
-            "stackTrace": [
-              "Character.DMD<Character::MagicDamageMe>",
-              "AEEvent.Update"
-            ],
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
             "context": {
               "stackDepth": 0
             }
@@ -39302,10 +39284,7 @@
               "dmg": "162",
               "fromPlayer": "False"
             },
-            "stackTrace": [
-              "Character.DMD<Character::MagicDamageMe>",
-              "AEEvent.Update"
-            ],
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
             "context": {
               "stackDepth": 0
             }
@@ -39343,10 +39322,7 @@
               "dmg": "147",
               "fromPlayer": "False"
             },
-            "stackTrace": [
-              "Character.DMD<Character::MagicDamageMe>",
-              "AEEvent.Update"
-            ],
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
             "context": {
               "stackDepth": 0
             }
@@ -39384,10 +39360,7 @@
               "dmg": "210",
               "fromPlayer": "False"
             },
-            "stackTrace": [
-              "Character.DMD<Character::MagicDamageMe>",
-              "AEEvent.Update"
-            ],
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
             "context": {
               "stackDepth": 0
             }
@@ -39425,10 +39398,7 @@
               "dmg": "231",
               "fromPlayer": "False"
             },
-            "stackTrace": [
-              "Character.DMD<Character::MagicDamageMe>",
-              "AEEvent.Update"
-            ],
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
             "context": {
               "stackDepth": 0
             }
@@ -39466,10 +39436,7 @@
               "dmg": "174",
               "fromPlayer": "False"
             },
-            "stackTrace": [
-              "Character.DMD<Character::MagicDamageMe>",
-              "AEEvent.Update"
-            ],
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
             "context": {
               "stackDepth": 0
             }
@@ -39909,10 +39876,7 @@
               "dmg": "162",
               "fromPlayer": "False"
             },
-            "stackTrace": [
-              "Character.DMD<Character::MagicDamageMe>",
-              "AEEvent.Update"
-            ],
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
             "context": {
               "stackDepth": 0
             }
@@ -39950,10 +39914,7 @@
               "dmg": "147",
               "fromPlayer": "False"
             },
-            "stackTrace": [
-              "Character.DMD<Character::MagicDamageMe>",
-              "AEEvent.Update"
-            ],
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
             "context": {
               "stackDepth": 0
             }
@@ -39991,10 +39952,7 @@
               "dmg": "210",
               "fromPlayer": "False"
             },
-            "stackTrace": [
-              "Character.DMD<Character::MagicDamageMe>",
-              "AEEvent.Update"
-            ],
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
             "context": {
               "stackDepth": 0
             }
@@ -40032,10 +39990,7 @@
               "dmg": "231",
               "fromPlayer": "False"
             },
-            "stackTrace": [
-              "Character.DMD<Character::MagicDamageMe>",
-              "AEEvent.Update"
-            ],
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
             "context": {
               "stackDepth": 0
             }
@@ -40073,10 +40028,7 @@
               "dmg": "174",
               "fromPlayer": "False"
             },
-            "stackTrace": [
-              "Character.DMD<Character::MagicDamageMe>",
-              "AEEvent.Update"
-            ],
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
             "context": {
               "stackDepth": 0
             }

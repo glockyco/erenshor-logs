@@ -202,10 +202,8 @@ export function addSession(info: SessionInfo): void {
 
   sessions.set(info.id, session);
 
-  // Set as active if no active session
-  if (!state.activeSessionId) {
-    state.activeSessionId = info.id;
-  }
+  // Always set new session as active for hands-off second-screen usage
+  state.activeSessionId = info.id;
 }
 
 /**

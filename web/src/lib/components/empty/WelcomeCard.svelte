@@ -16,7 +16,7 @@
   class={cn(
     "rounded-lg border-2 border-stone-700 bg-stone-800 p-6 shadow-lg",
     "transition-all hover:border-amber-600/50",
-    className,
+    className
   )}
 >
   <!-- Icon -->

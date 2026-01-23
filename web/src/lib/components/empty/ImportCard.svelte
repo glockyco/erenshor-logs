@@ -50,7 +50,7 @@
         "rounded-lg border px-3 py-2 text-xs",
         importStatus.type === "success"
           ? "border-green-500/30 bg-green-500/10 text-green-400"
-          : "border-rose-500/30 bg-rose-500/10 text-rose-400",
+          : "border-rose-500/30 bg-rose-500/10 text-rose-400"
       )}
     >
       {importStatus.message}

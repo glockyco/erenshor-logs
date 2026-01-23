@@ -43,14 +43,15 @@ describe("sessions state", () => {
       expect(activeSessionId.value).toBe("test-1");
     });
 
-    it("does not change active session when one already exists", () => {
+    it("switches to newly added session for hands-off usage", () => {
       const info1 = createSessionInfo({ id: "test-1" });
       const info2 = createSessionInfo({ id: "test-2" });
 
       addSession(info1);
-      addSession(info2);
-
       expect(activeSessionId.value).toBe("test-1");
+
+      addSession(info2);
+      expect(activeSessionId.value).toBe("test-2");
     });
 
     it("ignores duplicate session IDs when session has events", () => {
@@ -253,15 +254,15 @@ describe("sessions state", () => {
       expect(activeSessionId.value).toBeNull();
     });
 
-    it("does not clear active session if deleting inactive", () => {
+    it("clears active session when deleting the active session", () => {
       const info1 = createSessionInfo({ id: "test-1" });
       const info2 = createSessionInfo({ id: "test-2" });
       addSession(info1);
-      addSession(info2);
+      addSession(info2); // test-2 becomes active
 
       deleteSession("test-2");
 
-      expect(activeSessionId.value).toBe("test-1");
+      expect(activeSessionId.value).toBeNull();
     });
 
     it("handles deleting unknown session gracefully", () => {

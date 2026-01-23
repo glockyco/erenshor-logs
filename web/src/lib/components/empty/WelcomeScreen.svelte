@@ -18,10 +18,7 @@
 
     <!-- Status indicator (waiting for live data) -->
     <div class="mt-8 flex items-center justify-center gap-2 text-sm text-stone-500">
-      <span
-        class="h-2 w-2 animate-pulse rounded-full bg-amber-500"
-        aria-hidden="true"
-      ></span>
+      <span class="h-2 w-2 animate-pulse rounded-full bg-amber-500" aria-hidden="true"></span>
       <span>Waiting for live combat data...</span>
     </div>
   </div>

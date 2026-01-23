@@ -2,11 +2,7 @@
   import { Download } from "@lucide/svelte";
   import WelcomeCard from "./WelcomeCard.svelte";
 
-  const steps = [
-    "Download and install the mod",
-    "Launch Erenshor",
-    "Enter combat to see data",
-  ];
+  const steps = ["Download and install the mod", "Launch Erenshor", "Enter combat to see data"];
 </script>
 
 <WelcomeCard title="Get Started" icon={Download}>
