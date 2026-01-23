@@ -1,0 +1,44 @@
+using ErenshorLogs.Context;
+using ErenshorLogs.Events;
+using HarmonyLib;
+
+namespace ErenshorLogs.Hooks;
+
+/// <summary>
+/// Harmony patch for UseSkill.DoSkill to track skill execution context.
+/// Pushes ability context before skill execution and pops after completion.
+/// </summary>
+[HarmonyPatch(typeof(UseSkill), nameof(UseSkill.DoSkill))]
+public static class DoSkillPatch
+{
+  /// <summary>
+  /// Prefix: Push skill context onto stack before execution.
+  /// This allows subsequent damage hooks to attribute damage to this skill.
+  /// </summary>
+  /// <param name="_skill">The skill being executed.</param>
+  [HarmonyPrefix]
+  public static void Prefix(Skill _skill)
+  {
+    if (_skill == null)
+      return;
+
+    var context = new AbilityContext
+    {
+      Name = _skill.SkillName,
+      Type = AbilityType.Skill,
+      StableKey = $"skill:{_skill.Id}",
+    };
+
+    CombatContext.PushAbility(context);
+  }
+
+  /// <summary>
+  /// Finalizer: Pop context from stack after execution completes.
+  /// Uses Finalizer instead of Postfix to ensure cleanup even if DoSkill throws.
+  /// </summary>
+  [HarmonyFinalizer]
+  public static void Finalizer()
+  {
+    CombatContext.PopAbility();
+  }
+}
