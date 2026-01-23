@@ -51,6 +51,12 @@ public class CombatLogTests
           Id = "evt-1",
           Timestamp = 1704067200000,
           EventType = EventType.CombatStart,
+          Ability = new AbilityRef
+          {
+            Name = "Combat Start",
+            Type = AbilityType.Unknown,
+            StableKey = null,
+          },
         },
       ],
     };

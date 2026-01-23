@@ -51,13 +51,19 @@ public class CombatEventTests
       Id = "test-id",
       Timestamp = 1704067200000,
       EventType = EventType.CombatStart,
+      Ability = new AbilityRef
+      {
+        Name = "Combat Start",
+        Type = AbilityType.Unknown,
+        StableKey = null,
+      },
     };
 
     var json = JsonConvert.SerializeObject(evt, JsonSettings.Default);
 
     Assert.DoesNotContain("source", json);
     Assert.DoesNotContain("target", json);
-    Assert.DoesNotContain("ability", json);
+    Assert.Contains("ability", json); // Ability is now required
     Assert.DoesNotContain("amount", json);
   }
 }

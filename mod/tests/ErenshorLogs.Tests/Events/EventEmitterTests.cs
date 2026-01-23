@@ -11,6 +11,12 @@ public class EventEmitterTests
       Id = Guid.NewGuid().ToString(),
       Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
       EventType = EventType.DamageMelee,
+      Ability = new AbilityRef
+      {
+        Name = "Test Ability",
+        Type = AbilityType.Skill,
+        StableKey = null,
+      },
     };
 
   [Fact]

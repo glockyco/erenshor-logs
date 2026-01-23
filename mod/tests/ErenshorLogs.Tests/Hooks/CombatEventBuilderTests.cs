@@ -39,7 +39,13 @@ public class CombatEventBuilderTests
       source,
       amount: 100,
       DamageType.Physical,
-      new EventFlags { Critical = true }
+      ability: new AbilityRef
+      {
+        Name = "Test Attack",
+        Type = AbilityType.Skill,
+        StableKey = null,
+      },
+      flags: new EventFlags { Critical = true }
     );
 
     Assert.NotNull(evt);
@@ -71,7 +77,13 @@ public class CombatEventBuilderTests
       target,
       source: null,
       amount: 50,
-      DamageType.Physical
+      DamageType.Physical,
+      ability: new AbilityRef
+      {
+        Name = "Environmental",
+        Type = AbilityType.Environmental,
+        StableKey = null,
+      }
     );
 
     Assert.NotNull(evt);
@@ -96,7 +108,13 @@ public class CombatEventBuilderTests
       target,
       source: null,
       amount: 100,
-      DamageType.Physical
+      DamageType.Physical,
+      ability: new AbilityRef
+      {
+        Name = "Unknown",
+        Type = AbilityType.Unknown,
+        StableKey = null,
+      }
     );
 
     Assert.Null(evt);
@@ -120,7 +138,13 @@ public class CombatEventBuilderTests
       source,
       amount: 0,
       DamageType.Physical,
-      new EventFlags { Missed = true }
+      ability: new AbilityRef
+      {
+        Name = "Missed Attack",
+        Type = AbilityType.Auto,
+        StableKey = null,
+      },
+      flags: new EventFlags { Missed = true }
     );
 
     Assert.NotNull(evt);
@@ -146,7 +170,13 @@ public class CombatEventBuilderTests
       source,
       amount: 200,
       DamageType.Magic,
-      new EventFlags { Resisted = true }
+      ability: new AbilityRef
+      {
+        Name = "Magic Spell",
+        Type = AbilityType.Spell,
+        StableKey = null,
+      },
+      flags: new EventFlags { Resisted = true }
     );
 
     Assert.NotNull(evt);

@@ -119,6 +119,12 @@ public class MessageSerializerTests
         Id = "event-1",
         Timestamp = 1234567890,
         EventType = EventType.DamagePhysical,
+        Ability = new AbilityRef
+        {
+          Name = "Test",
+          Type = AbilityType.Auto,
+          StableKey = null,
+        },
       },
     };
     var message = CombatEventsMessage.Create("test-session", events);
@@ -140,12 +146,24 @@ public class MessageSerializerTests
         Id = "event-1",
         Timestamp = 1234567890,
         EventType = EventType.DamagePhysical,
+        Ability = new AbilityRef
+        {
+          Name = "Test",
+          Type = AbilityType.Auto,
+          StableKey = null,
+        },
       },
       new CombatEvent
       {
         Id = "event-2",
         Timestamp = 1234567891,
         EventType = EventType.CombatStart,
+        Ability = new AbilityRef
+        {
+          Name = "Combat Start",
+          Type = AbilityType.Unknown,
+          StableKey = null,
+        },
       },
     };
     var message = CombatEventsMessage.Create("test-session", events);
