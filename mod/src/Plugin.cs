@@ -2,6 +2,7 @@ using BepInEx;
 using BepInEx.Logging;
 using ErenshorLogs.Broadcast;
 using ErenshorLogs.Config;
+using ErenshorLogs.Context;
 using ErenshorLogs.Events;
 using ErenshorLogs.Hooks;
 using ErenshorLogs.Registry;
@@ -90,6 +91,11 @@ public sealed class Plugin : BaseUnityPlugin
     EnvironmentalDamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
     EnvironmentalDamageMePatch.RelevanceChecker = _relevanceChecker;
     EnvironmentalDamageMePatch.SessionManager = sessionManager;
+
+    // Create and wire up EffectTracker for DoT/HoT attribution
+    var effectTracker = new EffectTracker();
+    AddStatusEffectPatch.Tracker = effectTracker;
+    RemoveStatusEffectPatch.Tracker = effectTracker;
   }
 
   private void ConfigureSessionPatch()
