@@ -82,11 +82,23 @@ const ACTIVE_SESSION_KEY = `${STORAGE_KEYS.SESSIONS}-active`;
 // SSR-safe initialization from localStorage
 const storedSessions = loadFromStorage(STORAGE_KEYS.SESSIONS, StoredSessionsSchema);
 if (storedSessions) {
+  let emptySessionCount = 0;
+
   storedSessions.forEach(([id, session]) => {
+    // Filter out empty sessions during initialization
+    if (session.events.length === 0) {
+      console.log(`Skipping empty session ${id} from localStorage`);
+      emptySessionCount++;
+      return;
+    }
     sessions.set(id, session);
   });
 
-  // Validate activeSessionId exists
+  if (emptySessionCount > 0) {
+    console.log(`Cleaned up ${emptySessionCount} empty session(s) from localStorage`);
+  }
+
+  // Validate activeSessionId exists and is not empty
   const storedActiveId = loadFromStorage(ACTIVE_SESSION_KEY, z.string());
   if (storedActiveId && sessions.has(storedActiveId)) {
     state.activeSessionId = storedActiveId;
@@ -165,12 +177,21 @@ export function initSessionsPersistence(): () => void {
 
 /**
  * Add a new session from SessionInfo (handshake or sessionStart message).
- * Ignores duplicate session IDs to prevent overwriting existing sessions.
+ * Replaces existing empty sessions, otherwise ignores duplicates.
  */
 export function addSession(info: SessionInfo): void {
-  if (sessions.has(info.id)) {
-    console.warn(`Session ${info.id} already exists, ignoring duplicate sessionStart`);
-    return;
+  const existing = sessions.get(info.id);
+
+  if (existing) {
+    // If existing session is empty, replace it with fresh session
+    if (existing.events.length === 0) {
+      console.log(`Replacing empty session ${info.id} with fresh session`);
+      // Fall through to create new session
+    } else {
+      // Existing session has events - don't overwrite
+      console.warn(`Session ${info.id} already exists, ignoring duplicate sessionStart`);
+      return;
+    }
   }
 
   const session: Session = {

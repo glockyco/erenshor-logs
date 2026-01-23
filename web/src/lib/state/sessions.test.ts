@@ -53,10 +53,11 @@ describe("sessions state", () => {
       expect(activeSessionId.value).toBe("test-1");
     });
 
-    it("ignores duplicate session IDs", () => {
+    it("ignores duplicate session IDs when session has events", () => {
       const info = createSessionInfo({ id: "test-1", startTime: 1000 });
 
       addSession(info);
+      appendEvents("test-1", [createCombatEvent({ id: "e1" })]);
       const originalSession = sessions.get("test-1");
 
       // Try to add again with different start time
@@ -65,6 +66,23 @@ describe("sessions state", () => {
       // Original session unchanged
       expect(sessions.get("test-1")).toBe(originalSession);
       expect(sessions.get("test-1")!.startTime).toBe(1000);
+      expect(sessions.get("test-1")!.events).toHaveLength(1);
+    });
+
+    it("replaces empty session when duplicate session ID is added", () => {
+      const info1 = createSessionInfo({ id: "test-1", startTime: 1000 });
+      addSession(info1);
+
+      // Session is empty
+      expect(sessions.get("test-1")!.events).toHaveLength(0);
+
+      // Add same ID with different start time
+      const info2 = createSessionInfo({ id: "test-1", startTime: 2000 });
+      addSession(info2);
+
+      // Session replaced with new start time
+      expect(sessions.get("test-1")!.startTime).toBe(2000);
+      expect(sessions.get("test-1")!.events).toHaveLength(0);
     });
   });
 
