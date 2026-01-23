@@ -83,9 +83,23 @@
         )
   );
 
+  // Recalculate percentages based on filtered subset
+  const actorsWithRecalculatedPercentages = $derived(
+    (() => {
+      // Calculate total for the filtered set based on current metric
+      const filteredTotal = filteredActors.reduce((sum, a) => sum + a.total, 0);
+
+      // Recalculate percentage for each actor relative to filtered total
+      return filteredActors.map((a) => ({
+        ...a,
+        percentage: filteredTotal > 0 ? (a.total / filteredTotal) * 100 : 0,
+      }));
+    })()
+  );
+
   // Sort actors
   const sortedActors = $derived(
-    [...filteredActors].sort((a, b) => {
+    [...actorsWithRecalculatedPercentages].sort((a, b) => {
       const aVal = sortBy === "dps" ? a.dps : a.total;
       const bVal = sortBy === "dps" ? b.dps : b.total;
       return sortDirection === "desc" ? bVal - aVal : aVal - bVal;
