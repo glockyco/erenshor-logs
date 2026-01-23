@@ -8,6 +8,12 @@ repos:
         language: system
         files: ^web/
         pass_filenames: false
+      - id: test-web
+        name: test (web)
+        entry: bash -c 'cd web && pnpm test:run --reporter=dot --no-coverage --passWithNoTests'
+        language: system
+        files: ^web/
+        pass_filenames: false
 
   # CSharpier - Format C# (auto-fix)
   - repo: local
