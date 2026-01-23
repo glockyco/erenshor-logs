@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { X } from "@lucide/svelte";
+  import { X, Download } from "@lucide/svelte";
   import type { Session } from "$lib/types";
   import { formatNumber, formatDps, formatDuration, formatTime } from "$lib/utils";
 
@@ -8,9 +8,10 @@
     isActive?: boolean;
     onclick?: () => void;
     ondelete?: () => void;
+    onexport?: () => void;
   }
 
-  let { session, isActive = false, onclick, ondelete }: Props = $props();
+  let { session, isActive = false, onclick, ondelete, onexport }: Props = $props();
 
   // Calculate stats
   const duration = $derived(
@@ -57,18 +58,33 @@
     {formatDps(dps)} DPS · {formatDuration(duration)}
   </p>
 
-  <!-- Delete Button (appears on hover) -->
-  {#if ondelete}
-    <button
-      type="button"
-      onclick={(e) => {
-        e.stopPropagation();
-        ondelete?.();
-      }}
-      class="absolute right-3 top-3 rounded-md p-1.5 text-stone-600 opacity-0 transition-all hover:bg-rose-500/20 hover:text-rose-400 group-hover:opacity-100"
-      aria-label="Delete session"
-    >
-      <X class="h-4 w-4" />
-    </button>
-  {/if}
+  <!-- Action Buttons (appear on hover) -->
+  <div class="absolute right-3 top-3 flex gap-1 opacity-0 transition-all group-hover:opacity-100">
+    {#if onexport}
+      <button
+        type="button"
+        onclick={(e) => {
+          e.stopPropagation();
+          onexport?.();
+        }}
+        class="rounded-md p-1.5 text-stone-600 transition-all hover:bg-cyan-500/20 hover:text-cyan-400"
+        aria-label="Export session"
+      >
+        <Download class="h-4 w-4" />
+      </button>
+    {/if}
+    {#if ondelete}
+      <button
+        type="button"
+        onclick={(e) => {
+          e.stopPropagation();
+          ondelete?.();
+        }}
+        class="rounded-md p-1.5 text-stone-600 transition-all hover:bg-rose-500/20 hover:text-rose-400"
+        aria-label="Delete session"
+      >
+        <X class="h-4 w-4" />
+      </button>
+    {/if}
+  </div>
 </div>
