@@ -118,7 +118,7 @@
 
 <!-- Desktop: Two-column layout -->
 <div class="hidden lg:grid lg:grid-cols-[320px_1fr] lg:gap-6 lg:p-6">
-  <aside class="max-h-[calc(100vh-80px)] overflow-y-auto">
+  <aside class="self-start max-h-[calc(100vh-80px)] overflow-y-auto pr-3">
     {@render sidebar()}
   </aside>
   <main class="max-h-[calc(100vh-80px)] overflow-y-auto">
