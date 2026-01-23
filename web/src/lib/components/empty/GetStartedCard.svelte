@@ -10,6 +10,8 @@
   <a
     href="/mods/ErenshorLogs.dll"
     download="ErenshorLogs.dll"
+    data-sveltekit-reload
+    rel="external"
     class="flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-6 py-3 font-semibold text-stone-900 transition-all hover:bg-amber-400 active:scale-95"
   >
     <Download class="h-5 w-5" aria-hidden="true" />
