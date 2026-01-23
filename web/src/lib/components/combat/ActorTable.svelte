@@ -169,61 +169,65 @@
         <p>No actor data available</p>
       </div>
     {:else}
-      <table class="w-full text-sm">
-        <thead class="border-b border-stone-700">
-          <tr>
-            <th class="px-3 py-3 text-left text-xs uppercase tracking-wider text-stone-400"></th>
-            <th class="px-3 py-3 text-left text-xs uppercase tracking-wider text-stone-400"> # </th>
-            <th class="px-4 py-3 text-left text-xs uppercase tracking-wider text-stone-400">
-              Actor
-            </th>
-            <th class="px-4 py-3 text-right text-xs uppercase tracking-wider text-stone-400">
-              <button
-                type="button"
-                class="inline-flex items-center gap-1 hover:text-amber-500 cursor-pointer"
-                onclick={() => toggleSort("dps")}
-              >
-                {rateLabel}
-                {#if sortBy === "dps"}
-                  <ChevronDown
-                    class={`h-3 w-3 transition-transform ${sortDirection === "asc" ? "rotate-180" : ""}`}
-                  />
-                {/if}
-              </button>
-            </th>
-            <th class="px-4 py-3 text-right text-xs uppercase tracking-wider text-stone-400">
-              <button
-                type="button"
-                class="inline-flex items-center gap-1 hover:text-amber-500 cursor-pointer"
-                onclick={() => toggleSort("total")}
-              >
-                Total
-                {#if sortBy === "total"}
-                  <ChevronDown
-                    class={`h-3 w-3 transition-transform ${sortDirection === "asc" ? "rotate-180" : ""}`}
-                  />
-                {/if}
-              </button>
-            </th>
-            <th class="px-4 py-3 text-right text-xs uppercase tracking-wider text-stone-400">
-              % of Total
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each sortedActors as actor, i (`${actor.actorId}-${i}`)}
-            <ActorRow
-              {actor}
-              rank={i + 1}
-              {maxValue}
-              durationMs={stats?.durationMs || 1}
-              perspective={activeTab}
-              expanded={expandedActors.has(actor.actorId)}
-              onToggleExpand={() => toggleExpanded(actor.actorId)}
-            />
-          {/each}
-        </tbody>
-      </table>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm min-w-[700px]">
+          <thead class="border-b border-stone-700">
+            <tr>
+              <th class="px-3 py-3 text-left text-xs uppercase tracking-wider text-stone-400"></th>
+              <th class="px-3 py-3 text-left text-xs uppercase tracking-wider text-stone-400">
+                #
+              </th>
+              <th class="px-4 py-3 text-left text-xs uppercase tracking-wider text-stone-400">
+                Actor
+              </th>
+              <th class="px-4 py-3 text-right text-xs uppercase tracking-wider text-stone-400">
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-1 hover:text-amber-500 cursor-pointer"
+                  onclick={() => toggleSort("dps")}
+                >
+                  {rateLabel}
+                  {#if sortBy === "dps"}
+                    <ChevronDown
+                      class={`h-3 w-3 transition-transform ${sortDirection === "asc" ? "rotate-180" : ""}`}
+                    />
+                  {/if}
+                </button>
+              </th>
+              <th class="px-4 py-3 text-right text-xs uppercase tracking-wider text-stone-400">
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-1 hover:text-amber-500 cursor-pointer"
+                  onclick={() => toggleSort("total")}
+                >
+                  Total
+                  {#if sortBy === "total"}
+                    <ChevronDown
+                      class={`h-3 w-3 transition-transform ${sortDirection === "asc" ? "rotate-180" : ""}`}
+                    />
+                  {/if}
+                </button>
+              </th>
+              <th class="px-4 py-3 text-right text-xs uppercase tracking-wider text-stone-400">
+                % of Total
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each sortedActors as actor, i (`${actor.actorId}-${i}`)}
+              <ActorRow
+                {actor}
+                rank={i + 1}
+                {maxValue}
+                durationMs={stats?.durationMs || 1}
+                perspective={activeTab}
+                expanded={expandedActors.has(actor.actorId)}
+                onToggleExpand={() => toggleExpanded(actor.actorId)}
+              />
+            {/each}
+          </tbody>
+        </table>
+      </div>
     {/if}
   </div>
 </div>
