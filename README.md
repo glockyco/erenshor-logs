@@ -50,6 +50,23 @@ Coming soon!
 
 Combat logs are stored as gzipped JSON files. See [docs/LOG_FORMAT.md](docs/LOG_FORMAT.md) for the complete specification.
 
+## Versioning
+
+This project uses **automatic git-based versioning**. Versions are generated at build time from git commit metadata in the format `YYYY.MM.DD-COMMITHASH` (e.g., `2026.01.24-fdd823c`).
+
+Both the mod and web app always have identical versions since they're built from the same git commit. No manual version bumps are needed - just commit your changes and the version updates automatically.
+
+**Where to find the version:**
+- **Mod**: BepInEx log on startup
+- **Web App**: Settings drawer (gear icon) with copy button, or browser console on load
+- **CLI**: Run `uv run erenshor version`
+
+**Build enforcement:**
+- Debug builds allow uncommitted changes and append a timestamp
+- Release builds **fail with an error** if any uncommitted changes exist
+
+For detailed documentation, see [docs/VERSIONING.md](docs/VERSIONING.md).
+
 ## Development
 
 ### Prerequisites

@@ -122,9 +122,9 @@ Use **Svelte 5 runes** in `.svelte.ts` files. Traditional stores are deprecated.
 - See `svelte-web-development` skill for patterns
 
 ### Visual Design
-**Cyberpunk Analyst** theme - dark slate backgrounds with cyan accents, neon
-glows, and JetBrains Mono for numbers. See `/web/docs/style-guide.md` and
-`/web/demos/demo-cyberpunk.html`.
+**Classic MMO** theme - dark stone backgrounds (`stone-800/900`) with amber
+accents (`amber-500`), Cinzel fantasy font for headings, and JetBrains Mono for
+numbers. See `/web/docs/style-guide.md`.
 
 ### Component Structure
 Follow **shadcn/ui conventions** even before using shadcn components:
@@ -149,6 +149,33 @@ combat state determination. Confirmed sessions proceed normally with no timeout.
 Fall damage and other environmental sources are logged but do not start sessions.
 
 The `CheckForTrueCombat` hook confirms combat state rather than initiating it.
+
+### Versioning
+**Automatic git-based versioning** in the format `YYYY.MM.DD-COMMITHASH`.
+
+**How it works:**
+- Version is generated from git commit metadata at build time
+- Both mod and web app always have identical versions (same git commit)
+- No manual version bumps needed - just commit and version updates automatically
+
+**Version format:**
+- **Production**: `YYYY.MM.DD-COMMITHASH` (e.g., `2026.01.24-fdd823c`)
+- **Dirty Debug**: `YYYY.MM.DD-COMMITHASH-dirty-YYYYMMDD-HHMMSS`
+- **Fallback (no git)**: `0.0.0-YYYYMMDD-HHMMSS`
+
+**Build enforcement:**
+- **Debug builds**: Allow dirty trees, append timestamp
+- **Release builds**: **Fail with error** if any uncommitted changes exist
+
+**Where versions appear:**
+- Mod: BepInEx log on startup
+- Web: Settings drawer (with copy button), browser console on init
+- CLI: `uv run erenshor version`
+
+**Implementation:**
+- Mod: `GetGitVersion` MSBuild target generates `PluginInfo.g.cs`
+- Web: `scripts/generate-version.js` runs in `prebuild`/`predev` hooks
+- See `docs/VERSIONING.md` for detailed documentation
 
 ## Available Skills
 
