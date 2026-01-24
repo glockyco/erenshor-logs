@@ -103,14 +103,17 @@
 
   <!-- Mobile: Drawer with session list -->
   <Drawer.Root bind:open={drawerOpen}>
-    <Drawer.Content class="max-h-[85vh] md:hidden">
-      <Drawer.Header>
-        <Drawer.Title>Sessions ({sessions.size})</Drawer.Title>
-      </Drawer.Header>
-      <div class="overflow-y-auto px-4 pb-4">
-        <SessionListMobile onSessionSelect={() => (drawerOpen = false)} />
-      </div>
-    </Drawer.Content>
+    <Drawer.Portal>
+      <Drawer.Overlay />
+      <Drawer.Content class="max-h-[85vh] md:hidden">
+        <Drawer.Header>
+          <Drawer.Title>Sessions ({sessions.size})</Drawer.Title>
+        </Drawer.Header>
+        <div class="overflow-y-auto px-4 pb-4">
+          <SessionListMobile onSessionSelect={() => (drawerOpen = false)} />
+        </div>
+      </Drawer.Content>
+    </Drawer.Portal>
   </Drawer.Root>
 {/if}
 
