@@ -47,12 +47,37 @@ public class WebSocketServer : IWebSocketServer
     {
       _server = new Fleck.WebSocketServer(location);
       _server.Start(ConfigureSocket);
-      _logger.LogInfo($"WebSocket server started on {location}");
+      _logger.LogInfo($"WebSocket server started on port {port}");
+      LogConnectionUrls(port);
     }
     catch (Exception ex)
     {
       _logger.LogError($"Failed to start WebSocket server on port {port}: {ex.Message}");
       _logger.LogDebug(ex.ToString());
+    }
+  }
+
+  /// <summary>
+  /// Logs all available connection URLs (localhost + network IPs).
+  /// </summary>
+  private void LogConnectionUrls(int port)
+  {
+    _logger.LogInfo($"→ Local:   ws://localhost:{port}");
+
+    var networkIPs = NetworkUtils.GetLocalIPv4Addresses();
+
+    if (networkIPs.Count > 0)
+    {
+      foreach (var ip in networkIPs)
+      {
+        var interfaceName = NetworkUtils.GetInterfaceName(ip);
+        var interfaceLabel = interfaceName != null ? $" ({interfaceName})" : "";
+        _logger.LogInfo($"→ Network: ws://{ip}:{port}{interfaceLabel}");
+      }
+    }
+    else
+    {
+      _logger.LogWarning("No network adapters found. Server only accessible via localhost.");
     }
   }
 
