@@ -1,18 +1,19 @@
 ---
 name: ui-design-system
-description: Cyberpunk theme and component design patterns. Use when building UI components or styling screens.
+description: Classic MMO theme and component design patterns. Use when building UI components or styling screens.
 ---
 
 # UI Design System
 
-The Cyberpunk Analyst visual design system. Read `/web/docs/style-guide.md`
-for comprehensive documentation. This skill covers common patterns and gotchas.
+The Classic MMO visual design system. Read `/web/docs/style-guide.md` for
+comprehensive theme documentation. This skill covers component patterns and
+common implementation details.
 
 ## When to Follow the Style Guide
 
 **Always follow:**
-- Color palette (actor types, damage types, backgrounds)
-- Typography (Inter for UI, JetBrains Mono for numbers)
+- Color palette (stone/amber primary, semantic colors for damage/healing)
+- Typography (Cinzel fantasy headings, JetBrains Mono for numbers, Inter for UI)
 - Component structure (shadcn/ui compatible)
 - Spacing scale (Tailwind default: 4, 6, 8, 12, 16, 24, 32)
 
@@ -38,12 +39,12 @@ All UI components should support variants via props:
 
   let { variant = 'primary', size = 'md', class: className }: Props = $props();
 
-  const baseStyles = "font-semibold rounded transition";
+  const baseStyles = "font-semibold rounded-lg transition-colors";
 
   const variantStyles = {
-    primary: "bg-cyan-500 hover:bg-cyan-600 text-white glow-cyan-strong",
-    secondary: "bg-slate-700 hover:bg-slate-600 text-white",
-    danger: "bg-rose-500 hover:bg-rose-600 text-white"
+    primary: "bg-amber-500 text-stone-900 hover:bg-amber-400",
+    secondary: "bg-stone-700 text-stone-100 hover:bg-stone-600",
+    danger: "bg-rose-600 text-stone-100 hover:bg-rose-500"
   };
 
   const sizeStyles = {
@@ -58,75 +59,80 @@ All UI components should support variants via props:
 </button>
 ```
 
-## Actor Type Colors
+## Semantic Colors
 
-Use consistent semantic classes:
+### Actor Types
+
+Use consistent color classes for actor types:
 
 ```typescript
 const actorColors = {
-  player: 'text-cyan-400',      // You
-  sim_player: 'text-emerald-400', // Allies
-  npc: 'text-rose-400',          // Enemies
-  pet: 'text-violet-400'         // Companions
+  player: 'text-amber-500',       // You (player character)
+  sim_player: 'text-emerald-400', // Allies (SimPlayers)
+  npc: 'text-rose-400',           // Enemies
+  pet: 'text-violet-400'          // Companions/pets
 };
 ```
 
-Never use arbitrary colors for actor types - these are part of the visual
-language users will learn.
+### Damage & Healing
 
-## Glow Effects
-
-Apply glows to active/interactive states:
-
-```html
-<!-- Connection status -->
-<div class="w-2 h-2 bg-cyan-400 rounded-full glow-cyan animate-pulse" />
-
-<!-- Active card -->
-<div class="border border-cyan-500/30 glow-cyan hover:border-cyan-500/60" />
+```typescript
+const semanticColors = {
+  damage: 'text-rose-400',   // Damage dealt/taken
+  healing: 'text-lime-500',  // Healing done/received
+  primary: 'text-amber-500', // Primary accent (DPS values, etc.)
+  muted: 'text-stone-300'    // Secondary/contextual data
+};
 ```
 
-Custom glow utilities in `app.css`:
+Never use arbitrary colors - these create a consistent visual language.
 
-```css
-.glow-cyan {
-  box-shadow: 0 0 10px rgba(34, 211, 238, 0.4);
-}
+## Typography Components
 
-.glow-cyan-strong {
-  box-shadow: 0 0 20px rgba(34, 211, 238, 0.6),
-              0 0 40px rgba(34, 211, 238, 0.3);
-}
-```
-
-## Monospace Numbers
-
-Always use `font-mono` for numeric data:
+Use the typography components from `$lib/components/ui/typography` instead of
+manual classes:
 
 ```svelte
-<!-- DPS display -->
-<div class="text-2xl font-mono font-bold text-cyan-400">156</div>
+import { Heading, Numeric, Text } from '$lib/components/ui/typography';
 
-<!-- Duration -->
-<div class="font-mono">21.6s</div>
+<!-- Section header -->
+<Heading variant="section">Combat Session</Heading>
 
-<!-- Damage amounts -->
-<div class="font-mono text-lg">3,372</div>
+<!-- Hero stat -->
+<Numeric variant="hero" color="primary">{formatDps(900)}</Numeric>
+
+<!-- Table data -->
+<Numeric variant="medium" color="damage">{damage}</Numeric>
 ```
 
-This creates visual consistency and makes scanning data easier.
+Always use `<Numeric>` for numbers - it applies `font-mono` and proper sizing.
+
+## Fantasy Headings
+
+Use Cinzel font for all headings and uppercase labels:
+
+```svelte
+<!-- Via component (recommended) -->
+<Heading level={2} variant="section">Combat Session</Heading>
+
+<!-- Via class (when component doesn't fit) -->
+<div class="font-fantasy text-lg font-semibold text-amber-500">
+  Section Header
+</div>
+```
 
 ## Common Mistakes
 
 **Don't:**
-- Mix actor type colors (`text-blue-400` for player instead of `text-cyan-400`)
-- Use light backgrounds (`bg-white`, `bg-gray-100`)
+- Use raw `font-mono` classes - use `<Numeric>` component instead
+- Use raw `text-amber-500` - use component color props
+- Mix semantic colors (lime for damage, rose for healing)
+- Use light backgrounds (`bg-white`, `bg-stone-100`)
 - Skip hover states on interactive elements
-- Use arbitrary font sizes (use Tailwind scale)
-- Overuse glow effects (only on key interactive elements)
 
 **Do:**
-- Use semantic color classes from the style guide
-- Apply transitions to interactive elements (150-200ms)
-- Use uppercase + `tracking-wider` for section headers
-- Keep consistent spacing (gap-4, gap-6, p-4, p-6)
+- Use typography components for consistency
+- Use semantic color names via component props
+- Apply subtle transitions (150-200ms)
+- Use `font-fantasy` for uppercase labels and headers
+- Keep consistent spacing from the Tailwind scale
