@@ -182,7 +182,7 @@ pnpm lint   # ESLint
 
 - Use TypeScript strict mode
 - Prefer functional patterns
-- Use Svelte stores for state management
+- Use Svelte 5 runes (`.svelte.ts` files) for state management
 - Follow existing code formatting (Prettier)
 
 ## Commit Messages
