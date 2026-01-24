@@ -28,12 +28,17 @@
   );
 </script>
 
-<div class="flex items-center gap-2" role="status" aria-live="polite">
+<div
+  class="flex items-center gap-2"
+  role="status"
+  aria-live="polite"
+  aria-label={statusConfig.label}
+>
   <span
     class={`h-2 w-2 rounded-full ${statusConfig.color} ${status === "connecting" ? "animate-pulse" : ""}`}
     aria-hidden="true"
   ></span>
-  <span class={`text-sm font-medium ${statusConfig.textColor}`}>
+  <span class={`text-sm font-medium ${statusConfig.textColor} hidden sm:inline`}>
     {statusConfig.label}
   </span>
 </div>
