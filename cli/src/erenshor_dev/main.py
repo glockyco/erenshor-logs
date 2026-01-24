@@ -9,6 +9,7 @@ from erenshor_dev.commands.decompile import decompile
 from erenshor_dev.commands.deploy import deploy
 from erenshor_dev.commands.launch import launch
 from erenshor_dev.commands.setup import setup
+from erenshor_dev.commands.version import version
 
 
 @click.group()
@@ -27,3 +28,4 @@ cli.add_command(deploy)
 cli.add_command(cf_deploy)
 cli.add_command(launch)
 cli.add_command(decompile)
+cli.add_command(version)
