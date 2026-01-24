@@ -28,7 +28,7 @@
   );
 
   // Sidebar width for desktop layout offset
-  const sidebarWidth = $derived(sidebarCollapsed.value ? 80 : 280);
+  const sidebarWidth = $derived(sidebarCollapsed.value ? 96 : 280);
 
   // Mobile drawer state
   let drawerOpen = $state(false);
