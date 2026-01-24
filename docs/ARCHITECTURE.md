@@ -25,14 +25,10 @@ This document describes the technical architecture of Erenshor Logs.
 |  |         +---------------------+---------------------+        |  |
 |  |         |                     |                     |        |  |
 |  |         v                     v                     v        |  |
-|  |  +-------------+    +------------------+    +-------------+  |  |
-|  |  | Ring Buffer |    |  JSON Exporter   |    |  WebSocket  |  |  |
-|  |  +------+------+    +------------------+    |   Server    |  |  |
-|  |         |                                   +------+------+  |  |
-|  |         v                                          |         |  |
-|  |  +-------------+                                   |         |  |
-|  |  | IMGUI Layer |                                   |         |  |
-|  |  +-------------+                                   |         |  |
+|  |  +------------------+    +------------------+    +----------+|  |
+|  |  |  JSON Exporter   |    |  WebSocket Server|    | (Future) ||  |
+|  |  +------------------+    +--------+---------+    +----------+|  |
+|  |                                   |                          |  |
 |  +------------------------------------------------------------+  |
 +------------------------------------------------------------------+
                                                         |
@@ -50,7 +46,7 @@ This document describes the technical architecture of Erenshor Logs.
 |                          v                                       |
 |              +------------------------+                          |
 |              |     Event Store        |                          |
-|              |    (Svelte Stores)     |                          |
+|              |   (Svelte 5 Runes)     |                          |
 |              +-----------+------------+                          |
 |                          |                                       |
 |                          v                                       |
@@ -100,13 +96,6 @@ Central event bus that:
 - Validates and normalizes events
 - Dispatches to all registered listeners (buffer, exporter, WebSocket)
 
-### Ring Buffer
-
-Fixed-size circular buffer storing recent events:
-- Configurable size (default: 50,000 events)
-- Provides data for in-game UI
-- Can be exported on demand
-
 ### Session Manager
 
 Tracks combat sessions:
@@ -128,13 +117,6 @@ Real-time streaming via Fleck:
 - Supports commands from clients (reset, export)
 - Batches events for efficiency
 
-### IMGUI Layer
-
-In-game overlay:
-- Real-time DPS display
-- Ability breakdown list
-- Session controls
-
 ## Web App Components
 
 ### Data Sources
@@ -142,28 +124,31 @@ In-game overlay:
 - **WebSocket Client**: Connects to game for live data
 - **File Importer**: Loads exported JSON files
 
-### Event Store
+### Session State
 
-Svelte stores holding:
+Svelte 5 runes managing:
 - Current session metadata
 - Event stream
-- Computed aggregations (reactive)
+- Computed aggregations (reactive DPS/HPS)
 
-### Analysis Engine
+### Analysis Services
 
 Computes:
-- DPS/HPS calculations
-- Damage breakdowns by ability/type/source
-- Timeline aggregations
-- Comparison diffs
+- DPS/HPS calculations per session
+- Per-actor and per-ability damage/healing breakdowns
+- Session statistics and summaries
 
-### Views
+### Current Views
 
-- **Overview**: Summary statistics, key metrics
-- **Timeline**: Damage over time chart
-- **Breakdown**: Horizontal bar chart (WoW-style)
-- **Event Log**: Searchable event list
-- **Comparison**: Side-by-side analysis
+- **Session Management**: Live session tracking with sidebar
+- **Stats Panel**: Real-time DPS/HPS/DTPS metrics
+- **Actor Table**: Per-actor breakdown with expandable ability details
+
+### Planned Views
+
+- **Timeline**: Interactive damage/healing over time chart
+- **Event Log**: Searchable, filterable event list
+- **Comparison**: Side-by-side session analysis
 
 ## Event Data Model
 
