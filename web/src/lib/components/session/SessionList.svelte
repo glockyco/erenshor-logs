@@ -104,47 +104,40 @@
 </script>
 
 <div class="space-y-3">
-  <!-- Header: only show in expanded state -->
-  {#if !collapsed}
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-      <h2 class="text-sm font-semibold uppercase tracking-wider text-amber-600">
-        Sessions ({sessionsList.length})
-      </h2>
-      <div class="flex flex-wrap gap-2">
-        {#if sessionsList.length > 0}
-          <button
-            type="button"
-            onclick={handleExportAll}
-            class="flex items-center gap-1 text-xs text-stone-400 hover:text-cyan-400 transition cursor-pointer"
-            aria-label="Export all sessions"
-          >
-            <Download class="h-3 w-3" />
-            <span class="hidden sm:inline">Export All</span>
-            <span class="sm:hidden">Export</span>
-          </button>
-          <button
-            type="button"
-            onclick={clearAllSessions}
-            class="flex items-center gap-1 text-xs text-stone-400 hover:text-rose-400 transition cursor-pointer"
-            aria-label="Clear all sessions"
-          >
-            <Trash2 class="h-3 w-3" />
-            <span class="hidden sm:inline">Clear All</span>
-            <span class="sm:hidden">Clear</span>
-          </button>
-        {/if}
-        <button
-          type="button"
-          onclick={toggleImport}
-          class={`flex items-center gap-1 text-xs transition cursor-pointer ${
-            showImport ? "text-cyan-400" : "text-stone-400 hover:text-cyan-400"
-          }`}
-          aria-label="Import sessions"
-        >
-          <Upload class="h-3 w-3" />
-          Import
-        </button>
-      </div>
+  <!-- Action buttons: only show in expanded state -->
+  {#if !collapsed && sessionsList.length > 0}
+    <div class="mb-4 flex gap-2">
+      <button
+        type="button"
+        onclick={handleExportAll}
+        class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs text-stone-400 hover:text-cyan-400 bg-stone-800/50 hover:bg-stone-700/50 rounded-md transition cursor-pointer"
+        aria-label="Export all sessions"
+      >
+        <Download class="h-3.5 w-3.5" />
+        <span>Export</span>
+      </button>
+      <button
+        type="button"
+        onclick={clearAllSessions}
+        class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs text-stone-400 hover:text-rose-400 bg-stone-800/50 hover:bg-stone-700/50 rounded-md transition cursor-pointer"
+        aria-label="Clear all sessions"
+      >
+        <Trash2 class="h-3.5 w-3.5" />
+        <span>Clear</span>
+      </button>
+      <button
+        type="button"
+        onclick={toggleImport}
+        class={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs rounded-md transition cursor-pointer ${
+          showImport
+            ? "text-cyan-400 bg-cyan-500/10"
+            : "text-stone-400 hover:text-cyan-400 bg-stone-800/50 hover:bg-stone-700/50"
+        }`}
+        aria-label="Import sessions"
+      >
+        <Upload class="h-3.5 w-3.5" />
+        <span>Import</span>
+      </button>
     </div>
   {/if}
 
