@@ -346,7 +346,36 @@ export const UIPreferencesSchema = z.object({
   factionFilter: FactionFilterSchema,
   sidebarCollapsed: z.boolean().optional(),
 });
+
 export type UIPreferences = z.infer<typeof UIPreferencesSchema>;
+
+// =============================================================================
+// App Settings
+// =============================================================================
+
+export const AppSettingsSchema = z.object({
+  websocket: z.object({
+    url: z
+      .string()
+      .min(1, "WebSocket URL is required")
+      .refine(
+        (url) => url.startsWith("ws://") || url.startsWith("wss://"),
+        "URL must start with ws:// or wss://"
+      )
+      .refine((url) => {
+        try {
+          new URL(url);
+          return true;
+        } catch {
+          return false;
+        }
+      }, "Invalid URL format"),
+    autoReconnect: z.boolean().default(true),
+    reconnectInterval: z.number().min(1000).max(30000).default(2000),
+  }),
+});
+
+export type AppSettings = z.infer<typeof AppSettingsSchema>;
 
 // =============================================================================
 // Storage Schemas (for localStorage validation)
