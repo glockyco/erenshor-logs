@@ -78,7 +78,7 @@
   </aside>
 
   <!-- Main content (offset on desktop to account for sidebar) -->
-  <div class="min-h-screen" style="padding-left: {sidebarWidth}px">
+  <div class="min-h-screen main-content" style="--sidebar-offset: {sidebarWidth}px">
     <div class="p-8">
       <div class="max-w-7xl mx-auto space-y-8">
         <Header />
@@ -113,3 +113,11 @@
     </Drawer.Content>
   </Drawer.Root>
 {/if}
+
+<style>
+  @media (min-width: 768px) {
+    .main-content {
+      padding-left: var(--sidebar-offset);
+    }
+  }
+</style>
