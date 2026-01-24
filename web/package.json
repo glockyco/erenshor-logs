@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "version:generate": "node ../scripts/generate-version.js",
+    "predev": "pnpm version:generate",
+    "prebuild": "pnpm version:generate",
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
