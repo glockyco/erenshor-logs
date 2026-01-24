@@ -27,6 +27,7 @@ public sealed class Plugin : BaseUnityPlugin
   private ISessionManager? _sessionManager;
   private IWebSocketServer? _server;
   private ICombatEventBroadcaster? _broadcaster;
+  private ModConfig? _config;
 
   private void Awake()
   {
@@ -36,7 +37,6 @@ public sealed class Plugin : BaseUnityPlugin
     _harmony = new Harmony(PluginInfo.GUID);
 
     ConfigureDamagePatches();
-    ConfigureSessionPatch();
     ConfigureWebSocket();
     _harmony.PatchAll();
 
@@ -51,10 +51,49 @@ public sealed class Plugin : BaseUnityPlugin
       _broadcaster.Tick(UnityEngine.Time.deltaTime);
     }
 
-    // Check for session timeouts (pending and inactivity)
+    // Check for session inactivity timeout
     if (_sessionManager != null)
     {
-      _sessionManager.CheckSessionTimeouts(UnityEngine.Time.time);
+      _sessionManager.CheckInactivityTimeout(UnityEngine.Time.time);
+    }
+
+    // Manual session control via hotkeys
+    if (_config != null && _sessionManager != null)
+    {
+      var startKey = _config.ManualSessionStartKey.Value;
+      var stopKey = _config.ManualSessionStopKey.Value;
+
+      // Check if keys are the same (toggle mode)
+      if (startKey == stopKey)
+      {
+        // Toggle mode: one key for both actions
+        if (UnityEngine.Input.GetKeyDown(startKey))
+        {
+          if (_sessionManager.CurrentSession != null)
+          {
+            _sessionManager.EndManualSession();
+            Logger.LogInfo("Session toggled off");
+          }
+          else
+          {
+            _sessionManager.StartManualSession();
+            Logger.LogInfo("Session toggled on");
+          }
+        }
+      }
+      else
+      {
+        // Separate keys mode: explicit start/stop
+        if (UnityEngine.Input.GetKeyDown(startKey))
+        {
+          _sessionManager.StartManualSession();
+        }
+
+        if (UnityEngine.Input.GetKeyDown(stopKey))
+        {
+          _sessionManager.EndManualSession();
+        }
+      }
     }
   }
 
@@ -111,26 +150,16 @@ public sealed class Plugin : BaseUnityPlugin
     RemoveStatusEffectPatch.Tracker = effectTracker;
   }
 
-  private void ConfigureSessionPatch()
-  {
-    var services = _services!;
-    var sessionManager = services.GetRequiredService<ISessionManager>();
-
-    // Store reference for Update() timeout checks
-    _sessionManager = sessionManager;
-
-    CheckForTrueCombatPatch.SessionManager = sessionManager;
-
-    // Clear relevance cache when combat sessions end
-    sessionManager.SessionEnded += _ => _relevanceChecker?.ClearCache();
-  }
-
   private void ConfigureWebSocket()
   {
     var services = _services!;
     var config = services.GetRequiredService<ModConfig>();
     var eventEmitter = services.GetRequiredService<IEventEmitter>();
     var sessionManager = services.GetRequiredService<ISessionManager>();
+
+    // Store references for Update() method
+    _config = config;
+    _sessionManager = sessionManager;
 
     // Create WebSocket server
     _server = new WebSocketServer(config, Logger);
@@ -145,6 +174,9 @@ public sealed class Plugin : BaseUnityPlugin
       PluginInfo.Version,
       log: msg => Logger.LogDebug(msg)
     );
+
+    // Clear relevance cache when combat sessions end
+    sessionManager.SessionEnded += _ => _relevanceChecker?.ClearCache();
 
     // Send handshake when clients connect
     _server.ClientConnected += () =>
@@ -180,29 +212,37 @@ public sealed class Plugin : BaseUnityPlugin
 
     // Session management
     services.AddSingleton<IGameVersionProvider, GameVersionProvider>();
-    services.AddSingleton<ISessionManager>(sp => new SessionManager(
-      sp.GetRequiredService<IEventEmitter>(),
-      sp.GetRequiredService<IGameVersionProvider>(),
-      PluginInfo.Version,
-      log: (level, msg) =>
-      {
-        switch (level)
+    services.AddSingleton<ISessionManager>(sp =>
+    {
+      var config = sp.GetRequiredService<ModConfig>();
+      return new SessionManager(
+        sp.GetRequiredService<IEventEmitter>(),
+        sp.GetRequiredService<IGameVersionProvider>(),
+        PluginInfo.Version,
+        config.AutoSessionDetection.Value,
+        config.SessionInactivityTimeout.Value,
+        config.SessionStartEvents.Value,
+        config.SessionKeepAliveEvents.Value,
+        log: (level, msg) =>
         {
-          case Logging.LogLevel.Debug:
-            Logger.LogDebug(msg);
-            break;
-          case Logging.LogLevel.Info:
-            Logger.LogInfo(msg);
-            break;
-          case Logging.LogLevel.Warning:
-            Logger.LogWarning(msg);
-            break;
-          case Logging.LogLevel.Error:
-            Logger.LogError(msg);
-            break;
+          switch (level)
+          {
+            case Logging.LogLevel.Debug:
+              Logger.LogDebug(msg);
+              break;
+            case Logging.LogLevel.Info:
+              Logger.LogInfo(msg);
+              break;
+            case Logging.LogLevel.Warning:
+              Logger.LogWarning(msg);
+              break;
+            case Logging.LogLevel.Error:
+              Logger.LogError(msg);
+              break;
+          }
         }
-      }
-    ));
+      );
+    });
 
     return services.BuildServiceProvider();
   }

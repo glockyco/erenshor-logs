@@ -94,9 +94,6 @@ public static class BleedDamageMePatch
     if (RelevanceChecker != null && !RelevanceChecker.IsRelevantCombat(_attacker, __instance))
       return;
 
-    // Ensure session exists before emitting event
-    SessionManager?.EnsureSessionStarted(EventType.DamageDot);
-
     // Skip non-loggable results (negative values indicate skip conditions)
     // BleedDamageMe only returns positive values for actual damage
     if (__result <= 0)
@@ -177,6 +174,9 @@ public static class BleedDamageMePatch
           + $"for {__result}"
       );
       Emitter.Emit(evt);
+
+      // Notify session manager of combat event
+      SessionManager?.OnCombatEvent(evt.EventType, evt.Timestamp);
     }
   }
 }

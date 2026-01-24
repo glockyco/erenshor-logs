@@ -24,6 +24,7 @@ If you prefer to copy files manually, the following DLLs are required:
 | `Assembly-CSharp.dll` | `Erenshor_Data/Managed/` |
 | `UnityEngine.dll` | `Erenshor_Data/Managed/` |
 | `UnityEngine.CoreModule.dll` | `Erenshor_Data/Managed/` |
+| `UnityEngine.InputLegacyModule.dll` | `Erenshor_Data/Managed/` |
 
 ### Windows Steam Path
 

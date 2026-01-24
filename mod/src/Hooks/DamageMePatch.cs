@@ -98,9 +98,6 @@ public static class DamageMePatch
     if (RelevanceChecker != null && !RelevanceChecker.IsRelevantCombat(_attacker, __instance))
       return;
 
-    // Ensure session exists before emitting event
-    SessionManager?.EnsureSessionStarted(EventType.DamagePhysical);
-
     // Skip non-loggable results (dead, friendly fire, mining node, treasure chest)
     if (DamageResult.ShouldSkip(__result))
       return;
@@ -192,6 +189,9 @@ public static class DamageMePatch
           + (flags.Absorbed == true ? " [ABSORBED]" : "")
       );
       Emitter.Emit(evt);
+
+      // Notify session manager of combat event
+      SessionManager?.OnCombatEvent(evt.EventType, evt.Timestamp);
     }
   }
 }

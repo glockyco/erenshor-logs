@@ -74,10 +74,6 @@ public static class EnvironmentalDamageMePatch
     if (RelevanceChecker != null && !RelevanceChecker.IsRelevantCombat(null, __instance))
       return;
 
-    // Note: EnsureSessionStarted filters out DamageEnvironmental
-    // Environmental damage does not start sessions
-    SessionManager?.EnsureSessionStarted(EventType.DamageEnvironmental);
-
     // Skip non-loggable results (-1 = dead/invulnerable)
     if (__result <= 0)
       return;
@@ -114,6 +110,10 @@ public static class EnvironmentalDamageMePatch
     {
       LogDebug?.Invoke($"Environmental damage: {evt.Target?.Name ?? "Unknown"} took {__result}");
       Emitter.Emit(evt);
+
+      // Notify session manager of combat event
+      // Note: Environmental damage will not start sessions (filtered by config)
+      SessionManager?.OnCombatEvent(evt.EventType, evt.Timestamp);
     }
   }
 }

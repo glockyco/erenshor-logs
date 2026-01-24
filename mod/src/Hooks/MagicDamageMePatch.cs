@@ -90,9 +90,6 @@ public static class MagicDamageMePatch
     if (RelevanceChecker != null && !RelevanceChecker.IsRelevantCombat(_attacker, __instance))
       return;
 
-    // Ensure session exists before emitting event
-    SessionManager?.EnsureSessionStarted(EventType.DamageMagic);
-
     // Skip non-loggable results (dead, invulnerable, mining node, treasure chest)
     if (DamageResult.ShouldSkip(__result))
       return;
@@ -150,6 +147,9 @@ public static class MagicDamageMePatch
           + (flags.Resisted == true ? " [RESISTED]" : "")
       );
       Emitter.Emit(evt);
+
+      // Notify session manager of combat event
+      SessionManager?.OnCombatEvent(evt.EventType, evt.Timestamp);
     }
   }
 }

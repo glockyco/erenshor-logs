@@ -75,6 +75,10 @@
       <HintPath>lib/UnityEngine.CoreModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>lib/UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
   <!-- ILRepack configuration is in ILRepack.targets -->
