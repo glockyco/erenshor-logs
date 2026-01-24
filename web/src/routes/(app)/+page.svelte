@@ -49,7 +49,7 @@
 
 {#if !hasSessions}
   <div class="p-8">
-    <div class="space-y-8">
+    <div class="max-w-7xl mx-auto space-y-8">
       <Header />
       <WelcomeScreen />
     </div>
@@ -80,7 +80,7 @@
   <!-- Main content (offset on desktop to account for sidebar) -->
   <div class="min-h-screen" style="padding-left: {sidebarWidth}px">
     <div class="p-8">
-      <div class="space-y-8">
+      <div class="max-w-7xl mx-auto space-y-8">
         <Header />
         <StatsPanel {stats} {isLive} {duration} />
         <ActorTable {stats} />
