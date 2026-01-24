@@ -10,6 +10,10 @@
     error?: boolean;
     monospace?: boolean;
     class?: string;
+    id?: string;
+    min?: number;
+    max?: number;
+    step?: number;
     "aria-describedby"?: string;
     oninput?: (event: Event) => void;
     onchange?: (event: Event) => void;
@@ -26,6 +30,10 @@
     error = false,
     monospace = false,
     class: className,
+    id,
+    min,
+    max,
+    step,
     "aria-describedby": ariaDescribedby,
     oninput,
     onchange,
@@ -40,6 +48,10 @@
   {placeholder}
   {disabled}
   {readonly}
+  {id}
+  {min}
+  {max}
+  {step}
   aria-invalid={error}
   aria-describedby={ariaDescribedby}
   class={cn(

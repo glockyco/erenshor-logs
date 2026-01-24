@@ -2,98 +2,133 @@
   import {
     websocketUrl,
     setWebSocketUrl,
+    autoReconnect,
+    setAutoReconnect,
+    reconnectInterval,
+    setReconnectInterval,
     settingsChanged,
-    markSettingsApplied,
+    resetSettings,
   } from "$lib/state/settings.svelte";
+  import { reconnectWebSocket } from "$lib/state/connection.svelte";
   import { AppSettingsSchema } from "$lib/types/schemas";
-  import { Button, Input, QRCode } from "$lib/components/ui";
-  import { AlertTriangle, QrCode } from "@lucide/svelte";
+  import { Button, Checkbox, Input } from "$lib/components/ui";
+  import { Text } from "$lib/components/ui/typography";
+  import { AlertTriangle } from "@lucide/svelte";
   import SettingRow from "./SettingRow.svelte";
 
-  interface Props {
-    onReconnect?: () => void;
-  }
-
-  let { onReconnect }: Props = $props();
-
   let localUrl = $state(websocketUrl.value);
-  let error = $state<string | null>(null);
-  let showQR = $state(false);
+  let localInterval = $state(reconnectInterval.value);
+  let urlError = $state<string | null>(null);
+  let intervalError = $state<string | null>(null);
 
   // Validate and save URL on input
   function handleUrlChange() {
     const result = AppSettingsSchema.shape.websocket.shape.url.safeParse(localUrl);
     if (!result.success) {
-      error = result.error.issues[0].message;
+      urlError = result.error.issues[0].message;
       return;
     }
     setWebSocketUrl(result.data);
-    error = null;
+    urlError = null;
+  }
+
+  // Validate and save interval on input
+  function handleIntervalChange() {
+    const result =
+      AppSettingsSchema.shape.websocket.shape.reconnectInterval.safeParse(localInterval);
+    if (!result.success) {
+      intervalError = result.error.issues[0].message;
+      return;
+    }
+    setReconnectInterval(result.data);
+    intervalError = null;
+  }
+
+  function handleAutoReconnectChange(checked: boolean) {
+    setAutoReconnect(checked);
   }
 
   function handleReconnect() {
-    if (onReconnect) {
-      onReconnect();
-    }
-    markSettingsApplied();
+    reconnectWebSocket();
   }
 
-  function toggleQR() {
-    showQR = !showQR;
+  function handleReset() {
+    resetSettings();
+    // Update local state to match reset values
+    localUrl = websocketUrl.value;
+    localInterval = reconnectInterval.value;
+    urlError = null;
+    intervalError = null;
+    // Note: No need to call reconnectWebSocket() - the settings change
+    // will trigger the $effect in +layout.svelte to recreate the client
   }
 </script>
 
-<section aria-labelledby="connection-heading" class="space-y-4">
-  <h3 id="connection-heading" class="text-lg font-semibold uppercase tracking-wide text-stone-200">
-    Connection
-  </h3>
-
+<section class="space-y-4">
   {#if settingsChanged.value}
     <div
       role="alert"
       class="flex items-center gap-3 rounded-lg border border-amber-600/50 bg-amber-900/30 p-4"
     >
       <AlertTriangle class="h-5 w-5 flex-shrink-0 text-amber-400" />
-      <div class="flex-1">
-        <p class="text-sm font-medium text-amber-200">Settings changed. Reconnect to apply.</p>
-      </div>
-      <Button variant="secondary" size="sm" onclick={handleReconnect}>Reconnect Now</Button>
+      <Text variant="warning" as="span" class="flex-1">URL changed - reconnect to apply</Text>
     </div>
   {/if}
 
-  <SettingRow
-    label="WebSocket URL"
-    helpText="Enter the WebSocket server address. Replace 'localhost' with your PC's IP for remote connections."
-  >
+  <SettingRow label="WebSocket URL">
     <Input
       type="url"
       bind:value={localUrl}
       oninput={handleUrlChange}
-      error={!!error}
+      error={!!urlError}
       class="font-mono text-sm"
       placeholder="ws://localhost:38729"
-      aria-describedby={error ? "url-error" : undefined}
+      aria-describedby={urlError ? "url-error" : undefined}
     />
-    {#if error}
-      <p id="url-error" class="mt-1 text-xs text-rose-400" role="alert">
-        {error}
-      </p>
+    {#if urlError}
+      <p id="url-error" class="mt-1 text-sm text-rose-400">{urlError}</p>
+    {:else}
+      <Text variant="muted" as="p" class="mt-1">
+        To connect from other devices, replace 'localhost' with your PC's IP from the BepInEx
+        console.
+      </Text>
     {/if}
   </SettingRow>
 
-  <div class="flex flex-col gap-3">
-    <Button variant="ghost" size="sm" onclick={toggleQR} class="self-start">
-      <QrCode class="h-4 w-4" />
-      {showQR ? "Hide" : "Show"} QR Code
-    </Button>
+  <div role="separator" class="border-t border-stone-700"></div>
 
-    {#if showQR}
-      <div class="flex justify-center">
-        <QRCode data={localUrl} size={200} alt="WebSocket URL QR Code for mobile scanning" />
-      </div>
-      <p class="text-center text-xs text-stone-400">
-        Scan with your mobile device to connect instantly
-      </p>
+  <Checkbox
+    checked={autoReconnect.value}
+    label="Auto-reconnect on disconnect"
+    onchange={handleAutoReconnectChange}
+  />
+
+  <SettingRow label="Reconnect interval">
+    <div class="flex items-center gap-2">
+      <Input
+        type="number"
+        bind:value={localInterval}
+        oninput={handleIntervalChange}
+        error={!!intervalError}
+        min={1000}
+        max={30000}
+        step={100}
+        class="w-32"
+        aria-describedby={intervalError ? "interval-error" : undefined}
+      />
+      <Text variant="muted" as="span">milliseconds</Text>
+    </div>
+    {#if intervalError}
+      <p id="interval-error" class="mt-1 text-sm text-rose-400">{intervalError}</p>
     {/if}
+  </SettingRow>
+
+  <div role="separator" class="border-t border-stone-700"></div>
+
+  <div class="flex gap-3">
+    <Button size="sm" onclick={handleReconnect} class="flex-1">Reconnect Now</Button>
+    <Button size="sm" variant="secondary" onclick={handleReset} class="flex-1"
+      >Reset to Defaults</Button
+    >
   </div>
 </section>
