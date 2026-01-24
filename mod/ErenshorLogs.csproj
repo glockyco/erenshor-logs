@@ -47,13 +47,9 @@
   </ItemGroup>
 
   <!-- Version generation from git -->
-  <PropertyGroup>
-    <GitVersion Condition="'$(GitVersion)' == ''">0.0.0-unknown</GitVersion>
-  </PropertyGroup>
-
   <Target Name="GetGitVersion" BeforeTargets="GeneratePluginInfo">
-    <!-- Get version from git -->
-    <Exec Command="git log -1 --format=&quot;%%cd-%%h&quot; --date=format:&quot;%%Y.%%m.%%d&quot;"
+    <!-- Get version from git (use %cs for YYYY-MM-DD, then transform to YYYY.MM.DD) -->
+    <Exec Command="git log -1 --format=&quot;%cs-%h&quot; | sed 's/-/./1;s/-/./1'"
           ConsoleToMSBuild="true"
           IgnoreExitCode="true"
           StandardOutputImportance="low"
@@ -98,6 +94,12 @@
     <PropertyGroup Condition="'$(GitExitCode)' != '0' OR '$(GitVersionRaw)' == ''">
       <GitVersion>0.0.0-$([System.DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss'))</GitVersion>
       <GitVersionWarning>⚠️  Git not available, using fallback version</GitVersionWarning>
+    </PropertyGroup>
+
+    <!-- Final fallback in case nothing else set it -->
+    <PropertyGroup Condition="'$(GitVersion)' == ''">
+      <GitVersion>0.0.0-unknown</GitVersion>
+      <GitVersionWarning>⚠️  Version could not be determined</GitVersionWarning>
     </PropertyGroup>
 
     <Message Text="$(GitVersionWarning)" Importance="high" Condition="'$(GitVersionWarning)' != ''" />
