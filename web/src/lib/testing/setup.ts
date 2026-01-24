@@ -7,12 +7,17 @@ import {
 } from "$lib/state";
 
 /**
- * Global test setup - runs before all tests.
+ * Global test setup for unit tests.
+ *
  * Automatically cleans up state after each test to ensure isolation.
  */
 
+// =============================================================================
+// Test Cleanup
+// =============================================================================
+
 afterEach(() => {
-  // Clean browser APIs
+  // Clean storage
   localStorage.clear();
   sessionStorage.clear();
 
