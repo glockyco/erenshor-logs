@@ -87,11 +87,6 @@
     />
     {#if urlError}
       <p id="url-error" class="mt-1 text-sm text-rose-400">{urlError}</p>
-    {:else}
-      <Text variant="muted" as="p" class="mt-1">
-        To connect from other devices, replace 'localhost' with your PC's IP from the BepInEx
-        console.
-      </Text>
     {/if}
   </SettingRow>
 
