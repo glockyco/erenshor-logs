@@ -7,6 +7,7 @@ import type {
   ConnectionErrorCode,
   HandshakeMessage,
 } from "$lib/types";
+import type { WebSocketClient } from "$lib/services";
 
 // State
 const state = $state({
@@ -14,6 +15,7 @@ const state = $state({
   connectionError: null as ConnectionError | null,
   protocolVersion: null as string | null,
   modVersion: null as string | null,
+  client: null as WebSocketClient | null,
 });
 
 export const connectionStatus = {
@@ -88,6 +90,24 @@ export function clearError(): void {
 }
 
 /**
+ * Set the WebSocket client reference.
+ * Called by the root layout when creating/recreating the client.
+ */
+export function setClient(client: WebSocketClient | null): void {
+  state.client = client;
+}
+
+/**
+ * Manually trigger a reconnection attempt.
+ * This disconnects the current connection (if any) and attempts to reconnect.
+ */
+export function reconnectWebSocket(): void {
+  if (state.client) {
+    state.client.reconnect();
+  }
+}
+
+/**
  * Reset connection state to initial values. For testing only.
  */
 export function resetConnectionState(): void {
@@ -95,4 +115,5 @@ export function resetConnectionState(): void {
   state.connectionError = null;
   state.protocolVersion = null;
   state.modVersion = null;
+  state.client = null;
 }
