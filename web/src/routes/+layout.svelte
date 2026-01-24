@@ -6,6 +6,7 @@
     setConnected,
     setDisconnected,
     setError,
+    setClient,
     addSession,
     endSession,
     appendEvents,
@@ -13,6 +14,13 @@
     initUiPersistence,
     subscribeToClock,
   } from "$lib/state";
+  import {
+    websocketUrl,
+    autoReconnect,
+    reconnectInterval,
+    markSettingsApplied,
+    initSettingsPersistence,
+  } from "$lib/state/settings.svelte";
   import { untrack } from "svelte";
 
   let { children } = $props();
@@ -21,17 +29,25 @@
   $effect(() => {
     const cleanupSessions = initSessionsPersistence();
     const cleanupUi = initUiPersistence();
+    const cleanupSettings = initSettingsPersistence();
     const cleanupClock = subscribeToClock();
 
     return () => {
       cleanupSessions();
       cleanupUi();
+      cleanupSettings();
       cleanupClock();
     };
   });
 
   // Initialize WebSocket client in browser only
+  // Recreate client when URL or connection settings change
   $effect(() => {
+    // Track settings to reactively recreate client when they change
+    const currentUrl = websocketUrl.value;
+    const currentAutoReconnect = autoReconnect.value;
+    const currentReconnectInterval = reconnectInterval.value;
+
     // Use untrack to prevent callbacks from being tracked as dependencies
     // Without this, state mutations in callbacks trigger infinite reruns
     const callbacks: WebSocketCallbacks = {
@@ -42,6 +58,8 @@
           if (handshake.session) {
             addSession(handshake.session);
           }
+          // Mark settings as applied when successfully connected
+          markSettingsApplied();
         }),
       onSessionStart: (message) => untrack(() => addSession(message.session)),
       onSessionEnd: (message) => untrack(() => endSession(message.sessionId, message.endTime)),
@@ -50,9 +68,18 @@
       onError: (code, msg) => untrack(() => setError(code, msg)),
     };
 
-    const client = createWebSocketClient(callbacks);
+    // Create client with current settings
+    const client = createWebSocketClient(callbacks, {
+      url: currentUrl,
+      autoReconnect: currentAutoReconnect,
+      reconnectInterval: currentReconnectInterval,
+    });
+
+    // Store client reference so it can be manually reconnected
+    setClient(client);
 
     return () => {
+      setClient(null);
       client.disconnect();
     };
   });
