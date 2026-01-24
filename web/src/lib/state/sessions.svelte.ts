@@ -10,28 +10,8 @@ import { STORAGE_KEYS } from "$lib/utils/constants";
 import { loadFromStorage, saveToStorage, removeFromStorage } from "$lib/utils/storage";
 import { now } from "./clock.svelte";
 
-// Constants
-
-/**
- * Timeout for auto-ending stale sessions (milliseconds).
- * A session is considered stale if it has no endTime and the last event
- * timestamp is older than this timeout. This handles cases where the mod
- * crashes or fails to send a combatEnd event.
- *
- * Set to 5 seconds to quickly end sessions after combat finishes. The mod's
- * inactivity timeout is also 5s, so this acts as a safety net if the mod
- * fails to send combatEnd.
- */
-const STALE_SESSION_TIMEOUT_MS = 5_000; // 5 seconds
-
 // State
 export const sessions = new SvelteMap<string, Session>();
-
-/**
- * Timer ID for stale session cleanup interval.
- * Null when not running.
- */
-let cleanupIntervalId: number | null = null;
 
 const state = $state({
   activeSessionId: null as string | null,
@@ -82,60 +62,15 @@ const ACTIVE_SESSION_KEY = `${STORAGE_KEYS.SESSIONS}-active`;
 // SSR-safe initialization from localStorage
 const storedSessions = loadFromStorage(STORAGE_KEYS.SESSIONS, StoredSessionsSchema);
 if (storedSessions) {
-  let emptySessionCount = 0;
-
+  // Load all sessions regardless of event count
   storedSessions.forEach(([id, session]) => {
-    // Filter out empty sessions during initialization
-    if (session.events.length === 0) {
-      console.log(`Skipping empty session ${id} from localStorage`);
-      emptySessionCount++;
-      return;
-    }
     sessions.set(id, session);
   });
 
-  if (emptySessionCount > 0) {
-    console.log(`Cleaned up ${emptySessionCount} empty session(s) from localStorage`);
-  }
-
-  // Validate activeSessionId exists and is not empty
+  // Validate activeSessionId exists
   const storedActiveId = loadFromStorage(ACTIVE_SESSION_KEY, z.string());
   if (storedActiveId && sessions.has(storedActiveId)) {
     state.activeSessionId = storedActiveId;
-  }
-}
-
-/**
- * Check for stale sessions and auto-end them.
- * A session is considered stale if:
- * 1. It has no endTime (still "running")
- * 2. Last event timestamp is > STALE_SESSION_TIMEOUT_MS ago
- *
- * This handles cases where mod crashes or fails to send combatEnd event.
- */
-function checkForStaleSessions(): void {
-  const nowMs = now.value;
-
-  for (const [sessionId, session] of sessions.entries()) {
-    // Skip already-ended sessions
-    if (session.endTime !== undefined) {
-      continue;
-    }
-
-    // Find most recent event timestamp
-    const lastEventTime =
-      session.events.length > 0
-        ? Math.max(...session.events.map((e) => e.timestamp))
-        : session.startTime;
-
-    // Check if stale
-    const inactiveMs = nowMs - lastEventTime;
-    if (inactiveMs > STALE_SESSION_TIMEOUT_MS) {
-      console.warn(
-        `Auto-ending stale session ${sessionId} (${(inactiveMs / 1000).toFixed(1)}s inactive)`
-      );
-      endSession(sessionId, lastEventTime + STALE_SESSION_TIMEOUT_MS);
-    }
   }
 }
 
@@ -160,35 +95,26 @@ export function initSessionsPersistence(): () => void {
     });
   });
 
-  // Start stale session cleanup interval (checks every second)
-  cleanupIntervalId = window.setInterval(checkForStaleSessions, 1000);
-
   // Return cleanup function
-  return () => {
-    cleanup();
-    if (cleanupIntervalId !== null) {
-      window.clearInterval(cleanupIntervalId);
-      cleanupIntervalId = null;
-    }
-  };
+  return cleanup;
 }
 
 // Functions
 
 /**
  * Add a new session from SessionInfo (handshake or sessionStart message).
- * Replaces existing empty sessions, otherwise ignores duplicates.
+ * Handles duplicate session IDs by replacing empty sessions or warning about non-empty duplicates.
  */
 export function addSession(info: SessionInfo): void {
   const existing = sessions.get(info.id);
 
   if (existing) {
-    // If existing session is empty, replace it with fresh session
+    // If existing session is empty, allow replacement to handle reconnection edge cases
     if (existing.events.length === 0) {
-      console.log(`Replacing empty session ${info.id} with fresh session`);
+      console.log(`Replacing empty session ${info.id} with fresh session (duplicate ID)`);
       // Fall through to create new session
     } else {
-      // Existing session has events - don't overwrite
+      // Existing session has events - don't overwrite data
       console.warn(`Session ${info.id} already exists, ignoring duplicate sessionStart`);
       return;
     }
@@ -229,7 +155,7 @@ export function appendEvents(sessionId: string, events: CombatEvent[]): void {
 
 /**
  * Mark a session as ended.
- * Automatically deletes sessions with no events to prevent UI clutter.
+ * All sessions are preserved regardless of event count.
  */
 export function endSession(sessionId: string, endTime: number): void {
   const session = sessions.get(sessionId);
@@ -239,23 +165,7 @@ export function endSession(sessionId: string, endTime: number): void {
     return;
   }
 
-  // Auto-delete if session has no events
-  if (session.events.length === 0) {
-    console.log(`Auto-deleting empty session ${sessionId}`);
-    sessions.delete(sessionId);
-
-    // Switch active session if we just deleted it
-    if (state.activeSessionId === sessionId) {
-      const remainingSessions = Array.from(sessions.values()).sort(
-        (a, b) => b.startTime - a.startTime
-      );
-      state.activeSessionId = remainingSessions.length > 0 ? remainingSessions[0].id : null;
-    }
-
-    return; // Early return - session deleted, nothing more to do
-  }
-
-  // Session has events - mark as ended normally
+  // Mark session as ended (preserve all sessions regardless of event count)
   sessions.set(sessionId, {
     ...session,
     endTime,

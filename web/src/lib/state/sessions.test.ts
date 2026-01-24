@@ -160,17 +160,19 @@ describe("sessions state", () => {
     });
   });
 
-  describe("endSession with empty sessions", () => {
-    it("deletes session if it has no events", () => {
+  describe("endSession behavior", () => {
+    it("preserves session with no events", () => {
       const info = createSessionInfo({ id: "test-1" });
       addSession(info);
 
       endSession("test-1", 5000);
 
-      expect(sessions.has("test-1")).toBe(false);
+      expect(sessions.has("test-1")).toBe(true);
+      expect(sessions.get("test-1")!.endTime).toBe(5000);
+      expect(sessions.get("test-1")!.events).toHaveLength(0);
     });
 
-    it("keeps session if it has events", () => {
+    it("preserves session with events", () => {
       const info = createSessionInfo({ id: "test-1" });
       addSession(info);
       appendEvents("test-1", [createCombatEvent({ id: "e1" })]);
@@ -179,59 +181,48 @@ describe("sessions state", () => {
 
       expect(sessions.has("test-1")).toBe(true);
       expect(sessions.get("test-1")!.endTime).toBe(5000);
+      expect(sessions.get("test-1")!.events).toHaveLength(1);
     });
 
-    it("switches active to most recent when deleting active empty session", () => {
+    it("does not change active session when ending non-active session", () => {
       const info1 = createSessionInfo({ id: "test-1", startTime: 1000 });
       const info2 = createSessionInfo({ id: "test-2", startTime: 2000 });
       addSession(info1);
       addSession(info2);
-      appendEvents("test-2", [createCombatEvent({ id: "e1" })]);
-      setActiveSession("test-1");
+      setActiveSession("test-2");
 
       endSession("test-1", 3000);
 
-      expect(sessions.has("test-1")).toBe(false);
+      expect(sessions.has("test-1")).toBe(true);
+      expect(sessions.get("test-1")!.endTime).toBe(3000);
       expect(activeSessionId.value).toBe("test-2");
     });
 
-    it("clears active when deleting last remaining session", () => {
+    it("does not change active session when ending active session", () => {
       const info = createSessionInfo({ id: "test-1" });
       addSession(info);
       setActiveSession("test-1");
 
       endSession("test-1", 5000);
 
-      expect(sessions.size).toBe(0);
-      expect(activeSessionId.value).toBeNull();
+      expect(sessions.has("test-1")).toBe(true);
+      expect(sessions.get("test-1")!.endTime).toBe(5000);
+      expect(activeSessionId.value).toBe("test-1");
     });
 
-    it("does not affect non-active empty session deletion", () => {
-      const info1 = createSessionInfo({ id: "test-1" });
-      const info2 = createSessionInfo({ id: "test-2", startTime: 2000 });
-      addSession(info1);
-      addSession(info2);
-      appendEvents("test-2", [createCombatEvent({ id: "e1" })]);
-      setActiveSession("test-2");
-
-      endSession("test-1", 3000);
-
-      expect(sessions.has("test-1")).toBe(false);
-      expect(activeSessionId.value).toBe("test-2");
-    });
-
-    it("preserves session order when switching active", () => {
+    it("preserves all sessions when ending multiple sessions", () => {
       addSession(createSessionInfo({ id: "test-1", startTime: 1000 }));
-      addSession(createSessionInfo({ id: "test-2", startTime: 3000 }));
-      addSession(createSessionInfo({ id: "test-3", startTime: 2000 }));
-      appendEvents("test-2", [createCombatEvent()]);
-      appendEvents("test-3", [createCombatEvent()]);
-      setActiveSession("test-1");
+      addSession(createSessionInfo({ id: "test-2", startTime: 2000 }));
+      addSession(createSessionInfo({ id: "test-3", startTime: 3000 }));
 
       endSession("test-1", 4000);
+      endSession("test-2", 5000);
+      endSession("test-3", 6000);
 
-      // Should switch to test-2 (startTime: 3000) not test-3 (startTime: 2000)
-      expect(activeSessionId.value).toBe("test-2");
+      expect(sessions.size).toBe(3);
+      expect(sessions.get("test-1")!.endTime).toBe(4000);
+      expect(sessions.get("test-2")!.endTime).toBe(5000);
+      expect(sessions.get("test-3")!.endTime).toBe(6000);
     });
   });
 
