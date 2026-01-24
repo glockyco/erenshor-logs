@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { X, Download } from "@lucide/svelte";
   import * as HoverCard from "$lib/components/ui/hover-card";
   import type { Session } from "$lib/types";
   import { formatNumber, formatDps, formatDuration, getSessionEnemies } from "$lib/utils";
@@ -9,11 +8,9 @@
     session: Session;
     isActive?: boolean;
     onclick?: () => void;
-    ondelete?: () => void;
-    onexport?: () => void;
   }
 
-  let { session, isActive = false, onclick, ondelete, onexport }: Props = $props();
+  let { session, isActive = false, onclick }: Props = $props();
 
   // Calculate stats for tooltip
   const duration = $derived(
@@ -103,36 +100,4 @@
       </div>
     </HoverCard.Content>
   </HoverCard.Root>
-
-  <!-- Action buttons (outside HoverCard, show on hover) -->
-  <div
-    class="absolute inset-x-0 bottom-0 flex gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
-  >
-    {#if onexport}
-      <button
-        type="button"
-        onclick={(e) => {
-          e.stopPropagation();
-          onexport?.();
-        }}
-        class="flex-1 rounded-bl-md py-1 text-stone-600 transition-all hover:bg-cyan-500/20 hover:text-cyan-400"
-        aria-label="Export session"
-      >
-        <Download class="h-3 w-3 mx-auto" />
-      </button>
-    {/if}
-    {#if ondelete}
-      <button
-        type="button"
-        onclick={(e) => {
-          e.stopPropagation();
-          ondelete?.();
-        }}
-        class="flex-1 rounded-br-md py-1 text-stone-600 transition-all hover:bg-rose-500/20 hover:text-rose-400"
-        aria-label="Delete session"
-      >
-        <X class="h-3 w-3 mx-auto" />
-      </button>
-    {/if}
-  </div>
 </div>

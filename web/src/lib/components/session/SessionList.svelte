@@ -9,7 +9,6 @@
     addSession,
     setActiveSession,
     activeSession,
-    deleteSession,
   } from "$lib/state/sessions.svelte";
   import { exportSessions } from "$lib/services";
 
@@ -192,8 +191,6 @@
         {session}
         isActive={activeSession.value?.id === session.id}
         onclick={() => setActiveSession(session.id)}
-        ondelete={() => deleteSession(session.id)}
-        onexport={() => exportSessions([session])}
       />
     {/each}
   {:else}
