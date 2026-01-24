@@ -31,12 +31,17 @@ A BepInEx plugin that hooks into Erenshor's combat system to capture detailed co
 
 A static Svelte application for analyzing combat logs:
 
-- **Live Mode** - Connect to the running game via WebSocket
-- **Import Mode** - Load exported JSON log files
-- **Timeline View** - Damage/healing over time with drill-down
-- **Breakdown View** - Ability-by-ability analysis (WoW-style bars)
-- **Event Log** - Searchable, filterable event list
-- **Comparison** - Side-by-side log comparison for theorycrafting
+**Current Features:**
+- **Live Mode** - WebSocket connection to running game for real-time data
+- **File Import** - Load exported JSON session files
+- **Session Management** - Track and switch between multiple combat sessions
+- **DPS/HPS Metrics** - Real-time damage and healing per second calculations
+- **Actor Breakdown** - Per-actor damage/healing analysis with ability details
+
+**Planned Features:**
+- Interactive timeline with combat replay
+- Side-by-side session comparison for theorycrafting
+- Searchable event log with advanced filters
 
 ## Installation
 
