@@ -67,7 +67,6 @@
     "wrangler": "^4.51.0"
   },
   "dependencies": {
-    "@svelte-put/qr": "^2.1.1",
     "@tailwindcss/vite": "^4.1.18",
     "clsx": "^2.1.1",
     "vaul-svelte": "1.0.0-next.7",
