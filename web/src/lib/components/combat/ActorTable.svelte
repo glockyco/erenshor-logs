@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ChevronDown } from "@lucide/svelte";
+  import { ChevronDown, ChevronRight } from "@lucide/svelte";
   import { SvelteSet } from "svelte/reactivity";
   import { Heading } from "$lib/components/ui/typography";
   import FactionTabs from "./FactionTabs.svelte";
@@ -124,6 +124,29 @@
     }
   };
 
+  const expandAll = () => {
+    sortedActors.forEach((actor) => {
+      expandedActors.add(actor.actorId);
+    });
+  };
+
+  const collapseAll = () => {
+    expandedActors.clear();
+  };
+
+  // Determine if all actors are expanded
+  const allExpanded = $derived(
+    sortedActors.length > 0 && sortedActors.every((actor) => expandedActors.has(actor.actorId))
+  );
+
+  const toggleExpandAll = () => {
+    if (allExpanded) {
+      collapseAll();
+    } else {
+      expandAll();
+    }
+  };
+
   // Context-aware rate label for main table header
   const rateLabel = $derived(
     activeTab === "damageDealt"
@@ -193,7 +216,20 @@
         <table class="w-full text-sm min-w-[700px]">
           <thead class="border-b border-stone-700">
             <tr>
-              <th class="px-3 py-3 text-left"></th>
+              <th class="w-12 px-3 py-3 text-left">
+                <button
+                  type="button"
+                  class="text-stone-400 hover:text-amber-500 transition-colors cursor-pointer"
+                  onclick={toggleExpandAll}
+                  aria-label={allExpanded ? "Collapse all" : "Expand all"}
+                >
+                  {#if allExpanded}
+                    <ChevronDown class="h-4 w-4" />
+                  {:else}
+                    <ChevronRight class="h-4 w-4" />
+                  {/if}
+                </button>
+              </th>
               <th class="px-3 py-3 text-left">
                 <Heading level={6} variant="label">#</Heading>
               </th>
