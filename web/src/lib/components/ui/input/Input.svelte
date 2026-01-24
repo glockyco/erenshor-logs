@@ -10,6 +10,7 @@
     error?: boolean;
     monospace?: boolean;
     class?: string;
+    "aria-describedby"?: string;
     oninput?: (event: Event) => void;
     onchange?: (event: Event) => void;
     onfocus?: (event: FocusEvent) => void;
@@ -25,6 +26,7 @@
     error = false,
     monospace = false,
     class: className,
+    "aria-describedby": ariaDescribedby,
     oninput,
     onchange,
     onfocus,
@@ -39,6 +41,7 @@
   {disabled}
   {readonly}
   aria-invalid={error}
+  aria-describedby={ariaDescribedby}
   class={cn(
     "w-full rounded-lg border bg-stone-800 px-4 py-2.5 text-stone-100 transition-colors",
     "placeholder:text-stone-500",
