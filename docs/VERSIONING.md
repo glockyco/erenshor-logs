@@ -4,32 +4,40 @@ This document describes the automatic git-based versioning system used in the Er
 
 ## Overview
 
-Erenshor Logs uses **automatic versioning** based on git commit metadata. Versions are generated at build time and follow the format `YYYY.MM.DD-COMMITHASH`.
+Erenshor Logs uses **automatic versioning** based on git commit metadata. Versions are generated at build time and follow a **semver-compliant CalVer format**: `YYYY.M.D+COMMITHASH`.
 
 **Key principles:**
 - **No manual version bumps** - Just commit and the version updates automatically
 - **Unified versions** - Mod and web app always have identical versions (same git commit)
 - **Build-time generation** - Versions are computed during build from git metadata
 - **Clean release enforcement** - Release builds fail if working tree has uncommitted changes
+- **Semver compliance** - Format follows semantic versioning for BepInEx compatibility
 
 ## Version Format
 
 ### Production Build
 ```
-YYYY.MM.DD-COMMITHASH
+YYYY.M.D+COMMITHASH
 ```
 
-**Example:** `2026.01.24-fdd823c`
+**Example:** `2026.1.24+fdd823c`
 
-- `YYYY.MM.DD` - Date of the git commit (UTC)
+- `YYYY.M.D` - Date of the git commit (UTC, no leading zeros)
+- `+` - Semver build metadata separator
 - `COMMITHASH` - Short git commit hash (7 characters)
+
+**Why this format?**
+- **Semver-compliant**: BepInEx requires semantic versioning (`MAJOR.MINOR.PATCH`)
+- **CalVer semantics**: Date-based versions auto-increment with each commit
+- **No leading zeros**: `2026.1.9` not `2026.01.09` (semver requires integers)
+- **Build metadata**: `+hash` marks commit hash as metadata (not pre-release)
 
 ### Dirty Debug Build
 ```
-YYYY.MM.DD-COMMITHASH-dirty-YYYYMMDD-HHMMSS
+YYYY.M.D+COMMITHASH-dirty-YYYYMMDD-HHMMSS
 ```
 
-**Example:** `2026.01.24-fdd823c-dirty-20260124-204219`
+**Example:** `2026.1.24+fdd823c-dirty-20260124-204219`
 
 - Same as production, plus:
 - `-dirty` - Indicates uncommitted changes exist
@@ -54,13 +62,13 @@ YYYY.MM.DD-COMMITHASH-dirty-YYYYMMDD-HHMMSS
 
 **Example output:**
 ```
-[Info   : ErenshorLogs] ErenshorLogs v2026.01.24-fdd823c loaded
+[Info   : ErenshorLogs] ErenshorLogs v2026.1.24+fdd823c loaded
 ```
 
 **Implementation:**
 - `GetGitVersion` MSBuild target in `ErenshorLogs.csproj`
 - Generates `PluginInfo.g.cs` with version constant
-- Runs before compilation via `BeforeTargets="BeforeBuild"`
+- Runs before compilation via `BeforeTargets="GeneratePluginInfo"`
 
 ### Web Application
 
@@ -84,13 +92,13 @@ YYYY.MM.DD-COMMITHASH-dirty-YYYYMMDD-HHMMSS
 
 **Output (clean tree):**
 ```
-2026.01.24-fdd823c
+2026.1.24+fdd823c
 ```
 (displayed in green)
 
 **Output (dirty tree):**
 ```
-2026.01.24-fdd823c-dirty-20260124-204219
+2026.1.24+fdd823c-dirty-20260124-204219
 ⚠️  Working tree has uncommitted changes
 ```
 (displayed in yellow)
@@ -149,8 +157,9 @@ error : ❌ Cannot build Release with uncommitted changes. Commit or stash your 
 **MSBuild Target:**
 ```xml
 <Target Name="GetGitVersion" BeforeTargets="GeneratePluginInfo">
-  <!-- Get version from git using %cs (YYYY-MM-DD), transform to YYYY.MM.DD with sed -->
-  <Exec Command="git log -1 --format=&quot;%cs-%h&quot; | sed 's/-/./1;s/-/./1'"
+  <!-- Get version from git in semver-compliant CalVer format (YYYY.M.D+COMMITHASH) -->
+  <!-- Transform YYYY-MM-DD+hash to YYYY.M.D+hash (remove leading zeros for semver) -->
+  <Exec Command="git log -1 --format=&quot;%cs+%h&quot; | sed 's/-/./g' | sed 's/\.0\([0-9]\)/.\1/g'"
         ConsoleToMSBuild="true"
         IgnoreExitCode="true">
     <Output TaskParameter="ConsoleOutput" PropertyName="GitVersionRaw" />
@@ -203,7 +212,7 @@ node scripts/generate-version.js
 
 **Example output:**
 ```typescript
-export const VERSION = '2026.01.24-fdd823c';
+export const VERSION = '2026.1.24+fdd823c';
 ```
 
 ### CLI (Python)
@@ -276,7 +285,7 @@ vim mod/SomeFile.cs
 
 # Build (dirty tree is fine)
 cd mod && dotnet build -c Debug
-# Version: 2026.01.24-fdd823c-dirty-20260124-210530
+# Version: 2026.1.24+fdd823c-dirty-20260124-210530
 ```
 
 ### Creating a Release

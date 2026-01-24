@@ -48,8 +48,9 @@
 
   <!-- Version generation from git -->
   <Target Name="GetGitVersion" BeforeTargets="GeneratePluginInfo">
-    <!-- Get version from git (use %cs for YYYY-MM-DD, then transform to YYYY.MM.DD) -->
-    <Exec Command="git log -1 --format=&quot;%cs-%h&quot; | sed 's/-/./1;s/-/./1'"
+    <!-- Get version from git in semver-compliant CalVer format (YYYY.M.D+COMMITHASH) -->
+    <!-- Transform YYYY-MM-DD+hash to YYYY.M.D+hash (remove leading zeros for semver) -->
+    <Exec Command="git log -1 --format=&quot;%cs+%h&quot; | sed 's/-/./g' | sed 's/\.0\([0-9]\)/.\1/g'"
           ConsoleToMSBuild="true"
           IgnoreExitCode="true"
           StandardOutputImportance="low"

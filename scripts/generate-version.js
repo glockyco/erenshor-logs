@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Generate version from git for Erenshor Logs project.
- * Format: YYYY.MM.DD-COMMITHASH
+ * Format: YYYY.M.D+COMMITHASH (semver-compliant CalVer)
  * Writes to: web/src/lib/version.ts
  */
 
@@ -16,11 +16,14 @@ const OUTPUT_FILE = join(PROJECT_ROOT, 'web/src/lib/version.ts');
 
 function getVersion() {
   try {
-    // Get version from git
+    // Get version from git (use + for build metadata, not - for pre-release)
     const gitVersion = execSync(
-      'git log -1 --format="%cd-%h" --date=format:"%Y.%m.%d"',
+      'git log -1 --format="%cd+%h" --date=format:"%Y.%m.%d"',
       { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'], cwd: PROJECT_ROOT }
-    ).trim();
+    )
+      .trim()
+      // Remove leading zeros from month/day for semver compliance
+      .replace(/\.0(\d)/g, '.$1');
 
     // Check for dirty working tree
     const gitStatus = execSync('git status --porcelain', {
