@@ -3,7 +3,7 @@
   import type { Snippet } from "svelte";
 
   const button = tv({
-    base: "inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50",
+    base: "inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-all cursor-pointer active:scale-95 disabled:cursor-not-allowed disabled:opacity-50",
     variants: {
       variant: {
         default: "bg-amber-500 text-stone-900 hover:bg-amber-400",

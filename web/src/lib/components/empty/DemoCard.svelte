@@ -85,7 +85,7 @@
   <button
     onclick={loadDemo}
     disabled={isLoading}
-    class="w-full rounded-lg bg-cyan-500 px-6 py-3 font-semibold text-stone-900 transition-all hover:bg-cyan-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+    class="w-full rounded-lg bg-cyan-500 px-6 py-3 font-semibold text-stone-900 transition-all cursor-pointer hover:bg-cyan-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
   >
     {isLoading ? "Loading..." : "Load Demo Data"}
   </button>
