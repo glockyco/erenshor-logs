@@ -15,6 +15,7 @@ const uiState = $state({
   sortDirection: "desc" as SortDirection,
   actorBreakdownTab: "damageDealt" as ActorBreakdownTab,
   factionFilter: "all" as FactionFilter,
+  sidebarCollapsed: true,
 });
 
 export const sortBy = {
@@ -53,6 +54,15 @@ export const factionFilter = {
   },
 };
 
+export const sidebarCollapsed = {
+  get value() {
+    return uiState.sidebarCollapsed;
+  },
+  toggle() {
+    uiState.sidebarCollapsed = !uiState.sidebarCollapsed;
+  },
+};
+
 // SSR-safe initialization from localStorage
 const stored = loadFromStorage(STORAGE_KEYS.PREFERENCES, UIPreferencesSchema);
 if (stored) {
@@ -61,6 +71,9 @@ if (stored) {
   uiState.sortDirection = stored.sortDirection;
   uiState.actorBreakdownTab = stored.actorBreakdownTab;
   uiState.factionFilter = stored.factionFilter;
+  if (stored.sidebarCollapsed !== undefined) {
+    uiState.sidebarCollapsed = stored.sidebarCollapsed;
+  }
 }
 
 /**
@@ -77,6 +90,7 @@ export function initUiPersistence(): () => void {
         sortDirection: uiState.sortDirection,
         actorBreakdownTab: uiState.actorBreakdownTab,
         factionFilter: uiState.factionFilter,
+        sidebarCollapsed: uiState.sidebarCollapsed,
       });
     });
   });
@@ -151,4 +165,5 @@ export function resetUiState(): void {
   uiState.sortDirection = "desc";
   uiState.actorBreakdownTab = "damageDealt";
   uiState.factionFilter = "all";
+  uiState.sidebarCollapsed = true;
 }

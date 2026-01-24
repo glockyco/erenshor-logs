@@ -344,6 +344,7 @@ export const UIPreferencesSchema = z.object({
   sortDirection: SortDirectionSchema,
   actorBreakdownTab: ActorBreakdownTabSchema,
   factionFilter: FactionFilterSchema,
+  sidebarCollapsed: z.boolean().optional(),
 });
 export type UIPreferences = z.infer<typeof UIPreferencesSchema>;
 
