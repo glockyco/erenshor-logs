@@ -1,6 +1,6 @@
 <script lang="ts">
   import { ChevronDown, ChevronRight, Download, AlertTriangle } from "@lucide/svelte";
-  import { Heading } from "$lib/components/ui/typography";
+  import { Heading, Numeric } from "$lib/components/ui/typography";
   import type { Session } from "$lib/types";
   import {
     analyzeUnknownEvents,
@@ -121,34 +121,34 @@
       <!-- Attribution Summary -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="space-y-1">
-          <div class="text-xs uppercase tracking-wider text-stone-400">Total Events</div>
-          <div class="text-2xl font-mono font-bold text-stone-200">
+          <Heading level={6} variant="label">Total Events</Heading>
+          <Numeric variant="large" color="muted" as="div">
             {formatNumber(analysis.summary.total)}
-          </div>
+          </Numeric>
         </div>
         <div class="space-y-1">
-          <div class="text-xs uppercase tracking-wider text-stone-400">Attributed</div>
-          <div class="text-2xl font-mono font-bold text-emerald-400">
+          <Heading level={6} variant="label">Attributed</Heading>
+          <Numeric variant="large" color="hit" as="div">
             {formatNumber(analysis.summary.attributed)}
-          </div>
+          </Numeric>
           <div class="text-xs text-stone-500">
             {((analysis.summary.attributed / analysis.summary.total) * 100).toFixed(1)}%
           </div>
         </div>
         <div class="space-y-1">
-          <div class="text-xs uppercase tracking-wider text-stone-400">Unknown</div>
-          <div class="text-2xl font-mono font-bold text-amber-500">
+          <Heading level={6} variant="label">Unknown</Heading>
+          <Numeric variant="large" color="primary" as="div">
             {formatNumber(analysis.summary.unknown)}
-          </div>
+          </Numeric>
           <div class="text-xs text-stone-500">
             {((analysis.summary.unknown / analysis.summary.total) * 100).toFixed(1)}%
           </div>
         </div>
         <div class="space-y-1">
-          <div class="text-xs uppercase tracking-wider text-stone-400">Inferred</div>
-          <div class="text-2xl font-mono font-bold text-cyan-400">
+          <Heading level={6} variant="label">Inferred</Heading>
+          <Numeric variant="large" color="crit" as="div">
             {formatNumber(analysis.summary.inferred)}
-          </div>
+          </Numeric>
           <div class="text-xs text-stone-500">
             {((analysis.summary.inferred / analysis.summary.total) * 100).toFixed(1)}%
           </div>
@@ -158,9 +158,9 @@
       <!-- Unknown Signatures Table -->
       {#if analysis.signatures.length > 0}
         <div class="space-y-2">
-          <h4 class="text-sm font-semibold text-stone-300 uppercase tracking-wider">
+          <Heading level={4} variant="label" class="text-stone-300">
             Unknown Events by Source (sorted by impact)
-          </h4>
+          </Heading>
 
           <div class="space-y-1">
             {#each analysis.signatures as signature (getSignatureKey(signature))}
@@ -215,11 +215,7 @@
                     <!-- Common Parameters -->
                     {#if signature.commonParameters && Object.keys(signature.commonParameters).length > 0}
                       <div class="pt-3">
-                        <div
-                          class="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2"
-                        >
-                          Common Parameters
-                        </div>
+                        <Heading level={6} variant="label" class="mb-2">Common Parameters</Heading>
                         <div class="grid grid-cols-2 gap-x-4 gap-y-1">
                           {#each Object.entries(signature.commonParameters) as [key, value] (key)}
                             <div class="flex gap-2 text-sm">
@@ -234,16 +230,14 @@
                     <!-- Stack Traces -->
                     {#if signature.uniqueStackTraces.length > 0}
                       <div>
-                        <div
-                          class="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2"
-                        >
+                        <Heading level={6} variant="label" class="mb-2">
                           Stack Trace
                           {#if signature.uniqueStackTraces.length > 1}
                             <span class="text-stone-500">
                               ({signature.uniqueStackTraces.length} unique)
                             </span>
                           {/if}
-                        </div>
+                        </Heading>
                         {#each signature.uniqueStackTraces.slice(0, 1) as stackTrace, i (i)}
                           <div class="bg-stone-950 border border-stone-700 rounded p-3 space-y-1">
                             {#each stackTrace as frame, j (j)}

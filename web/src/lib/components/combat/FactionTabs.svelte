@@ -26,7 +26,7 @@
   <select
     value={activeTab}
     onchange={handleSelectChange}
-    class="w-full bg-stone-800 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-amber-500 border-none outline-none cursor-pointer"
+    class="w-full bg-stone-800 px-4 py-3 text-base font-semibold uppercase tracking-wider text-amber-500 border-none outline-none cursor-pointer"
   >
     {#each tabs as tab (tab.value)}
       <option value={tab.value}>{tab.label}</option>
@@ -40,7 +40,7 @@
     {#each tabs as tab (tab.value)}
       <button
         type="button"
-        class={`px-4 py-3 text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
+        class={`px-4 py-3 text-sm font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
           activeTab === tab.value
             ? "border-b-2 border-amber-500 text-amber-500"
             : "border-b-2 border-transparent text-stone-400 hover:text-stone-200"

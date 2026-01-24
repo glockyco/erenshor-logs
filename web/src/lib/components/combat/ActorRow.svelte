@@ -2,6 +2,7 @@
   import { ChevronDown, ChevronRight } from "@lucide/svelte";
   import { formatDps, formatNumber, formatPercent } from "$lib/utils";
   import { getActorIcon } from "$lib/utils/actor-icons";
+  import { Numeric } from "$lib/components/ui/typography";
   import AbilityBreakdownTable from "./AbilityBreakdownTable.svelte";
   import type { AbilityStats } from "$lib/types";
 
@@ -81,8 +82,8 @@
   </td>
 
   <!-- Rank -->
-  <td class="px-3 py-3 font-mono text-stone-500">
-    {rank}
+  <td class="px-3 py-3">
+    <Numeric variant="medium" color="muted">{rank}</Numeric>
   </td>
 
   <!-- Actor Name with Icon Badge -->
@@ -98,20 +99,20 @@
   </td>
 
   <!-- DPS -->
-  <td class="px-4 py-3 text-right font-mono font-semibold text-amber-500">
-    {formatDps(actor.dps)}
+  <td class="px-4 py-3 text-right">
+    <Numeric variant="medium" color="primary">{formatDps(actor.dps)}</Numeric>
   </td>
 
   <!-- Total -->
-  <td class="px-4 py-3 text-right font-mono text-stone-200">
-    {formatNumber(actor.total)}
+  <td class="px-4 py-3 text-right">
+    <Numeric variant="medium" color="muted">{formatNumber(actor.total)}</Numeric>
   </td>
 
   <!-- Percentage Bar -->
   <td class="px-4 py-3 relative">
     <div class="absolute inset-y-0 right-0 bg-amber-500/20" style:width="{actor.percentage}%"></div>
-    <div class="relative text-right font-mono text-stone-200">
-      {formatPercent(actor.percentage / 100)}
+    <div class="relative text-right">
+      <Numeric variant="medium" color="muted">{formatPercent(actor.percentage / 100)}</Numeric>
     </div>
   </td>
 </tr>

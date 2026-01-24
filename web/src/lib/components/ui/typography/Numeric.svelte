@@ -3,7 +3,7 @@
   import type { Snippet } from "svelte";
 
   interface Props {
-    variant?: "stat" | "large" | "medium" | "small";
+    variant?: "hero" | "large" | "medium" | "small";
     color?: "primary" | "damage" | "healing" | "muted" | "crit" | "hit" | "miss";
     as?: "span" | "div";
     class?: string;
@@ -19,9 +19,9 @@
   }: Props = $props();
 
   const sizeClasses = {
-    stat: "text-4xl font-mono font-bold",
-    large: "text-2xl font-mono font-semibold",
-    medium: "text-base font-mono font-semibold",
+    hero: "text-4xl font-mono font-bold",
+    large: "text-base font-mono",
+    medium: "text-sm font-mono",
     small: "text-sm font-mono",
   };
 

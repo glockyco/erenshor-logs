@@ -193,17 +193,17 @@
         <table class="w-full text-sm min-w-[700px]">
           <thead class="border-b border-stone-700">
             <tr>
-              <th class="px-3 py-3 text-left text-xs uppercase tracking-wider text-stone-400"></th>
-              <th class="px-3 py-3 text-left text-xs uppercase tracking-wider text-stone-400">
-                #
+              <th class="px-3 py-3 text-left"></th>
+              <th class="px-3 py-3 text-left">
+                <Heading level={6} variant="label">#</Heading>
               </th>
-              <th class="px-4 py-3 text-left text-xs uppercase tracking-wider text-stone-400">
-                Actor
+              <th class="px-4 py-3 text-left">
+                <Heading level={6} variant="label">Actor</Heading>
               </th>
-              <th class="px-4 py-3 text-right text-xs uppercase tracking-wider text-stone-400">
+              <th class="px-4 py-3 text-right">
                 <button
                   type="button"
-                  class="inline-flex items-center gap-1 hover:text-amber-500 cursor-pointer"
+                  class="inline-flex items-center gap-1 text-sm font-medium uppercase tracking-wider text-stone-400 hover:text-amber-500 cursor-pointer"
                   onclick={() => toggleSort("dps")}
                 >
                   {rateLabel}
@@ -214,10 +214,10 @@
                   {/if}
                 </button>
               </th>
-              <th class="px-4 py-3 text-right text-xs uppercase tracking-wider text-stone-400">
+              <th class="px-4 py-3 text-right">
                 <button
                   type="button"
-                  class="inline-flex items-center gap-1 hover:text-amber-500 cursor-pointer"
+                  class="inline-flex items-center gap-1 text-sm font-medium uppercase tracking-wider text-stone-400 hover:text-amber-500 cursor-pointer"
                   onclick={() => toggleSort("total")}
                 >
                   Total
@@ -228,8 +228,8 @@
                   {/if}
                 </button>
               </th>
-              <th class="px-4 py-3 text-right text-xs uppercase tracking-wider text-stone-400">
-                % of Total
+              <th class="px-4 py-3 text-right">
+                <Heading level={6} variant="label">% of Total</Heading>
               </th>
             </tr>
           </thead>

@@ -6,7 +6,7 @@
 
 <header class="border-b-2 border-amber-600/50 pb-4">
   <div class="flex items-center justify-between">
-    <Heading level={1} variant="display" class="text-4xl">Erenshor Logs</Heading>
+    <Heading level={1} variant="app">Erenshor Logs</Heading>
     <ConnectionStatus status={connectionStatus.value} />
   </div>
 </header>

@@ -26,7 +26,7 @@
   </div>
 
   <!-- Title -->
-  <Heading level={2} variant="section" class="mb-4 text-center text-xl">
+  <Heading level={2} variant="section" class="mb-4 text-center">
     {title}
   </Heading>
 

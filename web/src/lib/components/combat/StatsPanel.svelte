@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { SessionStats } from "$lib/types";
   import { formatDps, formatNumber, formatDuration } from "$lib/utils";
-  import { Heading } from "$lib/components/ui/typography";
+  import { Heading, Numeric } from "$lib/components/ui/typography";
 
   interface Props {
     stats: SessionStats | null;
@@ -35,28 +35,28 @@
       <div class="grid grid-cols-3 gap-8 mb-6 pb-6 border-b border-stone-700">
         <!-- Damage Dealt -->
         <div class="text-center space-y-1">
-          <div class="text-xs uppercase tracking-wider text-stone-400">Damage Dealt</div>
-          <div class="text-4xl font-mono font-bold text-amber-500">
+          <Heading level={6} variant="label">Damage Dealt</Heading>
+          <Numeric variant="hero" color="primary" as="div">
             {formatDps(stats.dps)}
-          </div>
+          </Numeric>
           <div class="text-xs text-stone-500">DPS</div>
         </div>
 
         <!-- Damage Taken -->
         <div class="text-center space-y-1">
-          <div class="text-xs uppercase tracking-wider text-stone-400">Damage Taken</div>
-          <div class="text-4xl font-mono font-bold text-rose-400">
+          <Heading level={6} variant="label">Damage Taken</Heading>
+          <Numeric variant="hero" color="damage" as="div">
             {formatDps(stats.dtps)}
-          </div>
+          </Numeric>
           <div class="text-xs text-stone-500">DTPS</div>
         </div>
 
         <!-- Healing Done -->
         <div class="text-center space-y-1">
-          <div class="text-xs uppercase tracking-wider text-stone-400">Healing Done</div>
-          <div class="text-4xl font-mono font-bold text-lime-500">
+          <Heading level={6} variant="label">Healing Done</Heading>
+          <Numeric variant="hero" color="healing" as="div">
             {formatDps(stats.hps)}
-          </div>
+          </Numeric>
           <div class="text-xs text-stone-500">HPS</div>
         </div>
       </div>
@@ -64,31 +64,31 @@
       <!-- Supporting Stats: Single Row -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
         <div class="space-y-1">
-          <div class="text-xs uppercase tracking-wider text-stone-400">Total Damage</div>
-          <div class="text-base font-mono font-semibold text-stone-200">
+          <Heading level={6} variant="label">Total Damage</Heading>
+          <Numeric variant="large" color="muted" as="div">
             {formatNumber(stats.totalDamage)}
-          </div>
+          </Numeric>
         </div>
 
         <div class="space-y-1">
-          <div class="text-xs uppercase tracking-wider text-stone-400">Total Taken</div>
-          <div class="text-base font-mono font-semibold text-stone-200">
+          <Heading level={6} variant="label">Total Taken</Heading>
+          <Numeric variant="large" color="muted" as="div">
             {formatNumber(stats.totalDamageTaken)}
-          </div>
+          </Numeric>
         </div>
 
         <div class="space-y-1">
-          <div class="text-xs uppercase tracking-wider text-stone-400">Total Healing</div>
-          <div class="text-base font-mono font-semibold text-stone-200">
+          <Heading level={6} variant="label">Total Healing</Heading>
+          <Numeric variant="large" color="muted" as="div">
             {formatNumber(stats.totalHealing)}
-          </div>
+          </Numeric>
         </div>
 
         <div class="space-y-1">
-          <div class="text-xs uppercase tracking-wider text-stone-400">Duration</div>
-          <div class="text-base font-mono font-semibold text-stone-200">
+          <Heading level={6} variant="label">Duration</Heading>
+          <Numeric variant="large" color="muted" as="div">
             {formatDuration(duration)}
-          </div>
+          </Numeric>
         </div>
       </div>
     {/if}

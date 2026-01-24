@@ -4,7 +4,7 @@
 
   interface Props {
     level?: 1 | 2 | 3 | 4 | 5 | 6;
-    variant?: "display" | "section" | "subsection" | "label";
+    variant?: "app" | "section" | "label";
     class?: string;
     children: Snippet;
   }
@@ -12,10 +12,9 @@
   let { level = 3, variant = "section", class: className, children }: Props = $props();
 
   const variantClasses = {
-    display: "font-fantasy text-2xl font-bold text-amber-500",
+    app: "font-fantasy text-4xl font-bold text-amber-500",
     section: "font-fantasy text-lg font-semibold text-amber-500",
-    subsection: "font-fantasy text-base font-semibold text-amber-500",
-    label: "text-sm font-semibold uppercase tracking-wider text-amber-500",
+    label: "text-sm font-medium uppercase tracking-wider text-stone-400",
   };
 
   const Tag = `h${level}` as const;
