@@ -141,18 +141,13 @@ public sealed class SessionManager : ISessionManager
       return;
     }
 
-    // Only allow ending manual sessions
-    if (!_currentSession.IsManual)
-    {
-      _log?.Invoke(
-        LogLevel.Warning,
-        $"Cannot manually stop automatic session {_currentSession.Id}. "
-          + "Use manual start to begin a new session, or wait for inactivity timeout."
-      );
-      return;
-    }
+    // Allow ending any session (manual or automatic)
+    var sessionType = _currentSession.IsManual ? "manual" : "automatic";
+    _log?.Invoke(
+      LogLevel.Info,
+      $"Manually ending {sessionType} session {_currentSession.Id} via hotkey"
+    );
 
-    _log?.Invoke(LogLevel.Info, $"Manually ending session {_currentSession.Id} via hotkey");
     EndSession(null); // End at current time
   }
 
