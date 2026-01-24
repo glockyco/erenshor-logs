@@ -8,7 +8,6 @@
 
     <AssemblyName>ErenshorLogs</AssemblyName>
     <RootNamespace>ErenshorLogs</RootNamespace>
-    <Version>0.1.1</Version>
 
     <!-- Roslyn Analyzers -->
     <AnalysisMode>Recommended</AnalysisMode>
@@ -47,12 +46,70 @@
     <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.34.2" />
   </ItemGroup>
 
-  <!-- Generate PluginInfo.g.cs with version from .csproj -->
+  <!-- Version generation from git -->
+  <PropertyGroup>
+    <GitVersion Condition="'$(GitVersion)' == ''">0.0.0-unknown</GitVersion>
+  </PropertyGroup>
+
+  <Target Name="GetGitVersion" BeforeTargets="GeneratePluginInfo">
+    <!-- Get version from git -->
+    <Exec Command="git log -1 --format=&quot;%%cd-%%h&quot; --date=format:&quot;%%Y.%%m.%%d&quot;"
+          ConsoleToMSBuild="true"
+          IgnoreExitCode="true"
+          StandardOutputImportance="low"
+          EchoOff="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="GitVersionRaw" />
+      <Output TaskParameter="ExitCode" PropertyName="GitExitCode" />
+    </Exec>
+
+    <!-- For Release builds: check if working tree is dirty and fail if so -->
+    <Exec Command="git status --porcelain"
+          ConsoleToMSBuild="true"
+          IgnoreExitCode="true"
+          StandardOutputImportance="low"
+          EchoOff="true"
+          Condition="'$(Configuration)' == 'Release'">
+      <Output TaskParameter="ConsoleOutput" PropertyName="GitStatusRelease" />
+    </Exec>
+
+    <!-- Fail Release build if working tree is dirty -->
+    <Error Text="❌ Cannot build Release with uncommitted changes. Commit or stash your changes first. Run 'git status' to see uncommitted changes."
+           Condition="'$(Configuration)' == 'Release' AND '$(GitStatusRelease)' != ''" />
+
+    <!-- For Debug builds: check if dirty and append timestamp -->
+    <Exec Command="git status --porcelain"
+          ConsoleToMSBuild="true"
+          IgnoreExitCode="true"
+          StandardOutputImportance="low"
+          EchoOff="true"
+          Condition="'$(Configuration)' == 'Debug'">
+      <Output TaskParameter="ConsoleOutput" PropertyName="GitStatusDebug" />
+    </Exec>
+
+    <!-- Build version string -->
+    <PropertyGroup Condition="'$(GitExitCode)' == '0' AND '$(GitVersionRaw)' != ''">
+      <GitVersionClean>$(GitVersionRaw.Trim())</GitVersionClean>
+      <!-- Add -dirty-timestamp for Debug builds with uncommitted changes -->
+      <GitVersion Condition="'$(Configuration)' == 'Debug' AND '$(GitStatusDebug)' != ''">$(GitVersionClean)-dirty-$([System.DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss'))</GitVersion>
+      <GitVersion Condition="'$(GitVersion)' == ''">$(GitVersionClean)</GitVersion>
+    </PropertyGroup>
+
+    <!-- Fallback if git fails -->
+    <PropertyGroup Condition="'$(GitExitCode)' != '0' OR '$(GitVersionRaw)' == ''">
+      <GitVersion>0.0.0-$([System.DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss'))</GitVersion>
+      <GitVersionWarning>⚠️  Git not available, using fallback version</GitVersionWarning>
+    </PropertyGroup>
+
+    <Message Text="$(GitVersionWarning)" Importance="high" Condition="'$(GitVersionWarning)' != ''" />
+    <Message Text="📦 Build version: $(GitVersion)" Importance="high" />
+  </Target>
+
+  <!-- Generate PluginInfo.g.cs with version from git -->
   <Target Name="GeneratePluginInfo" BeforeTargets="CoreCompile">
     <PropertyGroup>
       <PluginInfoFile>$(IntermediateOutputPath)PluginInfo.g.cs</PluginInfoFile>
       <PluginInfoLine1>namespace ErenshorLogs%3B</PluginInfoLine1>
-      <PluginInfoLine2>internal static partial class PluginInfo { public const string Version = "$(Version)"%3B }</PluginInfoLine2>
+      <PluginInfoLine2>internal static partial class PluginInfo { public const string Version = "$(GitVersion)"%3B }</PluginInfoLine2>
     </PropertyGroup>
     <WriteLinesToFile File="$(PluginInfoFile)" Lines="$(PluginInfoLine1)" Overwrite="true" />
     <WriteLinesToFile File="$(PluginInfoFile)" Lines="$(PluginInfoLine2)" Overwrite="false" />
