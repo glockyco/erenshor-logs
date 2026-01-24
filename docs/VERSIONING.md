@@ -4,40 +4,40 @@ This document describes the automatic git-based versioning system used in the Er
 
 ## Overview
 
-Erenshor Logs uses **automatic versioning** based on git commit metadata. Versions are generated at build time and follow a **semver-compliant CalVer format**: `YYYY.M.D+COMMITHASH`.
+Erenshor Logs uses **automatic versioning** based on git commit metadata. Versions are generated at build time and follow a **System.Version compatible CalVer format**: `YYYY.M.D.REVISION`.
 
 **Key principles:**
 - **No manual version bumps** - Just commit and the version updates automatically
 - **Unified versions** - Mod and web app always have identical versions (same git commit)
 - **Build-time generation** - Versions are computed during build from git metadata
 - **Clean release enforcement** - Release builds fail if working tree has uncommitted changes
-- **Semver compliance** - Format follows semantic versioning for BepInEx compatibility
+- **BepInEx compatibility** - Format works with System.Version class requirements
 
 ## Version Format
 
 ### Production Build
 ```
-YYYY.M.D+COMMITHASH
+YYYY.M.D.REVISION
 ```
 
-**Example:** `2026.1.24+fdd823c`
+**Example:** `2026.1.24.72108205`
 
 - `YYYY.M.D` - Date of the git commit (UTC, no leading zeros)
-- `+` - Semver build metadata separator
-- `COMMITHASH` - Short git commit hash (7 characters)
+- `REVISION` - Commit hash converted from hex to decimal (e.g., `44c48ad` → `72108205`)
 
 **Why this format?**
-- **Semver-compliant**: BepInEx requires semantic versioning (`MAJOR.MINOR.PATCH`)
+- **System.Version compatible**: BepInEx uses System.Version which only accepts integers
 - **CalVer semantics**: Date-based versions auto-increment with each commit
-- **No leading zeros**: `2026.1.9` not `2026.01.09` (semver requires integers)
-- **Build metadata**: `+hash` marks commit hash as metadata (not pre-release)
+- **No leading zeros**: `2026.1.9` not `2026.01.09` (required for integer parsing)
+- **Full traceability**: Revision field encodes commit hash as decimal integer
+- **Unique per commit**: Two commits on same day have different revision numbers
 
 ### Dirty Debug Build
 ```
 YYYY.M.D+COMMITHASH-dirty-YYYYMMDD-HHMMSS
 ```
 
-**Example:** `2026.1.24+fdd823c-dirty-20260124-204219`
+**Example:** `2026.1.24.72108205-dirty-20260124-204219`
 
 - Same as production, plus:
 - `-dirty` - Indicates uncommitted changes exist
@@ -62,7 +62,7 @@ YYYY.M.D+COMMITHASH-dirty-YYYYMMDD-HHMMSS
 
 **Example output:**
 ```
-[Info   : ErenshorLogs] ErenshorLogs v2026.1.24+fdd823c loaded
+[Info   : ErenshorLogs] ErenshorLogs v2026.1.24.72108205 loaded
 ```
 
 **Implementation:**
@@ -92,13 +92,13 @@ YYYY.M.D+COMMITHASH-dirty-YYYYMMDD-HHMMSS
 
 **Output (clean tree):**
 ```
-2026.1.24+fdd823c
+2026.1.24.72108205
 ```
 (displayed in green)
 
 **Output (dirty tree):**
 ```
-2026.1.24+fdd823c-dirty-20260124-204219
+2026.1.24.72108205-dirty-20260124-204219
 ⚠️  Working tree has uncommitted changes
 ```
 (displayed in yellow)
@@ -212,7 +212,7 @@ node scripts/generate-version.js
 
 **Example output:**
 ```typescript
-export const VERSION = '2026.1.24+fdd823c';
+export const VERSION = '2026.1.24.72108205';
 ```
 
 ### CLI (Python)
@@ -285,7 +285,7 @@ vim mod/SomeFile.cs
 
 # Build (dirty tree is fine)
 cd mod && dotnet build -c Debug
-# Version: 2026.1.24+fdd823c-dirty-20260124-210530
+# Version: 2026.1.24.72108205-dirty-20260124-210530
 ```
 
 ### Creating a Release

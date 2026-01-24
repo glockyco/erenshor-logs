@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * Generate version from git for Erenshor Logs project.
- * Format: YYYY.M.D+COMMITHASH (semver-compliant CalVer)
+ * Format: YYYY.M.D.REVISION (System.Version compatible CalVer)
+ * REVISION is commit hash converted from hex to decimal
  * Writes to: web/src/lib/version.ts
  */
 
@@ -16,14 +17,23 @@ const OUTPUT_FILE = join(PROJECT_ROOT, 'web/src/lib/version.ts');
 
 function getVersion() {
   try {
-    // Get version from git (use + for build metadata, not - for pre-release)
-    const gitVersion = execSync(
-      'git log -1 --format="%cd+%h" --date=format:"%Y.%m.%d"',
+    // Get date and hash separately
+    const gitDate = execSync(
+      'git log -1 --format="%cd" --date=format:"%Y.%m.%d"',
       { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'], cwd: PROJECT_ROOT }
     )
       .trim()
-      // Remove leading zeros from month/day for semver compliance
+      // Remove leading zeros from month/day
       .replace(/\.0(\d)/g, '.$1');
+
+    const gitHash = execSync(
+      'git log -1 --format="%h"',
+      { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'], cwd: PROJECT_ROOT }
+    ).trim();
+
+    // Convert hex hash to decimal for System.Version compatibility
+    const hashDecimal = parseInt(gitHash, 16);
+    const gitVersion = `${gitDate}.${hashDecimal}`;
 
     // Check for dirty working tree
     const gitStatus = execSync('git status --porcelain', {

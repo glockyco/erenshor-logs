@@ -160,17 +160,17 @@ Fall damage and other environmental sources are logged but do not start sessions
 The `CheckForTrueCombat` hook confirms combat state rather than initiating it.
 
 ### Versioning
-**Automatic git-based versioning** in semver-compliant CalVer format: `YYYY.M.D+COMMITHASH`.
+**Automatic git-based versioning** in System.Version compatible CalVer format: `YYYY.M.D.REVISION`.
 
 **How it works:**
 - Version is generated from git commit metadata at build time
 - Both mod and web app always have identical versions (same git commit)
 - No manual version bumps needed - just commit and version updates automatically
-- Format complies with semantic versioning for BepInEx compatibility
+- REVISION field is commit hash converted from hex to decimal for BepInEx compatibility
 
 **Version format:**
-- **Production**: `YYYY.M.D+COMMITHASH` (e.g., `2026.1.24+fdd823c`)
-- **Dirty Debug**: `YYYY.M.D+COMMITHASH-dirty-YYYYMMDD-HHMMSS`
+- **Production**: `YYYY.M.D.REVISION` (e.g., `2026.1.24.72108205` where `72108205` = `0x44c48ad`)
+- **Dirty Debug**: `YYYY.M.D.REVISION-dirty-YYYYMMDD-HHMMSS`
 - **Fallback (no git)**: `0.0.0-YYYYMMDD-HHMMSS`
 
 **Build enforcement:**
