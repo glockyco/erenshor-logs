@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Drawer as DrawerPrimitive } from "vaul-svelte";
 
-  let { ...restProps } = $props();
+  let { ...restProps }: DrawerPrimitive.PortalProps = $props();
 </script>
 
 <DrawerPrimitive.Portal {...restProps} />
