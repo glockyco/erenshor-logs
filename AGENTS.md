@@ -31,8 +31,20 @@ cd web && pnpm install && pnpm dev    # Install and run
 pnpm build && pnpm check && pnpm lint # Build and validate
 
 # Mod
-cd mod && dotnet build                # Build
-dotnet test tests/ErenshorLogs.Tests  # Run tests
+cd mod && dotnet build                # Build only
+cd cli && uv run erenshor deploy      # Build and deploy to game
+
+# Development workflow (most common)
+cd cli && uv run erenshor deploy      # Build mod and copy to BepInEx plugins
+cd cli && uv run erenshor launch      # Launch Erenshor to test
+
+# Other CLI commands
+uv run erenshor setup                 # Copy game DLLs (needed once after install)
+uv run erenshor version               # Check current version
+uv run erenshor build                 # Build mod only (no deploy)
+
+# Tests
+cd mod && dotnet test tests/ErenshorLogs.Tests  # Run mod tests
 
 # Pre-commit
 pre-commit install                    # Install git hooks
@@ -75,11 +87,9 @@ Prioritize accuracy over agreement. Avoid sycophantic behavior.
 All code must be **clean**, **robust**, and **maintainable**. No shortcuts.
 
 ### Component Design (Web)
-- **Testable in isolation**: Components must work in Storybook without global state side effects
-- **Props over state access**: Use callback props; avoid direct global state mutation in components
-- **Pure presentation**: Separate presentation components from `.connected.svelte` wrappers that bind to state
-- **Required props**: No fallbacks to global state that hide missing data
-- **Callback props**: All actions (delete, select, etc.) should be callbacks that can be intercepted in tests
+- **Testable in isolation**: Components should work independently when possible
+- **Props for flexibility**: Accept props to override behavior for testing
+- **Callback props**: Actions (delete, select, etc.) should be callbacks
 
 ### Accessibility (a11y)
 - **Semantic HTML**: Use proper elements (`<button>`, `<ul>/<li>`, `<dl>/<dt>/<dd>`)
@@ -93,11 +103,10 @@ All code must be **clean**, **robust**, and **maintainable**. No shortcuts.
 - **Mock data factories**: Use typed factory functions in `src/lib/testing/`, not inline objects with JSDoc
 - **Zod validation**: Leverage existing schemas for type safety
 
-### Testing & Storybook
-- **Story coverage**: Every component variant must have a story
-- **Mock isolation**: Stories must not depend on or mutate global state
-- **Factory functions**: Use `$lib/testing` factories for all mock data
-- **Connected wrappers**: Production components use `.connected.svelte` wrappers that bind to global state
+### Testing
+- **Unit tests**: Core logic should have test coverage
+- **Type safety**: Leverage TypeScript and Zod schemas
+- **Mock data**: Use `$lib/testing` factories for test data
 
 ## Project Constraints
 
