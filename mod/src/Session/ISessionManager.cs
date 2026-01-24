@@ -3,7 +3,7 @@ using ErenshorLogs.Events;
 namespace ErenshorLogs.Session;
 
 /// <summary>
-/// Manages combat session lifecycle and state transitions with lazy session creation.
+/// Manages combat session lifecycle with event-driven detection and manual control.
 /// </summary>
 public interface ISessionManager
 {
@@ -13,38 +13,41 @@ public interface ISessionManager
   CombatSession? CurrentSession { get; }
 
   /// <summary>
-  /// Whether currently in combat.
+  /// Notifies the session manager that a combat event occurred.
+  /// Creates a new session if needed (auto-detection mode only).
+  /// Updates last event timestamp for inactivity tracking.
   /// </summary>
-  bool InCombat { get; }
+  /// <param name="eventType">The type of combat event that occurred.</param>
+  /// <param name="eventTimestamp">Unix timestamp (ms) of the event.</param>
+  void OnCombatEvent(EventType eventType, long eventTimestamp);
 
   /// <summary>
-  /// Called when combat state changes. Handles session start/end transitions.
-  /// </summary>
-  /// <param name="inCombat">The new combat state.</param>
-  void OnCombatStateChanged(bool inCombat);
-
-  /// <summary>
-  /// Ensures a combat session exists, creating one if needed.
-  /// Idempotent - safe to call multiple times.
-  /// </summary>
-  /// <param name="eventType">The type of event triggering session start.
-  /// Environmental damage does not start sessions.</param>
-  void EnsureSessionStarted(EventType eventType);
-
-  /// <summary>
-  /// Checks for session timeouts (both pending and inactivity) and ends sessions if needed.
-  /// Should be called from Plugin.Update() with Time.time.
+  /// Checks for session inactivity timeout and ends sessions if needed.
+  /// Should be called every frame from Plugin.Update() with Time.time.
+  /// Only affects automatic sessions (manual sessions don't timeout).
   /// </summary>
   /// <param name="currentTime">Current Unity Time.time value.</param>
-  void CheckSessionTimeouts(float currentTime);
+  void CheckInactivityTimeout(float currentTime);
 
   /// <summary>
-  /// Raised when a new combat session starts.
+  /// Manually starts a new combat session.
+  /// If a session is already active, it will be ended first (manual or automatic).
+  /// </summary>
+  void StartManualSession();
+
+  /// <summary>
+  /// Manually ends the current combat session.
+  /// Only ends manually-started sessions. Does nothing for automatic sessions.
+  /// </summary>
+  void EndManualSession();
+
+  /// <summary>
+  /// Raised when a new combat session starts (automatic or manual).
   /// </summary>
   event Action<CombatSession>? SessionStarted;
 
   /// <summary>
-  /// Raised when a combat session ends.
+  /// Raised when a combat session ends (timeout or manual).
   /// </summary>
   event Action<CombatSession>? SessionEnded;
 }
