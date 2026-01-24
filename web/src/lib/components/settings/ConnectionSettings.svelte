@@ -14,14 +14,12 @@
   import { Button, Checkbox, Input } from "$lib/components/ui";
   import { Text } from "$lib/components/ui/typography";
   import { AlertTriangle } from "@lucide/svelte";
-  import SettingRow from "./SettingRow.svelte";
 
   let localUrl = $state(websocketUrl.value);
   let localInterval = $state(reconnectInterval.value);
   let urlError = $state<string | null>(null);
   let intervalError = $state<string | null>(null);
 
-  // Validate and save URL on input
   function handleUrlChange() {
     const result = AppSettingsSchema.shape.websocket.shape.url.safeParse(localUrl);
     if (!result.success) {
@@ -32,7 +30,6 @@
     urlError = null;
   }
 
-  // Validate and save interval on input
   function handleIntervalChange() {
     const result =
       AppSettingsSchema.shape.websocket.shape.reconnectInterval.safeParse(localInterval);
@@ -54,17 +51,14 @@
 
   function handleReset() {
     resetSettings();
-    // Update local state to match reset values
     localUrl = websocketUrl.value;
     localInterval = reconnectInterval.value;
     urlError = null;
     intervalError = null;
-    // Note: No need to call reconnectWebSocket() - the settings change
-    // will trigger the $effect in +layout.svelte to recreate the client
   }
 </script>
 
-<section class="space-y-4">
+<section class="space-y-6">
   {#if settingsChanged.value}
     <div
       role="alert"
@@ -75,8 +69,12 @@
     </div>
   {/if}
 
-  <SettingRow label="WebSocket URL">
+  <div class="space-y-2">
+    <label for="websocket-url" class="block text-sm font-medium text-stone-300">
+      WebSocket URL
+    </label>
     <Input
+      id="websocket-url"
       type="url"
       bind:value={localUrl}
       oninput={handleUrlChange}
@@ -86,21 +84,25 @@
       aria-describedby={urlError ? "url-error" : undefined}
     />
     {#if urlError}
-      <p id="url-error" class="mt-1 text-sm text-rose-400">{urlError}</p>
+      <p id="url-error" class="text-sm text-rose-400">{urlError}</p>
     {/if}
-  </SettingRow>
+  </div>
 
-  <div role="separator" class="border-t border-stone-700"></div>
+  <div>
+    <Checkbox
+      checked={autoReconnect.value}
+      label="Auto-reconnect on disconnect"
+      onchange={handleAutoReconnectChange}
+    />
+  </div>
 
-  <Checkbox
-    checked={autoReconnect.value}
-    label="Auto-reconnect on disconnect"
-    onchange={handleAutoReconnectChange}
-  />
-
-  <SettingRow label="Reconnect interval">
+  <div class="space-y-2">
+    <label for="reconnect-interval" class="block text-sm font-medium text-stone-300">
+      Reconnect interval
+    </label>
     <div class="flex items-center gap-2">
       <Input
+        id="reconnect-interval"
         type="number"
         bind:value={localInterval}
         oninput={handleIntervalChange}
@@ -111,19 +113,17 @@
         class="w-32"
         aria-describedby={intervalError ? "interval-error" : undefined}
       />
-      <Text variant="muted" as="span">milliseconds</Text>
+      <Text variant="muted" as="span" class="text-sm">milliseconds</Text>
     </div>
     {#if intervalError}
-      <p id="interval-error" class="mt-1 text-sm text-rose-400">{intervalError}</p>
+      <p id="interval-error" class="text-sm text-rose-400">{intervalError}</p>
     {/if}
-  </SettingRow>
+  </div>
 
-  <div role="separator" class="border-t border-stone-700"></div>
-
-  <div class="flex gap-3">
+  <div class="flex gap-3 pt-2">
     <Button size="sm" onclick={handleReconnect} class="flex-1">Reconnect Now</Button>
-    <Button size="sm" variant="secondary" onclick={handleReset} class="flex-1"
-      >Reset to Defaults</Button
-    >
+    <Button size="sm" variant="secondary" onclick={handleReset} class="flex-1">
+      Reset to Defaults
+    </Button>
   </div>
 </section>

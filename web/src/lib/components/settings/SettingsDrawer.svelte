@@ -4,6 +4,7 @@
   import { Heading } from "$lib/components/ui/typography";
   import { Settings, X } from "@lucide/svelte";
   import ConnectionSettings from "./ConnectionSettings.svelte";
+  import AboutSection from "./AboutSection.svelte";
 
   interface Props {
     open?: boolean;
@@ -39,8 +40,11 @@
         </Button>
       </Drawer.Header>
 
-      <div class="space-y-6 overflow-y-auto px-4 pb-4">
-        <ConnectionSettings />
+      <div class="overflow-y-auto px-4 pb-4">
+        <div class="space-y-10">
+          <ConnectionSettings />
+          <AboutSection />
+        </div>
       </div>
     </Drawer.Content>
   </Drawer.Portal>
