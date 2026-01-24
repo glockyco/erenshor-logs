@@ -22,9 +22,9 @@
     warning: "text-sm text-amber-400",
   };
 
-  const Tag = as;
+  const tag = $derived(as);
 </script>
 
-<svelte:element this={Tag} class={cn(variantClasses[variant], className)}>
+<svelte:element this={tag} class={cn(variantClasses[variant], className)}>
   {@render children()}
 </svelte:element>

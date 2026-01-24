@@ -17,9 +17,9 @@
     label: "text-sm font-medium uppercase tracking-wider text-stone-400",
   };
 
-  const Tag = `h${level}` as const;
+  const tag = $derived(`h${level}` as const);
 </script>
 
-<svelte:element this={Tag} class={cn(variantClasses[variant], className)}>
+<svelte:element this={tag} class={cn(variantClasses[variant], className)}>
   {@render children()}
 </svelte:element>

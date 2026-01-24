@@ -35,9 +35,9 @@
     miss: "text-rose-400",
   };
 
-  const Tag = as;
+  const tag = $derived(as);
 </script>
 
-<svelte:element this={Tag} class={cn(sizeClasses[variant], colorClasses[color], className)}>
+<svelte:element this={tag} class={cn(sizeClasses[variant], colorClasses[color], className)}>
   {@render children()}
 </svelte:element>
