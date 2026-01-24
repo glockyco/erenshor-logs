@@ -6,12 +6,14 @@
 
   interface Props {
     session: Session;
+    onSelect?: () => void;
   }
 
-  let { session }: Props = $props();
+  let { session, onSelect }: Props = $props();
 
   const handleClick = () => {
     setActiveSession(session.id);
+    onSelect?.();
   };
 
   const handleDelete = () => {

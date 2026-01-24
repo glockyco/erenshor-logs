@@ -174,9 +174,7 @@
     </div>
   {:else}
     {#each sortedSessions as session (session.id)}
-      <div onclick={handleSessionClick}>
-        <SessionCardConnected {session} />
-      </div>
+      <SessionCardConnected {session} onSelect={handleSessionClick} />
     {/each}
   {/if}
 </div>
