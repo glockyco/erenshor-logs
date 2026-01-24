@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { SessionStats } from "$lib/types";
   import { formatDps, formatNumber, formatDuration } from "$lib/utils";
+  import { Heading } from "$lib/components/ui/typography";
 
   interface Props {
     stats: SessionStats | null;
@@ -13,7 +14,7 @@
 
 <div class="bg-stone-800 border-2 border-stone-700 rounded-lg shadow-lg">
   <div class="border-b border-stone-700 px-6 py-4 flex items-center justify-between">
-    <h3 class="font-fantasy text-lg font-semibold text-amber-500">Combat Session</h3>
+    <Heading variant="section">Combat Session</Heading>
     {#if isLive}
       <div
         class="flex items-center gap-1 text-xs font-semibold text-amber-500 bg-amber-950 px-2 py-1 rounded"

@@ -1,7 +1,11 @@
+<script lang="ts">
+  import { Heading } from "$lib/components/ui/typography";
+</script>
+
 <div class="bg-stone-800 border-2 border-stone-700 rounded-lg shadow-lg">
   <div class="border-b border-stone-700 px-6 py-4">
     <div class="flex items-center justify-between">
-      <h3 class="font-fantasy text-lg font-semibold text-amber-500">Combat Timeline</h3>
+      <Heading variant="section">Combat Timeline</Heading>
       <span
         class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded border bg-stone-900 text-stone-500 border-stone-700"
       >

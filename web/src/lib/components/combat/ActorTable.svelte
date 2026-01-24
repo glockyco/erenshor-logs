@@ -1,6 +1,7 @@
 <script lang="ts">
   import { ChevronDown } from "@lucide/svelte";
   import { SvelteSet } from "svelte/reactivity";
+  import { Heading } from "$lib/components/ui/typography";
   import FactionTabs from "./FactionTabs.svelte";
   import ActorRow from "./ActorRow.svelte";
   import type { SessionStats } from "$lib/types";
@@ -138,7 +139,7 @@
 <div class="bg-stone-800 border-2 border-stone-700 rounded-lg shadow-lg">
   <div class="border-b border-stone-700 px-4 py-4 md:px-6">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <h3 class="font-fantasy text-lg font-semibold text-amber-500">Actor Breakdown</h3>
+      <Heading variant="section">Actor Breakdown</Heading>
 
       <!-- Faction Filter Buttons -->
       <div class="flex flex-wrap gap-2">

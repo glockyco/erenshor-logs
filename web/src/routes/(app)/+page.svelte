@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { List } from "@lucide/svelte";
+  import { Heading } from "$lib/components/ui/typography";
   import Header from "$lib/components/layout/Header.svelte";
   import WelcomeScreen from "$lib/components/empty/WelcomeScreen.svelte";
   import SessionList from "$lib/components/session/SessionList.svelte";
@@ -65,9 +66,9 @@
     <!-- Header with toggle -->
     <div class="flex h-14 items-center justify-between border-b border-stone-700 px-3">
       {#if !sidebarCollapsed.value}
-        <h2 class="text-sm font-semibold uppercase tracking-wider text-amber-500">
+        <Heading level={2} variant="label">
           Sessions ({sessions.size})
-        </h2>
+        </Heading>
       {/if}
       <SidebarToggle isCollapsed={sidebarCollapsed.value} ontoggle={sidebarCollapsed.toggle} />
     </div>

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { ChevronDown, ChevronRight, Download, AlertTriangle } from "@lucide/svelte";
+  import { Heading } from "$lib/components/ui/typography";
   import type { Session } from "$lib/types";
   import {
     analyzeUnknownEvents,
@@ -95,7 +96,7 @@
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-2">
           <AlertTriangle class="w-5 h-5 text-amber-500 flex-shrink-0" />
-          <h3 class="font-fantasy text-lg font-semibold text-amber-500">Attribution Debug Panel</h3>
+          <Heading variant="section">Attribution Debug Panel</Heading>
         </div>
         <div class="flex flex-wrap gap-2">
           <button

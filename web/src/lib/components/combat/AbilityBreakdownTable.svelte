@@ -1,6 +1,7 @@
 <script lang="ts">
   import { formatDps, formatNumber, formatPercent } from "$lib/utils";
   import { calculateRate, calculatePercentage } from "$lib/services/combat-analyzer";
+  import { Heading } from "$lib/components/ui/typography";
   import type { AbilityStats } from "$lib/types";
 
   type Perspective = "damageDealt" | "damageTaken" | "healingDone" | "healingReceived";
@@ -39,9 +40,7 @@
 
 {#if sortedAbilities.length > 0}
   <div class="py-4 px-4 md:px-8">
-    <h4 class="mb-3 text-xs font-semibold uppercase tracking-wider text-amber-600">
-      Ability Breakdown
-    </h4>
+    <Heading level={4} variant="label" class="mb-3 text-xs">Ability Breakdown</Heading>
     <div class="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
       <table class="w-full text-xs min-w-[800px]">
         <thead class="border-b border-stone-700">

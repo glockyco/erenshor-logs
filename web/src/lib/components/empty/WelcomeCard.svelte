@@ -1,5 +1,6 @@
 <script lang="ts">
   import { cn } from "$lib/utils";
+  import { Heading } from "$lib/components/ui/typography";
   import type { Component } from "svelte";
 
   interface Props {
@@ -25,9 +26,9 @@
   </div>
 
   <!-- Title -->
-  <h2 class="mb-4 text-center font-fantasy text-xl font-bold text-amber-500">
+  <Heading level={2} variant="section" class="mb-4 text-center text-xl">
     {title}
-  </h2>
+  </Heading>
 
   <!-- Content -->
   <div class="space-y-4">
