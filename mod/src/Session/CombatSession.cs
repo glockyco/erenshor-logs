@@ -33,6 +33,12 @@ public sealed class CombatSession
   public string ModVersion { get; }
 
   /// <summary>
+  /// Whether this session was started manually via hotkey.
+  /// Manual sessions don't auto-end on inactivity timeout.
+  /// </summary>
+  public bool IsManual { get; }
+
+  /// <summary>
   /// Whether the session is still active (EndTime is null).
   /// </summary>
   public bool IsActive => EndTime == null;
@@ -45,22 +51,39 @@ public sealed class CombatSession
   /// <summary>
   /// Creates a new combat session.
   /// </summary>
-  public CombatSession(string gameVersion, string modVersion)
+  /// <param name="gameVersion">Game version string.</param>
+  /// <param name="modVersion">Mod version string.</param>
+  /// <param name="isManual">Whether this session was manually started.</param>
+  public CombatSession(string gameVersion, string modVersion, bool isManual = false)
   {
     Id = Guid.NewGuid().ToString();
     StartTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
     GameVersion = gameVersion;
     ModVersion = modVersion;
+    IsManual = isManual;
   }
 
   /// <summary>
-  /// Marks the session as ended.
+  /// Marks the session as ended at the current time.
   /// </summary>
   internal void End()
   {
     if (EndTime == null)
     {
       EndTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    }
+  }
+
+  /// <summary>
+  /// Marks the session as ended at a specific timestamp.
+  /// Used for backdating session end to last event time.
+  /// </summary>
+  /// <param name="endTime">Unix timestamp (ms) when session ended.</param>
+  internal void EndAt(long endTime)
+  {
+    if (EndTime == null)
+    {
+      EndTime = endTime;
     }
   }
 

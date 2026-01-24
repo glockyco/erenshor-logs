@@ -1,4 +1,6 @@
 using BepInEx.Configuration;
+using ErenshorLogs.Events;
+using UnityEngine;
 
 namespace ErenshorLogs.Config;
 
@@ -30,6 +32,46 @@ public class ModConfig
   /// WARNING: Adds significant data overhead.
   /// </summary>
   public ConfigEntry<bool> CaptureDebugForAll { get; }
+
+  /// <summary>
+  /// Enable automatic session detection based on combat events.
+  /// When false, sessions only start/stop via manual hotkeys.
+  /// </summary>
+  public ConfigEntry<bool> AutoSessionDetection { get; }
+
+  /// <summary>
+  /// Inactivity timeout in seconds before automatically ending sessions.
+  /// Only applies when AutoSessionDetection is enabled.
+  /// Sessions end when this duration passes with no combat events.
+  /// </summary>
+  public ConfigEntry<float> SessionInactivityTimeout { get; }
+
+  /// <summary>
+  /// Event types that can START a new session (comma-separated).
+  /// Only applies when AutoSessionDetection is enabled.
+  /// Uses camelCase event type names.
+  /// </summary>
+  public ConfigEntry<string> SessionStartEvents { get; }
+
+  /// <summary>
+  /// Event types that EXTEND an active session (reset inactivity timer).
+  /// Uses camelCase event type names.
+  /// </summary>
+  public ConfigEntry<string> SessionKeepAliveEvents { get; }
+
+  /// <summary>
+  /// Hotkey to manually start a combat session.
+  /// Ends any existing session first (manual or automatic).
+  /// Set to the same key as ManualSessionStopKey for toggle behavior.
+  /// </summary>
+  public ConfigEntry<KeyCode> ManualSessionStartKey { get; }
+
+  /// <summary>
+  /// Hotkey to manually stop a combat session.
+  /// Only ends manually-started sessions (not automatic sessions).
+  /// Set to the same key as ManualSessionStartKey for toggle behavior.
+  /// </summary>
+  public ConfigEntry<KeyCode> ManualSessionStopKey { get; }
 
   /// <summary>
   /// Creates a new ModConfig using the provided BepInEx config file.
@@ -68,5 +110,68 @@ public class ModConfig
         + "Useful for debugging misattributions or verifying context flow. "
         + "WARNING: Adds significant data overhead."
     );
+
+    // Build dynamic event type list from enum
+    var availableEventTypes = System
+      .Enum.GetValues(typeof(EventType))
+      .Cast<EventType>()
+      .Where(e => e != EventType.CombatStart && e != EventType.CombatEnd)
+      .Select(e => ToCamelCase(e.ToString()))
+      .OrderBy(e => e)
+      .ToArray();
+
+    var eventTypeList = string.Join(", ", availableEventTypes);
+
+    // Session configuration
+    AutoSessionDetection = config.Bind(
+      "Session",
+      "AutoSessionDetection",
+      true,
+      "Enable automatic session detection. When false, use hotkeys to control sessions."
+    );
+
+    SessionInactivityTimeout = config.Bind(
+      "Session",
+      "SessionInactivityTimeout",
+      5.0f,
+      "Seconds of inactivity before auto-ending sessions (only for automatic sessions)"
+    );
+
+    SessionStartEvents = config.Bind(
+      "Session",
+      "SessionStartEvents",
+      "damagePhysical,damageMagic,damageDot,damageSkill,damageSpell,damageMelee,damageProc,damagePet,damageReflect",
+      "Event types that can START a new session (comma-separated).\n"
+        + $"Available: {eventTypeList}"
+    );
+
+    SessionKeepAliveEvents = config.Bind(
+      "Session",
+      "SessionKeepAliveEvents",
+      "damagePhysical,damageMagic,damageDot,damageSkill,damageSpell,damageMelee,damageProc,damagePet,damageReflect",
+      "Event types that EXTEND an active session (reset inactivity timer).\n"
+        + $"Available: {eventTypeList}"
+    );
+
+    ManualSessionStartKey = config.Bind(
+      "Session",
+      "ManualSessionStartKey",
+      KeyCode.F9,
+      "Hotkey to start a manual session (ends existing session first)"
+    );
+
+    ManualSessionStopKey = config.Bind(
+      "Session",
+      "ManualSessionStopKey",
+      KeyCode.F10,
+      "Hotkey to stop a manual session (set to same as Start for toggle mode)"
+    );
+  }
+
+  private static string ToCamelCase(string pascalCase)
+  {
+    if (string.IsNullOrEmpty(pascalCase))
+      return pascalCase;
+    return char.ToLowerInvariant(pascalCase[0]) + pascalCase.Substring(1);
   }
 }
