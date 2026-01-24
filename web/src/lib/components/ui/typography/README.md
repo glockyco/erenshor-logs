@@ -220,4 +220,4 @@ Potential additions as the project evolves:
 
 - [Tailwind Typography Docs](https://tailwindcss.com/docs/font-size)
 - [WCAG Typography Guidelines](https://www.w3.org/WAI/WCAG21/Understanding/text-spacing.html)
-- [Classic MMO Theme](/web/docs/style-guide.md) (if created)
+- [Classic MMO Theme](/web/docs/style-guide.md)
