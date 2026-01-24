@@ -43,7 +43,7 @@
   role="button"
   tabindex="0"
   class="group relative w-full cursor-pointer rounded-lg bg-stone-800 border-2 p-3 text-center transition-all hover:bg-stone-800/80 {isActive
-    ? 'border-amber-600 shadow-lg shadow-amber-600/20'
+    ? 'border-amber-600'
     : 'border-stone-700 hover:border-amber-600/50'}"
   onclick={() => onclick?.()}
   onkeydown={(e) => {
