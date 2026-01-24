@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { List } from "@lucide/svelte";
+  import Header from "$lib/components/layout/Header.svelte";
   import WelcomeScreen from "$lib/components/empty/WelcomeScreen.svelte";
   import SessionList from "$lib/components/session/SessionList.svelte";
   import SessionListMobile from "$lib/components/session/SessionListMobile.svelte";
@@ -47,7 +48,12 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if !hasSessions}
-  <WelcomeScreen />
+  <div class="p-8">
+    <div class="space-y-8">
+      <Header />
+      <WelcomeScreen />
+    </div>
+  </div>
 {:else}
   <!-- Desktop: Fixed collapsible sidebar (hidden on mobile) -->
   <aside
@@ -72,13 +78,16 @@
   </aside>
 
   <!-- Main content (offset on desktop to account for sidebar) -->
-  <div class="min-h-screen p-6 md:transition-all" style="margin-left: {sidebarWidth}px">
-    <div class="space-y-6">
-      <StatsPanel {stats} {isLive} {duration} />
-      <ActorTable {stats} />
-      {#if session}
-        <DebugPanel {session} {duration} />
-      {/if}
+  <div class="min-h-screen" style="padding-left: {sidebarWidth}px">
+    <div class="p-8">
+      <div class="space-y-8">
+        <Header />
+        <StatsPanel {stats} {isLive} {duration} />
+        <ActorTable {stats} />
+        {#if session}
+          <DebugPanel {session} {duration} />
+        {/if}
+      </div>
     </div>
   </div>
 

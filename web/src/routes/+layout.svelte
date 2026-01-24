@@ -1,6 +1,5 @@
 <script lang="ts">
   import "../app.css";
-  import Header from "$lib/components/layout/Header.svelte";
   import { createWebSocketClient, type WebSocketCallbacks } from "$lib/services";
   import {
     setConnecting,
@@ -59,9 +58,4 @@
   });
 </script>
 
-<div class="p-8">
-  <div class="max-w-7xl mx-auto space-y-8">
-    <Header />
-    {@render children()}
-  </div>
-</div>
+{@render children()}
