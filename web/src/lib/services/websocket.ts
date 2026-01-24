@@ -25,6 +25,13 @@ export interface WebSocketCallbacks {
 
 export interface WebSocketClient {
   disconnect: () => void;
+  reconnect: () => void;
+}
+
+export interface WebSocketConfig {
+  url?: string;
+  autoReconnect?: boolean;
+  reconnectInterval?: number;
 }
 
 /**
@@ -33,14 +40,22 @@ export interface WebSocketClient {
  */
 export function createWebSocketClient(
   callbacks: WebSocketCallbacks,
-  url: string = DEFAULT_WEBSOCKET_URL
+  config: WebSocketConfig = {}
 ): WebSocketClient {
+  const {
+    url = DEFAULT_WEBSOCKET_URL,
+    autoReconnect = true,
+    reconnectInterval = RECONNECT_INTERVAL_MS,
+  } = config;
+
   let socket: WebSocket | null = null;
   let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
-  let shouldReconnect = true;
+  let shouldReconnect = autoReconnect;
 
-  function connect(): void {
-    if (!shouldReconnect) return;
+  function connect(force: boolean = false): void {
+    if (!shouldReconnect && !force) {
+      return;
+    }
 
     callbacks.onConnecting();
 
@@ -109,8 +124,10 @@ export function createWebSocketClient(
   }
 
   function scheduleReconnect(): void {
-    if (!shouldReconnect) return;
-    reconnectTimeout = setTimeout(connect, RECONNECT_INTERVAL_MS);
+    if (!shouldReconnect) {
+      return;
+    }
+    reconnectTimeout = setTimeout(connect, reconnectInterval);
   }
 
   function disconnect(): void {
@@ -127,8 +144,40 @@ export function createWebSocketClient(
     }
   }
 
+  function reconnect(): void {
+    // Clear any pending reconnect timers
+    if (reconnectTimeout) {
+      clearTimeout(reconnectTimeout);
+      reconnectTimeout = null;
+    }
+
+    // Close existing socket cleanly if it exists
+    if (socket) {
+      // Temporarily disable reconnection to prevent onclose from scheduling another
+      shouldReconnect = false;
+
+      // Remove event handlers to prevent duplicate events during cleanup
+      socket.onopen = null;
+      socket.onmessage = null;
+      socket.onerror = null;
+      socket.onclose = null;
+
+      // Close the socket (works in any state: CONNECTING, OPEN, CLOSING)
+      socket.close();
+      socket = null;
+    }
+
+    // Restore shouldReconnect based on config
+    shouldReconnect = autoReconnect;
+
+    // Attempt new connection with force=true
+    // This bypasses the shouldReconnect check, allowing manual reconnect
+    // even when autoReconnect is disabled
+    connect(true);
+  }
+
   // Auto-connect on creation
   connect();
 
-  return { disconnect };
+  return { disconnect, reconnect };
 }

@@ -8,7 +8,12 @@ export {
   calculatePercentage,
 } from "./combat-analyzer";
 export { parseMessage, isParseError } from "./message-parser";
-export { createWebSocketClient, type WebSocketCallbacks, type WebSocketClient } from "./websocket";
+export {
+  createWebSocketClient,
+  type WebSocketCallbacks,
+  type WebSocketClient,
+  type WebSocketConfig,
+} from "./websocket";
 export {
   analyzeUnknownEvents,
   exportSignaturesToCSV,
