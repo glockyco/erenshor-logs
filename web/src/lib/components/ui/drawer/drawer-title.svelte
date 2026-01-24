@@ -5,4 +5,7 @@
   let { class: className, ...restProps }: DrawerPrimitive.TitleProps = $props();
 </script>
 
-<DrawerPrimitive.Title class={cn("font-semibold text-stone-100", className)} {...restProps} />
+<DrawerPrimitive.Title
+  class={cn("text-sm font-semibold uppercase tracking-wider text-amber-500", className)}
+  {...restProps}
+/>

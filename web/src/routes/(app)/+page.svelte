@@ -5,6 +5,7 @@
   import WelcomeScreen from "$lib/components/empty/WelcomeScreen.svelte";
   import SessionList from "$lib/components/session/SessionList.svelte";
   import SessionListMobile from "$lib/components/session/SessionListMobile.svelte";
+  import SessionToolbar from "$lib/components/session/SessionToolbar.svelte";
   import SidebarToggle from "$lib/components/session/SidebarToggle.svelte";
   import StatsPanel from "$lib/components/combat/StatsPanel.svelte";
   import ActorTable from "$lib/components/combat/ActorTable.svelte";
@@ -64,12 +65,19 @@
     <!-- Header with toggle -->
     <div class="flex h-14 items-center justify-between border-b border-stone-700 px-3">
       {#if !sidebarCollapsed.value}
-        <h2 class="text-sm font-semibold uppercase tracking-wider text-amber-600">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-amber-500">
           Sessions ({sessions.size})
         </h2>
       {/if}
       <SidebarToggle isCollapsed={sidebarCollapsed.value} ontoggle={sidebarCollapsed.toggle} />
     </div>
+
+    <!-- Toolbar area (only when expanded) -->
+    {#if !sidebarCollapsed.value}
+      <div class="border-b border-stone-700 px-3 py-2">
+        <SessionToolbar />
+      </div>
+    {/if}
 
     <!-- Session list content -->
     <div class="flex-1 overflow-y-auto p-3">
@@ -105,11 +113,18 @@
   <Drawer.Root bind:open={drawerOpen}>
     <Drawer.Portal>
       <Drawer.Overlay />
-      <Drawer.Content class="max-h-[85vh] md:hidden">
+      <Drawer.Content class="max-h-[85vh]">
         <Drawer.Header>
           <Drawer.Title>Sessions ({sessions.size})</Drawer.Title>
         </Drawer.Header>
-        <div class="overflow-y-auto px-4 pb-4">
+
+        <!-- Toolbar -->
+        <div class="px-4 pb-3">
+          <SessionToolbar />
+        </div>
+
+        <!-- Session list -->
+        <div class="flex-1 overflow-y-auto px-4 pb-4">
           <SessionListMobile onSessionSelect={() => (drawerOpen = false)} />
         </div>
       </Drawer.Content>
