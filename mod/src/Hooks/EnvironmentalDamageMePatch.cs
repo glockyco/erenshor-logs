@@ -63,6 +63,13 @@ public static class EnvironmentalDamageMePatch
     if (EventBuilder == null || Emitter == null)
       return;
 
+    // Skip if target is a destroyed Unity object
+    if (!__instance.IsValid())
+    {
+      LogDebug?.Invoke("[EnvironmentalDamageMePatch] Skipping event - target destroyed");
+      return;
+    }
+
     // Skip if target not relevant to player's group (no source for environmental damage)
     if (RelevanceChecker != null && !RelevanceChecker.IsRelevantCombat(null, __instance))
       return;

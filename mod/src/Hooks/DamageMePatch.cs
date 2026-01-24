@@ -81,6 +81,19 @@ public static class DamageMePatch
     if (EventBuilder == null || Emitter == null)
       return;
 
+    // Skip if characters are destroyed Unity objects
+    if (!__instance.IsValid())
+    {
+      LogDebug?.Invoke("[DamageMePatch] Skipping event - target destroyed");
+      return;
+    }
+
+    if (!_attacker.IsValid())
+    {
+      LogDebug?.Invoke("[DamageMePatch] Skipping event - attacker destroyed");
+      return;
+    }
+
     // Skip if not relevant to player's group
     if (RelevanceChecker != null && !RelevanceChecker.IsRelevantCombat(_attacker, __instance))
       return;

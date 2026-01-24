@@ -73,6 +73,19 @@ public static class MagicDamageMePatch
     if (EventBuilder == null || Emitter == null)
       return;
 
+    // Skip if characters are destroyed Unity objects
+    if (!__instance.IsValid())
+    {
+      LogDebug?.Invoke("[MagicDamageMePatch] Skipping event - target destroyed");
+      return;
+    }
+
+    if (!_attacker.IsValid())
+    {
+      LogDebug?.Invoke("[MagicDamageMePatch] Skipping event - attacker destroyed");
+      return;
+    }
+
     // Skip if not relevant to player's group
     if (RelevanceChecker != null && !RelevanceChecker.IsRelevantCombat(_attacker, __instance))
       return;
