@@ -42,17 +42,24 @@
   const initials = $derived(getInitials(enemyInfo.primaryEnemy));
 </script>
 
-<HoverCard.Root openDelay={200}>
-  <HoverCard.Trigger>
-    <button
-      type="button"
-      class="group relative w-full cursor-pointer rounded-lg bg-stone-800 border-2 p-3 text-center transition-all hover:bg-stone-800/80 {isActive
-        ? 'border-amber-600 shadow-lg shadow-amber-600/20'
-        : 'border-stone-700 hover:border-amber-600/50'}"
-      onclick={() => onclick?.()}
-      aria-label="Session: {enemyInfo.primaryEnemy}"
-      aria-pressed={isActive}
-    >
+<div
+  role="button"
+  tabindex="0"
+  class="group relative w-full cursor-pointer rounded-lg bg-stone-800 border-2 p-3 text-center transition-all hover:bg-stone-800/80 {isActive
+    ? 'border-amber-600 shadow-lg shadow-amber-600/20'
+    : 'border-stone-700 hover:border-amber-600/50'}"
+  onclick={() => onclick?.()}
+  onkeydown={(e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onclick?.();
+    }
+  }}
+  aria-label="Session: {enemyInfo.primaryEnemy}"
+  aria-pressed={isActive}
+>
+  <HoverCard.Root openDelay={200}>
+    <HoverCard.Trigger class="block w-full">
       <!-- Status dot (top-right corner) -->
       {#if isLive}
         <div
@@ -65,67 +72,67 @@
       <div class="text-2xl font-mono font-bold text-stone-200">
         {initials}
       </div>
+    </HoverCard.Trigger>
 
-      <!-- Action buttons (hidden, show on hover) -->
-      <div
-        class="absolute inset-x-0 bottom-0 flex gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
-      >
-        {#if onexport}
-          <button
-            type="button"
-            onclick={(e) => {
-              e.stopPropagation();
-              onexport?.();
-            }}
-            class="flex-1 rounded-bl-md py-1 text-stone-600 transition-all hover:bg-cyan-500/20 hover:text-cyan-400"
-            aria-label="Export session"
-          >
-            <Download class="h-3 w-3 mx-auto" />
-          </button>
+    <HoverCard.Content side="right" align="center">
+      <div class="space-y-2">
+        <p class="font-semibold text-stone-100">{enemyInfo.primaryEnemy}</p>
+        {#if enemyInfo.totalEnemies > 1}
+          <p class="text-xs text-stone-400">+{enemyInfo.totalEnemies - 1} other enemies</p>
         {/if}
-        {#if ondelete}
-          <button
-            type="button"
-            onclick={(e) => {
-              e.stopPropagation();
-              ondelete?.();
-            }}
-            class="flex-1 rounded-br-md py-1 text-stone-600 transition-all hover:bg-rose-500/20 hover:text-rose-400"
-            aria-label="Delete session"
-          >
-            <X class="h-3 w-3 mx-auto" />
-          </button>
-        {/if}
-      </div>
-    </button>
-  </HoverCard.Trigger>
-
-  <HoverCard.Content side="right" align="center">
-    <div class="space-y-2">
-      <p class="font-semibold text-stone-100">{enemyInfo.primaryEnemy}</p>
-      {#if enemyInfo.totalEnemies > 1}
-        <p class="text-xs text-stone-400">+{enemyInfo.totalEnemies - 1} other enemies</p>
-      {/if}
-      <div class="mt-3 space-y-1 text-xs text-stone-300">
-        <div class="flex justify-between">
-          <span class="text-stone-400">Damage:</span>
-          <span class="font-mono">{formatNumber(stats.totalDamage)}</span>
-        </div>
-        <div class="flex justify-between">
-          <span class="text-stone-400">DPS:</span>
-          <span class="font-mono">{formatDps(stats.dps)}</span>
-        </div>
-        <div class="flex justify-between">
-          <span class="text-stone-400">Duration:</span>
-          <span class="font-mono">{formatDuration(duration)}</span>
-        </div>
-        {#if isLive}
-          <div class="mt-2 flex items-center gap-1 text-xs text-amber-500">
-            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-            LIVE
+        <div class="mt-3 space-y-1 text-xs text-stone-300">
+          <div class="flex justify-between">
+            <span class="text-stone-400">Damage:</span>
+            <span class="font-mono">{formatNumber(stats.totalDamage)}</span>
           </div>
-        {/if}
+          <div class="flex justify-between">
+            <span class="text-stone-400">DPS:</span>
+            <span class="font-mono">{formatDps(stats.dps)}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-stone-400">Duration:</span>
+            <span class="font-mono">{formatDuration(duration)}</span>
+          </div>
+          {#if isLive}
+            <div class="mt-2 flex items-center gap-1 text-xs text-amber-500">
+              <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+              LIVE
+            </div>
+          {/if}
+        </div>
       </div>
-    </div>
-  </HoverCard.Content>
-</HoverCard.Root>
+    </HoverCard.Content>
+  </HoverCard.Root>
+
+  <!-- Action buttons (outside HoverCard, show on hover) -->
+  <div
+    class="absolute inset-x-0 bottom-0 flex gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
+  >
+    {#if onexport}
+      <button
+        type="button"
+        onclick={(e) => {
+          e.stopPropagation();
+          onexport?.();
+        }}
+        class="flex-1 rounded-bl-md py-1 text-stone-600 transition-all hover:bg-cyan-500/20 hover:text-cyan-400"
+        aria-label="Export session"
+      >
+        <Download class="h-3 w-3 mx-auto" />
+      </button>
+    {/if}
+    {#if ondelete}
+      <button
+        type="button"
+        onclick={(e) => {
+          e.stopPropagation();
+          ondelete?.();
+        }}
+        class="flex-1 rounded-br-md py-1 text-stone-600 transition-all hover:bg-rose-500/20 hover:text-rose-400"
+        aria-label="Delete session"
+      >
+        <X class="h-3 w-3 mx-auto" />
+      </button>
+    {/if}
+  </div>
+</div>
