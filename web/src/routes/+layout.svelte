@@ -10,6 +10,7 @@
     addSession,
     endSession,
     appendEvents,
+    completeHydration,
     initSessionsPersistence,
     initUiPersistence,
     subscribeToClock,
@@ -27,12 +28,14 @@
 
   // Initialize state persistence and clock
   $effect(() => {
+    const cleanupHydration = completeHydration();
     const cleanupSessions = initSessionsPersistence();
     const cleanupUi = initUiPersistence();
     const cleanupSettings = initSettingsPersistence();
     const cleanupClock = subscribeToClock();
 
     return () => {
+      cleanupHydration();
       cleanupSessions();
       cleanupUi();
       cleanupSettings();

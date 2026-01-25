@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { onMount } from "svelte";
   import { List } from "@lucide/svelte";
   import { Heading } from "$lib/components/ui/typography";
+  import { LoadingScreen } from "$lib/components/ui";
   import Header from "$lib/components/layout/Header.svelte";
   import WelcomeScreen from "$lib/components/empty/WelcomeScreen.svelte";
   import SessionList from "$lib/components/session/SessionList.svelte";
@@ -13,9 +13,12 @@
   import DebugPanel from "$lib/components/debug/DebugPanel.svelte";
   import * as Drawer from "$lib/components/ui/drawer";
   import { sessions, activeSession, activeSessionStats } from "$lib/state/sessions.svelte";
-  import { sidebarCollapsed, initUiPersistence } from "$lib/state/ui.svelte";
+  import { sidebarCollapsed } from "$lib/state/ui.svelte";
+  import { hydrated } from "$lib/state/hydration.svelte";
 
-  const hasSessions = $derived(sessions.size > 0);
+  // Guard hasSessions with hydration check to prevent flash of wrong content
+  // during client hydration when localStorage loads asynchronously
+  const hasSessions = $derived(hydrated.value && sessions.size > 0);
   const session = $derived(activeSession.value);
   const stats = $derived(activeSessionStats.value);
   const isLive = $derived(session ? !session.endTime : false);
@@ -33,11 +36,6 @@
   // Mobile drawer state
   let drawerOpen = $state(false);
 
-  // Initialize UI persistence on mount
-  onMount(() => {
-    return initUiPersistence();
-  });
-
   // Keyboard shortcut: Cmd+B / Ctrl+B to toggle sidebar
   function handleKeydown(e: KeyboardEvent) {
     if ((e.metaKey || e.ctrlKey) && e.key === "b") {
@@ -49,7 +47,11 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-{#if !hasSessions}
+{#if !hydrated.value}
+  <!-- Hydration loading state (~50ms, prevents flash of wrong content) -->
+  <LoadingScreen />
+{:else if !hasSessions}
+  <!-- First-time user or no sessions yet -->
   <div class="p-8">
     <div class="max-w-7xl mx-auto space-y-8">
       <Header />

@@ -159,6 +159,60 @@ Fall damage and other environmental sources are logged but do not start sessions
 
 The `CheckForTrueCombat` hook confirms combat state rather than initiating it.
 
+### Hydration Pattern (Web)
+**Problem**: When users have localStorage data and refresh the page, there's a flash
+where the page briefly shows the wrong content (welcome screen instead of session data)
+before switching to the correct content. This happens because:
+
+1. During SSR: localStorage isn't available, state starts empty
+2. During client hydration: Module imports execute, localStorage loads, state populates
+3. Result: Page re-renders from wrong state to correct state
+
+**Solution**: Use a `hydrated` state flag to prevent rendering localStorage-dependent
+content until hydration is complete.
+
+**How it works:**
+- `hydration.svelte.ts` exports a `hydrated` getter (false initially)
+- Root layout calls `completeHydration()` which sets `hydrated = true` after mount
+- Components guard their rendering: `{#if hydrated.value && hasSessions}`
+- Result: SSR renders loading state, client loads localStorage, renders correctly with no flash
+
+**Implementation:**
+```svelte
+<!-- Root layout initializes hydration -->
+$effect(() => {
+  const cleanupHydration = completeHydration();
+  // ... other cleanup
+  return () => {
+    cleanupHydration();
+    // ... cleanup all
+  };
+});
+
+<!-- Page guards localStorage-dependent rendering -->
+<script>
+  import { hydrated } from "$lib/state";
+  import { sessions } from "$lib/state/sessions.svelte";
+
+  const hasSessions = $derived(hydrated.value && sessions.size > 0);
+</script>
+
+{#if !hydrated.value}
+  <LoadingScreen />
+{:else if !hasSessions}
+  <WelcomeScreen />
+{:else}
+  <SessionUI />
+{/if}
+```
+
+**Key points:**
+- Only use this pattern for conditional rendering based on localStorage
+- LoadingScreen appears for ~50ms (imperceptible to users)
+- Hydration flag is reusable for future pages
+- Unit tests can mock: `resetHydrationState()` for initial state, `completeHydration()` to simulate
+- See `src/lib/state/hydration.svelte.ts` for complete API
+
 ### Versioning
 **Automatic git-based versioning** in System.Version compatible CalVer format: `YYYY.M.D.REVISION`.
 
