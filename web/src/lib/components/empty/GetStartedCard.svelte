@@ -31,4 +31,12 @@
       </div>
     {/each}
   </div>
+
+  <!-- Link to detailed installation guide -->
+  <p class="mt-4 text-center text-xs text-stone-400">
+    Need help?
+    <a href="#installation-guide" class="text-amber-400 underline hover:text-amber-300">
+      See installation guide below ↓
+    </a>
+  </p>
 </WelcomeCard>
