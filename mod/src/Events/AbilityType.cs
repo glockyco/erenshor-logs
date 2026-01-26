@@ -25,4 +25,7 @@ public enum AbilityType
 
   /// <summary>Environmental damage (fall, fire, drowning, etc.).</summary>
   Environmental,
+
+  /// <summary>Area effect damage from NPC abilities (auras, breath attacks, curses, etc.).</summary>
+  AreaEffect,
 }
