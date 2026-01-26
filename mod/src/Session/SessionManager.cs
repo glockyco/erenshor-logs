@@ -17,6 +17,7 @@ public sealed class SessionManager : ISessionManager
 {
   private readonly IEventEmitter _emitter;
   private readonly IGameVersionProvider _gameVersionProvider;
+  private readonly ITimeProvider _timeProvider;
   private readonly string _modVersion;
   private readonly bool _autoDetectionEnabled;
   private readonly float _inactivityTimeoutSeconds;
@@ -25,7 +26,7 @@ public sealed class SessionManager : ISessionManager
   private readonly Action<LogLevel, string>? _log;
 
   private CombatSession? _currentSession;
-  private float? _lastEventTime; // Unity Time.time of last keep-alive event
+  private float? _lastEventTime; // Time provider's CurrentTime at last keep-alive event
   private long? _lastEventTimestamp; // Unix timestamp (ms) of last keep-alive event
 
   /// <inheritdoc />
@@ -42,6 +43,7 @@ public sealed class SessionManager : ISessionManager
   /// </summary>
   /// <param name="emitter">Event emitter for CombatStart/CombatEnd events.</param>
   /// <param name="gameVersionProvider">Provider for game version information.</param>
+  /// <param name="timeProvider">Provider for current time (enables testing without Unity).</param>
   /// <param name="modVersion">Current mod version string.</param>
   /// <param name="autoDetectionEnabled">Whether automatic session detection is enabled.</param>
   /// <param name="inactivityTimeoutSeconds">Seconds of inactivity before ending automatic sessions.</param>
@@ -51,6 +53,7 @@ public sealed class SessionManager : ISessionManager
   public SessionManager(
     IEventEmitter emitter,
     IGameVersionProvider gameVersionProvider,
+    ITimeProvider timeProvider,
     string modVersion,
     bool autoDetectionEnabled,
     float inactivityTimeoutSeconds,
@@ -61,6 +64,7 @@ public sealed class SessionManager : ISessionManager
   {
     _emitter = emitter;
     _gameVersionProvider = gameVersionProvider;
+    _timeProvider = timeProvider;
     _modVersion = modVersion;
     _autoDetectionEnabled = autoDetectionEnabled;
     _inactivityTimeoutSeconds = inactivityTimeoutSeconds;
@@ -78,7 +82,7 @@ public sealed class SessionManager : ISessionManager
     // Check if this event keeps session alive
     if (_sessionKeepAliveEvents.Contains(eventType))
     {
-      _lastEventTime = UnityEngine.Time.time;
+      _lastEventTime = _timeProvider.CurrentTime;
       _lastEventTimestamp = eventTimestamp;
     }
 

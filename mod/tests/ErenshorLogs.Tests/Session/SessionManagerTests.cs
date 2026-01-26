@@ -13,6 +13,11 @@ public class SessionManagerTests
     public string GetGameVersion() => GameVersion;
   }
 
+  private class FakeTimeProvider : ITimeProvider
+  {
+    public float CurrentTime { get; set; } = 0.0f;
+  }
+
   private class FakeEventEmitter : IEventEmitter
   {
     public List<CombatEvent> EmittedEvents { get; } = [];
@@ -25,206 +30,342 @@ public class SessionManagerTests
       throw new NotImplementedException();
   }
 
-  [Fact]
-  public void OnCombatStateChanged_ToTrue_CreatesSession()
+  /// <summary>
+  /// Default session start events for tests (matches typical config).
+  /// </summary>
+  private const string DefaultStartEvents = "DamagePhysical,DamageMagic,DamageDot";
+
+  /// <summary>
+  /// Default session keep-alive events for tests.
+  /// </summary>
+  private const string DefaultKeepAliveEvents =
+    "DamagePhysical,DamageMagic,DamageDot,DamageEnvironmental";
+
+  /// <summary>
+  /// Default inactivity timeout in seconds.
+  /// </summary>
+  private const float DefaultTimeout = 5.0f;
+
+  private static SessionManager CreateManager(
+    FakeEventEmitter emitter,
+    FakeGameVersionProvider versionProvider,
+    FakeTimeProvider timeProvider,
+    string modVersion = "0.1.0",
+    bool autoDetectionEnabled = true,
+    float inactivityTimeout = DefaultTimeout,
+    string? startEvents = null,
+    string? keepAliveEvents = null
+  )
   {
-    var emitter = new FakeEventEmitter();
-    var provider = new FakeGameVersionProvider();
-    var manager = new SessionManager(emitter, provider, "0.1.0");
-
-    manager.OnCombatStateChanged(true);
-
-    Assert.NotNull(manager.CurrentSession);
-    Assert.True(manager.InCombat);
+    return new SessionManager(
+      emitter,
+      versionProvider,
+      timeProvider,
+      modVersion,
+      autoDetectionEnabled,
+      inactivityTimeout,
+      startEvents ?? DefaultStartEvents,
+      keepAliveEvents ?? DefaultKeepAliveEvents
+    );
   }
 
   [Fact]
-  public void OnCombatStateChanged_ToTrue_EmitsCombatStartEvent()
+  public void OnCombatEvent_WithStartEvent_CreatesSession()
   {
     var emitter = new FakeEventEmitter();
-    var provider = new FakeGameVersionProvider();
-    var manager = new SessionManager(emitter, provider, "0.1.0");
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider();
+    var manager = CreateManager(emitter, versionProvider, timeProvider);
 
-    manager.OnCombatStateChanged(true);
+    manager.OnCombatEvent(EventType.DamagePhysical, 1000);
+
+    Assert.NotNull(manager.CurrentSession);
+  }
+
+  [Fact]
+  public void OnCombatEvent_WithStartEvent_EmitsCombatStartEvent()
+  {
+    var emitter = new FakeEventEmitter();
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider();
+    var manager = CreateManager(emitter, versionProvider, timeProvider);
+
+    manager.OnCombatEvent(EventType.DamagePhysical, 1000);
 
     Assert.Single(emitter.EmittedEvents);
     Assert.Equal(EventType.CombatStart, emitter.EmittedEvents[0].EventType);
   }
 
   [Fact]
-  public void OnCombatStateChanged_ToTrue_RaisesSessionStartedEvent()
+  public void OnCombatEvent_WithStartEvent_RaisesSessionStartedEvent()
   {
     var emitter = new FakeEventEmitter();
-    var provider = new FakeGameVersionProvider();
-    var manager = new SessionManager(emitter, provider, "0.1.0");
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider();
+    var manager = CreateManager(emitter, versionProvider, timeProvider);
     CombatSession? receivedSession = null;
     manager.SessionStarted += s => receivedSession = s;
 
-    manager.OnCombatStateChanged(true);
+    manager.OnCombatEvent(EventType.DamagePhysical, 1000);
 
     Assert.NotNull(receivedSession);
     Assert.Same(manager.CurrentSession, receivedSession);
   }
 
   [Fact]
-  public void OnCombatStateChanged_ToFalse_DoesNotEndSessionImmediately()
+  public void OnCombatEvent_NonStartEvent_DoesNotCreateSession()
   {
     var emitter = new FakeEventEmitter();
-    var provider = new FakeGameVersionProvider();
-    var manager = new SessionManager(emitter, provider, "0.1.0");
-    manager.OnCombatStateChanged(true);
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider();
+    var manager = CreateManager(emitter, versionProvider, timeProvider);
 
-    manager.OnCombatStateChanged(false);
+    // Environmental damage is not a start event by default
+    manager.OnCombatEvent(EventType.DamageEnvironmental, 1000);
 
-    // Session should still exist (not ended immediately)
-    Assert.NotNull(manager.CurrentSession);
-    Assert.False(manager.InCombat);
-  }
-
-  [Fact]
-  public void OnCombatStateChanged_ToFalse_DoesNotEmitCombatEndImmediately()
-  {
-    var emitter = new FakeEventEmitter();
-    var provider = new FakeGameVersionProvider();
-    var manager = new SessionManager(emitter, provider, "0.1.0");
-    manager.OnCombatStateChanged(true);
-    emitter.EmittedEvents.Clear();
-
-    manager.OnCombatStateChanged(false);
-
-    // No immediate combatEnd event - waits for inactivity timeout
-    Assert.Empty(emitter.EmittedEvents);
-  }
-
-  [Fact]
-  public void OnCombatStateChanged_ToFalse_DoesNotRaiseSessionEndedImmediately()
-  {
-    var emitter = new FakeEventEmitter();
-    var provider = new FakeGameVersionProvider();
-    var manager = new SessionManager(emitter, provider, "0.1.0");
-    manager.OnCombatStateChanged(true);
-    var startedSession = manager.CurrentSession;
-    CombatSession? endedSession = null;
-    manager.SessionEnded += s => endedSession = s;
-
-    manager.OnCombatStateChanged(false);
-
-    // Session not ended immediately - waits for inactivity timeout
-    Assert.Null(endedSession);
-    Assert.Same(startedSession, manager.CurrentSession);
-  }
-
-  [Fact]
-  public void OnCombatStateChanged_SameState_NoAction()
-  {
-    var emitter = new FakeEventEmitter();
-    var provider = new FakeGameVersionProvider();
-    var manager = new SessionManager(emitter, provider, "0.1.0");
-
-    manager.OnCombatStateChanged(false);
-    manager.OnCombatStateChanged(false);
-
-    Assert.Empty(emitter.EmittedEvents);
     Assert.Null(manager.CurrentSession);
+    Assert.Empty(emitter.EmittedEvents);
   }
 
   [Fact]
-  public void OnCombatStateChanged_TrueWhenAlreadyTrue_NoAction()
+  public void OnCombatEvent_WhenSessionExists_DoesNotCreateNewSession()
   {
     var emitter = new FakeEventEmitter();
-    var provider = new FakeGameVersionProvider();
-    var manager = new SessionManager(emitter, provider, "0.1.0");
-    manager.OnCombatStateChanged(true);
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider();
+    var manager = CreateManager(emitter, versionProvider, timeProvider);
+
+    manager.OnCombatEvent(EventType.DamagePhysical, 1000);
     var firstSession = manager.CurrentSession;
     emitter.EmittedEvents.Clear();
 
-    manager.OnCombatStateChanged(true);
+    timeProvider.CurrentTime = 1.0f;
+    manager.OnCombatEvent(EventType.DamagePhysical, 2000);
 
-    Assert.Empty(emitter.EmittedEvents);
     Assert.Same(firstSession, manager.CurrentSession);
+    Assert.Empty(emitter.EmittedEvents);
   }
 
   [Fact]
-  public void OnCombatStateChanged_CapturesVersionInfo()
+  public void OnCombatEvent_CapturesVersionInfo()
   {
     var emitter = new FakeEventEmitter();
-    var provider = new FakeGameVersionProvider { GameVersion = "2.0.0" };
-    var manager = new SessionManager(emitter, provider, "0.5.0");
+    var versionProvider = new FakeGameVersionProvider { GameVersion = "2.0.0" };
+    var timeProvider = new FakeTimeProvider();
+    var manager = CreateManager(emitter, versionProvider, timeProvider, modVersion: "0.5.0");
 
-    manager.OnCombatStateChanged(true);
+    manager.OnCombatEvent(EventType.DamagePhysical, 1000);
 
     Assert.Equal("2.0.0", manager.CurrentSession!.GameVersion);
     Assert.Equal("0.5.0", manager.CurrentSession.ModVersion);
   }
 
   [Fact]
-  public void MultipleTransitions_SessionPersistsAcrossCombatStateChanges()
+  public void CheckInactivityTimeout_BeforeTimeout_DoesNotEndSession()
   {
     var emitter = new FakeEventEmitter();
-    var provider = new FakeGameVersionProvider();
-    var manager = new SessionManager(emitter, provider, "0.1.0");
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider { CurrentTime = 0.0f };
+    var manager = CreateManager(emitter, versionProvider, timeProvider, inactivityTimeout: 5.0f);
 
-    manager.OnCombatStateChanged(true);
-    var firstSessionId = manager.CurrentSession!.Id;
+    // Start session at t=0
+    manager.OnCombatEvent(EventType.DamagePhysical, 1000);
+    emitter.EmittedEvents.Clear();
 
-    // Combat ends - but session continues (no immediate end)
-    manager.OnCombatStateChanged(false);
+    // Check at t=3s (before 5s timeout)
+    manager.CheckInactivityTimeout(3.0f);
+
     Assert.NotNull(manager.CurrentSession);
-
-    // Combat starts again - session is reused (not ended)
-    manager.OnCombatStateChanged(true);
-    var secondSessionId = manager.CurrentSession!.Id;
-
-    // Same session (inactivity timeout hasn't triggered without events)
-    Assert.Equal(firstSessionId, secondSessionId);
-  }
-
-  [Fact]
-  public void OnCombatStateChanged_EndWithoutStart_NoAction()
-  {
-    var emitter = new FakeEventEmitter();
-    var provider = new FakeGameVersionProvider();
-    var manager = new SessionManager(emitter, provider, "0.1.0");
-
-    // Force state to true without a session
-    manager.OnCombatStateChanged(false);
-
     Assert.Empty(emitter.EmittedEvents);
   }
 
   [Fact]
-  public void CheckSessionTimeouts_SessionWithoutEvents_DoesNotTimeout()
+  public void CheckInactivityTimeout_AfterTimeout_EndsSession()
   {
     var emitter = new FakeEventEmitter();
-    var provider = new FakeGameVersionProvider();
-    var manager = new SessionManager(emitter, provider, "0.1.0");
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider { CurrentTime = 0.0f };
+    var manager = CreateManager(emitter, versionProvider, timeProvider, inactivityTimeout: 5.0f);
 
-    // Start session via combat state (no events, so no _lastEventTime)
-    manager.OnCombatStateChanged(true);
+    // Start session at t=0
+    manager.OnCombatEvent(EventType.DamagePhysical, 1000);
+    emitter.EmittedEvents.Clear();
 
-    // Check at t=10s - session won't timeout without _lastEventTime
-    manager.CheckSessionTimeouts(10.0f);
+    // Check at t=6s (after 5s timeout)
+    manager.CheckInactivityTimeout(6.0f);
 
-    // Session remains open (inactivity timeout requires events)
-    Assert.NotNull(manager.CurrentSession);
+    Assert.Null(manager.CurrentSession);
+    Assert.Single(emitter.EmittedEvents);
+    Assert.Equal(EventType.CombatEnd, emitter.EmittedEvents[0].EventType);
   }
 
   [Fact]
-  public void CheckSessionTimeouts_CombatEndDoesNotEndSessionImmediately()
+  public void CheckInactivityTimeout_AfterTimeout_RaisesSessionEndedEvent()
   {
     var emitter = new FakeEventEmitter();
-    var provider = new FakeGameVersionProvider();
-    var manager = new SessionManager(emitter, provider, "0.1.0");
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider { CurrentTime = 0.0f };
+    var manager = CreateManager(emitter, versionProvider, timeProvider, inactivityTimeout: 5.0f);
+    CombatSession? endedSession = null;
+    manager.SessionEnded += s => endedSession = s;
 
-    // Start session
-    manager.OnCombatStateChanged(true);
+    manager.OnCombatEvent(EventType.DamagePhysical, 1000);
     var startedSession = manager.CurrentSession;
 
-    // Combat ends - session continues (no immediate end)
-    manager.OnCombatStateChanged(false);
+    manager.CheckInactivityTimeout(6.0f);
+
+    Assert.NotNull(endedSession);
+    Assert.Same(startedSession, endedSession);
+  }
+
+  [Fact]
+  public void CheckInactivityTimeout_WithNoSession_DoesNothing()
+  {
+    var emitter = new FakeEventEmitter();
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider();
+    var manager = CreateManager(emitter, versionProvider, timeProvider);
+
+    manager.CheckInactivityTimeout(10.0f);
+
+    Assert.Null(manager.CurrentSession);
+    Assert.Empty(emitter.EmittedEvents);
+  }
+
+  [Fact]
+  public void StartManualSession_CreatesSession()
+  {
+    var emitter = new FakeEventEmitter();
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider();
+    var manager = CreateManager(emitter, versionProvider, timeProvider);
+
+    manager.StartManualSession();
 
     Assert.NotNull(manager.CurrentSession);
-    Assert.Same(startedSession, manager.CurrentSession);
-    Assert.False(manager.InCombat);
+    Assert.True(manager.CurrentSession.IsManual);
+  }
+
+  [Fact]
+  public void StartManualSession_EmitsCombatStartEvent()
+  {
+    var emitter = new FakeEventEmitter();
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider();
+    var manager = CreateManager(emitter, versionProvider, timeProvider);
+
+    manager.StartManualSession();
+
+    Assert.Single(emitter.EmittedEvents);
+    Assert.Equal(EventType.CombatStart, emitter.EmittedEvents[0].EventType);
+  }
+
+  [Fact]
+  public void StartManualSession_WhenSessionExists_EndsExistingFirst()
+  {
+    var emitter = new FakeEventEmitter();
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider();
+    var manager = CreateManager(emitter, versionProvider, timeProvider);
+
+    manager.StartManualSession();
+    var firstSession = manager.CurrentSession;
+    emitter.EmittedEvents.Clear();
+
+    manager.StartManualSession();
+
+    // Should have ended first session and started second
+    Assert.NotSame(firstSession, manager.CurrentSession);
+    Assert.Equal(2, emitter.EmittedEvents.Count);
+    Assert.Equal(EventType.CombatEnd, emitter.EmittedEvents[0].EventType);
+    Assert.Equal(EventType.CombatStart, emitter.EmittedEvents[1].EventType);
+  }
+
+  [Fact]
+  public void EndManualSession_EndsSession()
+  {
+    var emitter = new FakeEventEmitter();
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider();
+    var manager = CreateManager(emitter, versionProvider, timeProvider);
+
+    manager.StartManualSession();
+    emitter.EmittedEvents.Clear();
+
+    manager.EndManualSession();
+
+    Assert.Null(manager.CurrentSession);
+    Assert.Single(emitter.EmittedEvents);
+    Assert.Equal(EventType.CombatEnd, emitter.EmittedEvents[0].EventType);
+  }
+
+  [Fact]
+  public void EndManualSession_WithNoSession_DoesNothing()
+  {
+    var emitter = new FakeEventEmitter();
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider();
+    var manager = CreateManager(emitter, versionProvider, timeProvider);
+
+    manager.EndManualSession();
+
+    Assert.Null(manager.CurrentSession);
+    Assert.Empty(emitter.EmittedEvents);
+  }
+
+  [Fact]
+  public void ManualSession_DoesNotTimeout()
+  {
+    var emitter = new FakeEventEmitter();
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider();
+    var manager = CreateManager(emitter, versionProvider, timeProvider, inactivityTimeout: 1.0f);
+
+    manager.StartManualSession();
+    emitter.EmittedEvents.Clear();
+
+    // Even with long time passed, manual session should not timeout
+    manager.CheckInactivityTimeout(100.0f);
+
+    Assert.NotNull(manager.CurrentSession);
+    Assert.Empty(emitter.EmittedEvents);
+  }
+
+  [Fact]
+  public void AutoDetectionDisabled_DoesNotAutoStartSession()
+  {
+    var emitter = new FakeEventEmitter();
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider();
+    var manager = CreateManager(
+      emitter,
+      versionProvider,
+      timeProvider,
+      autoDetectionEnabled: false
+    );
+
+    manager.OnCombatEvent(EventType.DamagePhysical, 1000);
+
+    Assert.Null(manager.CurrentSession);
+    Assert.Empty(emitter.EmittedEvents);
+  }
+
+  [Fact]
+  public void AutoDetectionDisabled_ManualSessionStillWorks()
+  {
+    var emitter = new FakeEventEmitter();
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider();
+    var manager = CreateManager(
+      emitter,
+      versionProvider,
+      timeProvider,
+      autoDetectionEnabled: false
+    );
+
+    manager.StartManualSession();
+
+    Assert.NotNull(manager.CurrentSession);
+    Assert.True(manager.CurrentSession.IsManual);
   }
 }

@@ -212,12 +212,14 @@ public sealed class Plugin : BaseUnityPlugin
 
     // Session management
     services.AddSingleton<IGameVersionProvider, GameVersionProvider>();
+    services.AddSingleton<ITimeProvider, UnityTimeProvider>();
     services.AddSingleton<ISessionManager>(sp =>
     {
       var config = sp.GetRequiredService<ModConfig>();
       return new SessionManager(
         sp.GetRequiredService<IEventEmitter>(),
         sp.GetRequiredService<IGameVersionProvider>(),
+        sp.GetRequiredService<ITimeProvider>(),
         PluginInfo.Version,
         config.AutoSessionDetection.Value,
         config.SessionInactivityTimeout.Value,
