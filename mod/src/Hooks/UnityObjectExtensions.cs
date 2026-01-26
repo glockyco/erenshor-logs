@@ -9,23 +9,15 @@ public static class UnityObjectExtensions
 {
   /// <summary>
   /// Checks if a Unity Character object is valid (not null and not destroyed).
-  /// Uses Unity's overloaded equality operator which properly detects destroyed objects.
+  /// Uses Unity's special null-checking that handles destroyed objects.
   /// </summary>
   /// <param name="character">The character to validate.</param>
   /// <returns>True if the character is valid and not destroyed; false otherwise.</returns>
-  /// <remarks>
-  /// We explicitly cast to UnityEngine.Object and use the != operator rather than
-  /// relying on implicit bool conversion. Unity's == and != operators are overloaded
-  /// to return true for comparisons with null when the native object is destroyed,
-  /// even if the C# wrapper reference is non-null. This approach is more reliable
-  /// across assembly boundaries in the BepInEx/Harmony context.
-  /// </remarks>
   public static bool IsValid(this Character? character)
   {
-    // Unity's == and != operators handle both C# null AND destroyed objects.
-    // Cast to UnityEngine.Object to ensure we use Unity's overloaded operator, not C#'s default.
-    // The null-forgiving operator is safe here - we're explicitly checking for null.
-    return (UnityEngine.Object)character! != null;
+    // Unity's implicit bool operator returns false for both null and destroyed objects
+    // This is Unity-specific behavior - a destroyed object is not the same as C# null
+    return character != null && character;
   }
 
   /// <summary>

@@ -1,5 +1,4 @@
 using ErenshorLogs.Events;
-using ErenshorLogs.Hooks;
 
 namespace ErenshorLogs.Registry;
 
@@ -24,7 +23,7 @@ public sealed class ActorRegistryAdapter : IActorRegistry
   )
   {
     _inner = new ActorRegistry<Character>(
-      c => c.GetSafeInstanceID() ?? -1, // -1 for invalid/destroyed objects
+      c => c.GetInstanceID(),
       typeResolver.Resolve,
       dataExtractor.Extract,
       logError

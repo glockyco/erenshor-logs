@@ -84,12 +84,7 @@ public sealed class CombatRelevanceChecker<TCharacter, TNpc>
   /// </summary>
   private bool IsRelevantCharacter(TCharacter character)
   {
-    // Get instance ID - will be -1 or negative for invalid/destroyed objects
     var instanceId = _getInstanceId(character);
-
-    // Invalid objects (negative IDs) are never relevant
-    if (instanceId < 0)
-      return false;
 
     // Check cache first (O(1))
     if (_relevantCharacterIds.Contains(instanceId))
@@ -120,9 +115,7 @@ public sealed class CombatRelevanceChecker<TCharacter, TNpc>
   /// </summary>
   private bool IsPlayer(TCharacter character)
   {
-    var name = _getTransformName(character);
-    // Empty string indicates destroyed object - not a player
-    return !string.IsNullOrEmpty(name) && name == "Player";
+    return _getTransformName(character) == "Player";
   }
 
   /// <summary>
