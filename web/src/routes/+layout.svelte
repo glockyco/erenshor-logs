@@ -24,6 +24,7 @@
     initSettingsPersistence,
   } from "$lib/state/settings.svelte";
   import { untrack } from "svelte";
+  import DevToolsPanel from "$lib/components/debug/DevToolsPanel.svelte";
 
   let { children } = $props();
 
@@ -94,3 +95,5 @@
 </script>
 
 {@render children()}
+
+<DevToolsPanel />
