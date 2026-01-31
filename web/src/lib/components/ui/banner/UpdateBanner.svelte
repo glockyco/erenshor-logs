@@ -24,7 +24,7 @@
 
     /**
      * URL for the mod download link.
-     * @default "https://thunderstore.io/c/erenshor/p/JohannGlock/ErenshorLogs/"
+     * @default "/mods/ErenshorLogs.dll"
      */
     downloadHref?: string;
 
@@ -35,11 +35,7 @@
     class?: string;
   }
 
-  let {
-    ondismiss,
-    downloadHref = "https://thunderstore.io/c/erenshor/p/JohannGlock/ErenshorLogs/",
-    class: className,
-  }: Props = $props();
+  let { ondismiss, downloadHref = "/mods/ErenshorLogs.dll", class: className }: Props = $props();
 </script>
 
 <!-- Update notification banner -->
