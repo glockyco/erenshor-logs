@@ -74,12 +74,12 @@ describe("update state", () => {
       expect(updateAvailable.value).toBe(false);
     });
 
-    it("does not show update when mod version is dirty", () => {
-      // Dirty versions are not parseable, fail open
+    it("does not show update when mod version is dirty but same", () => {
+      // Dirty suffixes are stripped, then versions are compared normally
       const handshake = {
         type: "handshake" as const,
         protocolVersion: "0.1.0",
-        modVersion: "2026.1.1.100-dirty-20260124-204219",
+        modVersion: VERSION, // Same version, just happens to be dirty
         session: undefined,
       };
 
@@ -219,16 +219,16 @@ describe("update state", () => {
     });
 
     it("works even when mod version is unparseable", () => {
-      // Edge case: dismissing while connected to dirty mod
+      // Edge case: dismissing while connected to unparseable mod (fallback format)
       const handshake = {
         type: "handshake" as const,
         protocolVersion: "0.1.0",
-        modVersion: "2026.1.1.100-dirty-...",
+        modVersion: "0.0.0-20260131-123456", // Unparseable even after stripping
         session: undefined,
       };
 
       setConnected(handshake);
-      expect(updateAvailable.value).toBe(false); // Already not shown
+      expect(updateAvailable.value).toBe(false); // Not shown (unparseable)
 
       // Should not throw
       dismissUpdate();

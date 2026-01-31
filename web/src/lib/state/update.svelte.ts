@@ -3,7 +3,7 @@
 
 import { modVersion } from "./connection.svelte";
 import { VERSION } from "$lib/version";
-import { isModOutdated } from "$lib/utils/version";
+import { parseVersion, compareVersions } from "$lib/utils/version";
 import { DismissedUpdateSchema } from "$lib/types/schemas";
 import { STORAGE_KEYS } from "$lib/utils/constants";
 import { loadFromStorage, saveToStorage } from "$lib/utils/storage";
@@ -36,8 +36,19 @@ const _updateAvailable = $derived.by(() => {
   // Already dismissed for this web version
   if (state.dismissedVersion === VERSION) return false;
 
-  // Check if mod is outdated (fail open on unparseable versions)
-  return isModOutdated(modVersion.value, VERSION);
+  // Strip dirty/fallback suffixes from both versions before comparison
+  // This allows version comparison to work with dirty dev builds
+  const cleanMod = modVersion.value.split("-")[0];
+  const cleanWeb = VERSION.split("-")[0];
+
+  const modParts = parseVersion(cleanMod);
+  const webParts = parseVersion(cleanWeb);
+
+  // Fail open: if either version is unparseable after cleaning, don't show banner
+  if (!modParts || !webParts) return false;
+
+  // Check if mod < web
+  return compareVersions(modParts, webParts) === -1;
 });
 
 // =============================================================================
