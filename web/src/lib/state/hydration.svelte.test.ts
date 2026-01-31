@@ -33,4 +33,17 @@ describe("hydration state", () => {
     completeHydration();
     expect(hydrated.value).toBe(true);
   });
+
+  it("is idempotent - multiple calls don't break state", () => {
+    completeHydration();
+    expect(hydrated.value).toBe(true);
+
+    // Calling again should be safe (no errors, state remains true)
+    completeHydration();
+    expect(hydrated.value).toBe(true);
+
+    // Even multiple times
+    completeHydration();
+    expect(hydrated.value).toBe(true);
+  });
 });

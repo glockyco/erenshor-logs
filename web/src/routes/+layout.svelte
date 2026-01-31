@@ -28,6 +28,8 @@
   let { children } = $props();
 
   // Initialize state persistence and clock
+  // Data is already loaded at module-level in each state file
+  // These functions only set up reactive persistence (saving to localStorage)
   $effect(() => {
     const cleanupHydration = completeHydration();
     const cleanupSessions = initSessionsPersistence();

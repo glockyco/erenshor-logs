@@ -5,10 +5,8 @@ import {
   dismissedVersion,
   dismissUpdate,
   resetUpdateState,
-  initUpdatePersistence,
 } from "./update.svelte";
 import { setConnected, setDisconnected, resetConnectionState } from "./connection.svelte";
-import { STORAGE_KEYS } from "$lib/utils/constants";
 
 // Note: Tests work with generated VERSION which may be dirty during development.
 // Version comparison tests (updateAvailable) will fail-open when VERSION is dirty,
@@ -276,27 +274,6 @@ describe("update state", () => {
   });
 
   describe("localStorage persistence", () => {
-    it("loads dismissed version from localStorage on init", () => {
-      const dismissedVer = "2026.1.20.100";
-      localStorage.setItem(STORAGE_KEYS.DISMISSED_UPDATE, JSON.stringify(dismissedVer));
-      resetUpdateState();
-
-      initUpdatePersistence();
-
-      expect(dismissedVersion.value).toBe(dismissedVer);
-    });
-
-    it("handles missing localStorage gracefully", () => {
-      // Ensure no stored value
-      localStorage.removeItem(STORAGE_KEYS.DISMISSED_UPDATE);
-      resetUpdateState();
-
-      // Should not throw
-      initUpdatePersistence();
-
-      expect(dismissedVersion.value).toBeNull();
-    });
-
     it("dismissUpdate sets state immediately", () => {
       // Verify state updates work (persistence via $effect is tested in integration)
       expect(dismissedVersion.value).toBeNull();

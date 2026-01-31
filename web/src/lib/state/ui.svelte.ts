@@ -63,31 +63,28 @@ export const sidebarCollapsed = {
   },
 };
 
+// SSR-safe initialization from localStorage
+// Runs at module evaluation time, before any component renders
+const stored = loadFromStorage(STORAGE_KEYS.PREFERENCES, UIPreferencesSchema);
+if (stored) {
+  stored.collapsedActors.forEach((id) => collapsedActors.add(id));
+  uiState.sortBy = stored.sortBy;
+  uiState.sortDirection = stored.sortDirection;
+  uiState.actorBreakdownTab = stored.actorBreakdownTab;
+  uiState.factionFilter = stored.factionFilter;
+  if (stored.sidebarCollapsed !== undefined) {
+    uiState.sidebarCollapsed = stored.sidebarCollapsed;
+  }
+}
+
 /**
- * Initialize UI preferences persistence.
- *
- * Loads stored preferences from localStorage once, then sets up reactive
- * persistence to save changes automatically.
- *
- * Must be called from a component context (uses $effect).
+ * Initialize persistence effects. Must be called from a component context.
+ * Sets up reactive persistence to save changes to localStorage.
+ * Does NOT load data - that happens at module-level above.
  *
  * @returns cleanup function for effect disposal
  */
 export function initUiPersistence(): () => void {
-  // Load from localStorage (runs once on initialization)
-  const stored = loadFromStorage(STORAGE_KEYS.PREFERENCES, UIPreferencesSchema);
-  if (stored) {
-    stored.collapsedActors.forEach((id) => collapsedActors.add(id));
-    uiState.sortBy = stored.sortBy;
-    uiState.sortDirection = stored.sortDirection;
-    uiState.actorBreakdownTab = stored.actorBreakdownTab;
-    uiState.factionFilter = stored.factionFilter;
-    if (stored.sidebarCollapsed !== undefined) {
-      uiState.sidebarCollapsed = stored.sidebarCollapsed;
-    }
-  }
-
-  // Set up reactive persistence (runs on changes)
   const cleanup = $effect.root(() => {
     // Persist to localStorage on changes
     $effect(() => {

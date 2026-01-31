@@ -59,33 +59,30 @@ export const activeSessionStats = {
 
 const ACTIVE_SESSION_KEY = `${STORAGE_KEYS.SESSIONS}-active`;
 
+// SSR-safe initialization from localStorage
+// Runs at module evaluation time, before any component renders
+const storedSessions = loadFromStorage(STORAGE_KEYS.SESSIONS, StoredSessionsSchema);
+if (storedSessions) {
+  // Load all sessions regardless of event count
+  storedSessions.forEach(([id, session]) => {
+    sessions.set(id, session);
+  });
+
+  // Validate activeSessionId exists
+  const storedActiveId = loadFromStorage(ACTIVE_SESSION_KEY, z.string());
+  if (storedActiveId && sessions.has(storedActiveId)) {
+    state.activeSessionId = storedActiveId;
+  }
+}
+
 /**
- * Initialize session persistence.
- *
- * Loads stored sessions from localStorage once, then sets up reactive
- * persistence to save changes automatically.
- *
- * Must be called from a component context (uses $effect).
+ * Initialize persistence effects. Must be called from a component context.
+ * Sets up reactive persistence to save changes to localStorage.
+ * Does NOT load data - that happens at module-level above.
  *
  * @returns cleanup function for effect disposal
  */
 export function initSessionsPersistence(): () => void {
-  // Load from localStorage (runs once on initialization)
-  const storedSessions = loadFromStorage(STORAGE_KEYS.SESSIONS, StoredSessionsSchema);
-  if (storedSessions) {
-    // Load all sessions regardless of event count
-    storedSessions.forEach(([id, session]) => {
-      sessions.set(id, session);
-    });
-
-    // Validate activeSessionId exists
-    const storedActiveId = loadFromStorage(ACTIVE_SESSION_KEY, z.string());
-    if (storedActiveId && sessions.has(storedActiveId)) {
-      state.activeSessionId = storedActiveId;
-    }
-  }
-
-  // Set up reactive persistence (runs on changes)
   const cleanup = $effect.root(() => {
     // Persist sessions to localStorage on changes
     $effect(() => {

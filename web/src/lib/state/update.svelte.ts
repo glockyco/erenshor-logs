@@ -16,6 +16,13 @@ const state = $state({
   dismissedVersion: null as string | null,
 });
 
+// SSR-safe initialization from localStorage
+// Runs at module evaluation time, before any component renders
+const stored = loadFromStorage(STORAGE_KEYS.DISMISSED_UPDATE, DismissedUpdateSchema);
+if (stored) {
+  state.dismissedVersion = stored;
+}
+
 // =============================================================================
 // Derived State
 // =============================================================================
@@ -89,23 +96,13 @@ export function dismissUpdate(): void {
 }
 
 /**
- * Initialize update notification persistence.
- *
- * Loads dismissed update version from localStorage once, then sets up reactive
- * persistence to save changes automatically.
- *
- * Must be called from a component context (uses $effect).
+ * Initialize persistence effects. Must be called from a component context.
+ * Sets up reactive persistence to save changes to localStorage.
+ * Does NOT load data - that happens at module-level above.
  *
  * @returns cleanup function for effect disposal
  */
 export function initUpdatePersistence(): () => void {
-  // Load from localStorage (runs once on initialization)
-  const stored = loadFromStorage(STORAGE_KEYS.DISMISSED_UPDATE, DismissedUpdateSchema);
-  if (stored) {
-    state.dismissedVersion = stored;
-  }
-
-  // Set up reactive persistence (runs on changes)
   return $effect.root(() => {
     // Persist dismissedVersion to localStorage on changes
     $effect(() => {
