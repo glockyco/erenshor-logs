@@ -13,6 +13,7 @@
     completeHydration,
     initSessionsPersistence,
     initUiPersistence,
+    initUpdatePersistence,
     subscribeToClock,
   } from "$lib/state";
   import {
@@ -32,6 +33,7 @@
     const cleanupSessions = initSessionsPersistence();
     const cleanupUi = initUiPersistence();
     const cleanupSettings = initSettingsPersistence();
+    const cleanupUpdate = initUpdatePersistence();
     const cleanupClock = subscribeToClock();
 
     return () => {
@@ -39,6 +41,7 @@
       cleanupSessions();
       cleanupUi();
       cleanupSettings();
+      cleanupUpdate();
       cleanupClock();
     };
   });

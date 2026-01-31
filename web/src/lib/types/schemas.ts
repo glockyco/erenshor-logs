@@ -383,3 +383,6 @@ export type AppSettings = z.infer<typeof AppSettingsSchema>;
 
 export const StoredSessionsSchema = z.array(z.tuple([z.string(), SessionSchema]));
 export type StoredSessions = z.infer<typeof StoredSessionsSchema>;
+
+export const DismissedUpdateSchema = z.string();
+export type DismissedUpdate = z.infer<typeof DismissedUpdateSchema>;

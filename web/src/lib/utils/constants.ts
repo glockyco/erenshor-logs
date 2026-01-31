@@ -7,4 +7,5 @@ export const STORAGE_KEYS = {
   SESSIONS: "erenshor-sessions",
   PREFERENCES: "erenshor-preferences",
   APP_SETTINGS: "erenshor-settings",
+  DISMISSED_UPDATE: "erenshor-dismissed-update",
 } as const;

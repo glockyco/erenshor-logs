@@ -1,7 +1,7 @@
 <script lang="ts">
   import { List } from "@lucide/svelte";
   import { Heading } from "$lib/components/ui/typography";
-  import { LoadingScreen } from "$lib/components/ui";
+  import { LoadingScreen, UpdateBanner } from "$lib/components/ui";
   import Header from "$lib/components/layout/Header.svelte";
   import WelcomeScreen from "$lib/components/empty/WelcomeScreen.svelte";
   import SessionList from "$lib/components/session/SessionList.svelte";
@@ -15,6 +15,7 @@
   import { sessions, activeSession, activeSessionStats } from "$lib/state/sessions.svelte";
   import { sidebarCollapsed } from "$lib/state/ui.svelte";
   import { hydrated } from "$lib/state/hydration.svelte";
+  import { updateAvailable, dismissUpdate } from "$lib/state/update.svelte";
 
   // Guard hasSessions with hydration check to prevent flash of wrong content
   // during client hydration when localStorage loads asynchronously
@@ -55,6 +56,9 @@
   <div class="p-8">
     <div class="max-w-7xl mx-auto space-y-8">
       <Header />
+      {#if updateAvailable.value}
+        <UpdateBanner ondismiss={dismissUpdate} />
+      {/if}
       <WelcomeScreen />
     </div>
   </div>
@@ -93,6 +97,9 @@
     <div class="p-8">
       <div class="max-w-7xl mx-auto space-y-8">
         <Header />
+        {#if updateAvailable.value}
+          <UpdateBanner ondismiss={dismissUpdate} />
+        {/if}
         <StatsPanel {stats} {isLive} {duration} />
         <ActorTable {stats} />
         {#if session}

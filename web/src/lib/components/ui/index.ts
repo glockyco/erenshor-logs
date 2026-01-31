@@ -6,3 +6,4 @@ export { Input } from "./input";
 export { Label } from "./label";
 export { LoadingScreen } from "./loading";
 export * from "./typography";
+export { UpdateBanner } from "./banner";

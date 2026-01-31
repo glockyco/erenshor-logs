@@ -5,3 +5,4 @@ export * from "./format";
 export * from "./storage";
 export * from "./download";
 export * from "./session-enemies";
+export * from "./version";

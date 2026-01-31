@@ -15,13 +15,6 @@ const state = $state({
   activeUrl: DEFAULT_WEBSOCKET_URL,
 });
 
-// Load from storage on module init (SSR-safe)
-const stored = loadFromStorage(STORAGE_KEYS.APP_SETTINGS, AppSettingsSchema);
-if (stored) {
-  state.websocket = stored.websocket;
-  state.activeUrl = stored.websocket.url;
-}
-
 // =============================================================================
 // Exported Getters
 // =============================================================================
@@ -89,7 +82,25 @@ export function resetSettings(): void {
 // Persistence
 // =============================================================================
 
+/**
+ * Initialize settings persistence.
+ *
+ * Loads stored settings from localStorage once, then sets up reactive
+ * persistence to save changes automatically.
+ *
+ * Must be called from a component context (uses $effect).
+ *
+ * @returns cleanup function for effect disposal
+ */
 export function initSettingsPersistence(): () => void {
+  // Load from localStorage (runs once on initialization)
+  const stored = loadFromStorage(STORAGE_KEYS.APP_SETTINGS, AppSettingsSchema);
+  if (stored) {
+    state.websocket = stored.websocket;
+    state.activeUrl = stored.websocket.url;
+  }
+
+  // Set up reactive persistence (runs on changes)
   return $effect.root(() => {
     $effect(() => {
       saveToStorage(STORAGE_KEYS.APP_SETTINGS, {

@@ -6,3 +6,4 @@ export * from "./hydration.svelte";
 export * from "./sessions.svelte";
 export * from "./settings.svelte";
 export * from "./ui.svelte";
+export * from "./update.svelte";
