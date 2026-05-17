@@ -157,6 +157,12 @@ public sealed class Plugin : BaseUnityPlugin
     DeathEventPatch.LogDebug = msg => Logger.LogDebug(msg);
     DeathEventPatch.RelevanceChecker = _relevanceChecker;
     DeathEventPatch.SessionManager = sessionManager;
+
+    EncounterMechanicEmitter.Emitter = emitter;
+    EncounterMechanicEmitter.EventBuilder = eventBuilder;
+    EncounterMechanicEmitter.LogDebug = msg => Logger.LogDebug(msg);
+    EncounterMechanicEmitter.RelevanceChecker = _relevanceChecker;
+    EncounterMechanicEmitter.SessionManager = sessionManager;
     // Wire EffectTracker to effect lifecycle hooks
     AddStatusEffectPatch.Tracker = effectTracker;
     RemoveStatusEffectPatch.Tracker = effectTracker;

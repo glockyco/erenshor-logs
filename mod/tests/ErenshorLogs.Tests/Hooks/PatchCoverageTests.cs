@@ -64,6 +64,33 @@ public class PatchCoverageTests
 
     AssertPatchTargetExists("Character", "DoDeath", "ErenshorLogs.Hooks.DeathEventPatch");
     var patchType = RequireModType("ErenshorLogs.Hooks.MizukiEventPatch");
+
+    AssertPatchTargetExists(
+      "SprinklesEvent",
+      "Update",
+      "ErenshorLogs.Hooks.SprinklesInvulnerabilityPatch"
+    );
+    AssertPatchTargetExists(
+      "SprinklesEvent",
+      "CleanList",
+      "ErenshorLogs.Hooks.SprinklesMechanicPatch"
+    );
+    AssertPatchTargetExists(
+      "SprinklesEvent",
+      "spawnWards",
+      "ErenshorLogs.Hooks.SprinklesWardSpawnPatch"
+    );
+    AssertPatchTargetExists(
+      "DPSCheckAEEvent",
+      "Update",
+      "ErenshorLogs.Hooks.DpsCheckAeMechanicPatch"
+    );
+    AssertPatchTargetExists(
+      "FaithEvent",
+      "DoEventScript",
+      "ErenshorLogs.Hooks.FaithEventMechanicPatch"
+    );
+    AssertPatchTargetExists("MizukiEvent", "DoFinal", "ErenshorLogs.Hooks.MizukiFinalPhasePatch");
     var mizukiTarget = patchType.GetMethod("TargetMethod")?.Invoke(null, null) as MethodBase;
     Assert.NotNull(mizukiTarget);
     Assert.Equal("MoveNext", mizukiTarget!.Name);
