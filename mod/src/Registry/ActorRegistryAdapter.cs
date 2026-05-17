@@ -15,18 +15,19 @@ public sealed class ActorRegistryAdapter : IActorRegistry
   /// </summary>
   /// <param name="typeResolver">Resolver for determining actor types.</param>
   /// <param name="dataExtractor">Extractor for actor data.</param>
-  /// <param name="logError">Optional callback for error logging.</param>
+  /// <param name="logWarning">Optional callback for warning logging.</param>
   public ActorRegistryAdapter(
     IActorTypeResolver typeResolver,
     IActorDataExtractor dataExtractor,
-    Action<string>? logError = null
+    Action<string>? logWarning = null
   )
   {
     _inner = new ActorRegistry<Character>(
       c => c.GetInstanceID(),
       typeResolver.Resolve,
       dataExtractor.Extract,
-      logError
+      logWarning,
+      c => c.Master
     );
   }
 

@@ -222,7 +222,7 @@ public sealed class Plugin : BaseUnityPlugin
     services.AddSingleton<IActorRegistry>(sp => new ActorRegistryAdapter(
       sp.GetRequiredService<IActorTypeResolver>(),
       sp.GetRequiredService<IActorDataExtractor>(),
-      msg => Logger.LogError(msg)
+      msg => Logger.LogWarning(msg)
     ));
 
     // Combat event building

@@ -13,7 +13,8 @@ public sealed class ActorRegistry<TCharacter>
   private readonly Func<TCharacter, int> _getInstanceId;
   private readonly Func<TCharacter, ActorType> _resolveType;
   private readonly Func<TCharacter, ActorData> _extractData;
-  private readonly Action<string>? _logError;
+  private readonly Action<string>? _logWarning;
+  private readonly Func<TCharacter, TCharacter?>? _getMaster;
 
   private readonly object _lock = new();
   private readonly Dictionary<int, ActorRef> _byInstanceId = new();
@@ -26,18 +27,21 @@ public sealed class ActorRegistry<TCharacter>
   /// <param name="getInstanceId">Function to get the unique instance ID from a character.</param>
   /// <param name="resolveType">Function to determine the ActorType of a character.</param>
   /// <param name="extractData">Function to extract ActorData from a character.</param>
-  /// <param name="logError">Optional callback for error logging.</param>
+  /// <param name="logWarning">Optional callback for warning logging.</param>
+  /// <param name="getMaster">Optional function to get a pet's master character.</param>
   public ActorRegistry(
     Func<TCharacter, int> getInstanceId,
     Func<TCharacter, ActorType> resolveType,
     Func<TCharacter, ActorData> extractData,
-    Action<string>? logError = null
+    Action<string>? logWarning = null,
+    Func<TCharacter, TCharacter?>? getMaster = null
   )
   {
     _getInstanceId = getInstanceId;
     _resolveType = resolveType;
     _extractData = extractData;
-    _logError = logError;
+    _logWarning = logWarning;
+    _getMaster = getMaster;
   }
 
   /// <summary>
@@ -77,25 +81,27 @@ public sealed class ActorRegistry<TCharacter>
       var actorType = _resolveType(character);
       var data = _extractData(character);
 
-      // Generate stable ID
-      var stableId = GenerateStableId(actorType);
-
       // Handle pet master relationship
       string? masterId = null;
       if (actorType == ActorType.Pet && data.MasterInstanceId.HasValue)
       {
-        if (_byInstanceId.TryGetValue(data.MasterInstanceId.Value, out var masterRef))
+        var masterRef = GetRegisteredOrCreateMaster(character, data.MasterInstanceId.Value);
+        if (masterRef != null)
         {
           masterId = masterRef.Id;
         }
         else
         {
-          // Master not registered yet - log warning but continue
-          _logError?.Invoke(
+          // Master not registered yet and no master object was available.
+          _logWarning?.Invoke(
             $"Pet '{data.Name}' registered before master (instance {data.MasterInstanceId})"
           );
         }
       }
+
+      // Generate stable ID after resolving master so pet-first registration
+      // still assigns the master its normal ID before assigning the pet ID.
+      var stableId = GenerateStableId(actorType);
 
       // Only include class for Player and SimPlayer
       var includeClass = actorType is ActorType.Player or ActorType.SimPlayer;
@@ -142,6 +148,22 @@ public sealed class ActorRegistry<TCharacter>
       _byStableId.Clear();
       _nextId = 1;
     }
+  }
+
+  private ActorRef? GetRegisteredOrCreateMaster(TCharacter character, int masterInstanceId)
+  {
+    if (_byInstanceId.TryGetValue(masterInstanceId, out var masterRef))
+    {
+      return masterRef;
+    }
+
+    var master = _getMaster?.Invoke(character);
+    if (master == null || _getInstanceId(master) != masterInstanceId)
+    {
+      return null;
+    }
+
+    return GetOrCreate(master);
   }
 
   private string GenerateStableId(ActorType type)

@@ -17,6 +17,7 @@ public class ActorRegistryTests
     public string? ClassName { get; init; }
     public int? Level { get; init; }
     public int? MasterInstanceId { get; init; }
+    public MockCharacter? Master { get; init; }
   }
 
   private static ActorRegistry<MockCharacter> CreateRegistry(Action<string>? logError = null)
@@ -286,10 +287,50 @@ public class ActorRegistryTests
   }
 
   [Fact]
+  public void GetOrCreate_Pet_WithMasterObjectRegistersMasterFirst()
+  {
+    var loggedWarnings = new List<string>();
+    var simPlayer = new MockCharacter
+    {
+      InstanceId = 100,
+      Type = ActorType.SimPlayer,
+      Name = "Leliril",
+      ClassName = "Druid",
+    };
+    var pet = new MockCharacter
+    {
+      InstanceId = 200,
+      Type = ActorType.Pet,
+      Name = "Leliril's pet",
+      MasterInstanceId = 100,
+      Master = simPlayer,
+    };
+    var registry = new ActorRegistry<MockCharacter>(
+      c => c.InstanceId,
+      c => c.Type,
+      c => new ActorData
+      {
+        Name = c.Name,
+        ClassName = c.ClassName,
+        Level = c.Level,
+        MasterInstanceId = c.MasterInstanceId,
+      },
+      msg => loggedWarnings.Add(msg),
+      c => c.Master
+    );
+
+    var petRef = registry.GetOrCreate(pet);
+
+    Assert.Equal("sim_player:1", petRef!.MasterId);
+    Assert.Equal(2, registry.Count);
+    Assert.Empty(loggedWarnings);
+  }
+
+  [Fact]
   public void GetOrCreate_Pet_WithMasterNotRegistered_LogsWarningAndOmitsMasterId()
   {
-    var loggedErrors = new List<string>();
-    var registry = CreateRegistry(msg => loggedErrors.Add(msg));
+    var loggedWarnings = new List<string>();
+    var registry = CreateRegistry(msg => loggedWarnings.Add(msg));
 
     var pet = new MockCharacter
     {
@@ -303,9 +344,9 @@ public class ActorRegistryTests
 
     Assert.NotNull(petRef);
     Assert.Null(petRef.MasterId);
-    Assert.Single(loggedErrors);
-    Assert.Contains("Wolf", loggedErrors[0]);
-    Assert.Contains("100", loggedErrors[0]);
+    Assert.Single(loggedWarnings);
+    Assert.Contains("Wolf", loggedWarnings[0]);
+    Assert.Contains("100", loggedWarnings[0]);
   }
 
   [Fact]
