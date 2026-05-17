@@ -1,27 +1,14 @@
 <script lang="ts">
   import { VERSION } from "$lib/version";
-  import { setConnected, setDisconnected, modVersion } from "$lib/state/connection.svelte";
+  import { modVersion } from "$lib/state/connection.svelte";
+  import {
+    simulateHealthyModConnection,
+    simulateLegacyModConnectionError,
+    simulateMalformedLiveFrameError,
+    simulateUnexpectedDisconnect,
+  } from "$lib/services/dev-tools-actions";
 
   let expanded = $state(false);
-
-  function simulateOutdatedMod() {
-    setConnected({
-      protocol: "erenshor.logs.live",
-      protocolVersion: "2.0.0",
-      schemaVersion: "2.0.0",
-      kind: "hello",
-      frameSeq: 1,
-      sentAtMs: Date.now(),
-      payload: {
-        producer: { name: "ErenshorLogsMod", modVersion: "2026.1.1.1000" },
-        capabilities: ["registryDelta", "sessionSnapshot"],
-      },
-    });
-  }
-
-  function simulateDisconnect() {
-    setDisconnected();
-  }
 </script>
 
 {#if import.meta.env.DEV}
@@ -61,16 +48,28 @@
           <!-- Actions -->
           <div class="border-t border-stone-700 pt-3 space-y-2">
             <button
-              onclick={simulateOutdatedMod}
+              onclick={simulateHealthyModConnection}
               class="w-full px-3 py-1.5 bg-stone-700 hover:bg-stone-600 rounded text-xs text-amber-400 transition-colors"
             >
-              Simulate Outdated Mod
+              Simulate Healthy Mod
             </button>
             <button
-              onclick={simulateDisconnect}
+              onclick={simulateLegacyModConnectionError}
               class="w-full px-3 py-1.5 bg-stone-700 hover:bg-stone-600 rounded text-xs text-amber-400 transition-colors"
             >
-              Disconnect
+              Simulate Old Mod Error
+            </button>
+            <button
+              onclick={simulateMalformedLiveFrameError}
+              class="w-full px-3 py-1.5 bg-stone-700 hover:bg-stone-600 rounded text-xs text-amber-400 transition-colors"
+            >
+              Simulate Parse Error
+            </button>
+            <button
+              onclick={simulateUnexpectedDisconnect}
+              class="w-full px-3 py-1.5 bg-stone-700 hover:bg-stone-600 rounded text-xs text-amber-400 transition-colors"
+            >
+              Simulate Disconnect
             </button>
           </div>
         </div>

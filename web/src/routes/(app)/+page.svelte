@@ -12,11 +12,13 @@
   import ActorTable from "$lib/components/combat/ActorTable.svelte";
   import DebugPanel from "$lib/components/debug/DebugPanel.svelte";
   import * as Drawer from "$lib/components/ui/drawer";
+  import ConnectionAlert from "$lib/components/status/ConnectionAlert.svelte";
   import { sessions, activeSession, activeSessionStats } from "$lib/state/sessions.svelte";
   import { sidebarCollapsed } from "$lib/state/ui.svelte";
   import { hydrated } from "$lib/state/hydration.svelte";
   import { updateAvailable, dismissUpdate } from "$lib/state/update.svelte";
 
+  import { clearError, connectionError } from "$lib/state/connection.svelte";
   // Guard hasSessions with hydration check to prevent flash of wrong content
   // during client hydration when localStorage loads asynchronously
   const hasSessions = $derived(hydrated.value && sessions.size > 0);
@@ -59,6 +61,7 @@
       {#if updateAvailable.value}
         <UpdateBanner ondismiss={dismissUpdate} />
       {/if}
+      <ConnectionAlert error={connectionError.value} ondismiss={clearError} />
       <WelcomeScreen />
     </div>
   </div>
@@ -100,6 +103,7 @@
         {#if updateAvailable.value}
           <UpdateBanner ondismiss={dismissUpdate} />
         {/if}
+        <ConnectionAlert error={connectionError.value} ondismiss={clearError} />
         <StatsPanel {stats} {isLive} {duration} />
         <ActorTable {stats} />
         {#if session}

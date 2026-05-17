@@ -46,12 +46,13 @@ describe("connection state", () => {
       expect(connectionStatus.value).toBe("connecting");
     });
 
-    it("clears any existing error", () => {
-      setError("connection_failed", "Test error");
+    it("keeps existing errors visible while reconnecting", () => {
+      setError("unexpected_disconnect", "Connection lost");
 
       setConnecting();
 
-      expect(connectionError.value).toBeNull();
+      expect(connectionError.value?.code).toBe("unexpected_disconnect");
+      expect(connectionError.value?.message).toBe("Connection lost");
     });
   });
 

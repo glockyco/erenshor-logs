@@ -10,7 +10,7 @@ export interface WebSocketCallbacks {
   onFrame: (message: LiveEnvelope) => void;
   onDisconnected: () => void;
   onError: (
-    code: "connection_failed" | "parse_error" | "unexpected_disconnect",
+    code: "connection_failed" | "parse_error" | "legacy_mod" | "unexpected_disconnect",
     message: string
   ) => void;
 }
@@ -66,7 +66,10 @@ export function createWebSocketClient(
       const result = parseMessage(event.data as string);
 
       if (isParseError(result)) {
-        callbacks.onError("parse_error", result.message);
+        callbacks.onError(
+          result.code === "legacy_mod" ? "legacy_mod" : "parse_error",
+          result.message
+        );
         return;
       }
 

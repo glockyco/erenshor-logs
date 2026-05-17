@@ -794,6 +794,7 @@ export type ParseError = z.infer<typeof ParseErrorSchema>;
 export const ConnectionErrorCodeSchema = z.enum([
   "connection_failed",
   "parse_error",
+  "legacy_mod",
   "unexpected_disconnect",
 ]);
 export type ConnectionErrorCode = z.infer<typeof ConnectionErrorCodeSchema>;

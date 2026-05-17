@@ -43,7 +43,6 @@ export const modVersion = {
 
 export function setConnecting(): void {
   state.connectionStatus = "connecting";
-  state.connectionError = null;
 }
 
 export function setConnected(hello: LiveEnvelope): void {
