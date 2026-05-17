@@ -436,6 +436,7 @@ interface AbilityRecord {
     | "hot"
     | "proc"
     | "environmental"
+    | "areaEffect"
     | "unknown";
   stableKey?: string;
   damageType?: DamageType;

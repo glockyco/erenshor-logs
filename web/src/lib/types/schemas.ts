@@ -163,7 +163,17 @@ export type ActorKind = ActorRecord["kind"];
 export const AbilityRecordSchema = z.object({
   id: z.string(),
   name: z.string(),
-  kind: z.enum(["skill", "spell", "auto", "dot", "hot", "proc", "environmental", "unknown"]),
+  kind: z.enum([
+    "skill",
+    "spell",
+    "auto",
+    "dot",
+    "hot",
+    "proc",
+    "environmental",
+    "areaEffect",
+    "unknown",
+  ]),
   stableKey: z.string().optional(),
   damageType: DamageTypeSchema.optional(),
   procSource: ProcSourceSchema.optional(),
@@ -645,7 +655,17 @@ export type Session = z.infer<typeof SessionSchema>;
 
 export const AbilityStatsSchema = z.object({
   abilityName: z.string(),
-  abilityType: z.enum(["skill", "spell", "auto", "dot", "hot", "proc", "environmental", "unknown"]),
+  abilityType: z.enum([
+    "skill",
+    "spell",
+    "auto",
+    "dot",
+    "hot",
+    "proc",
+    "environmental",
+    "areaEffect",
+    "unknown",
+  ]),
   damage: z.number(),
   healing: z.number(),
   hits: z.number(),

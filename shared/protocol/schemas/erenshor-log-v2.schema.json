@@ -244,7 +244,7 @@
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
-        "kind": { "enum": ["skill", "spell", "auto", "dot", "hot", "proc", "environmental", "unknown"] },
+        "kind": { "enum": ["skill", "spell", "auto", "dot", "hot", "proc", "environmental", "areaEffect", "unknown"] },
         "stableKey": { "type": "string" },
         "damageType": { "$ref": "#/$defs/damageType" },
         "procSource": { "enum": ["weapon", "wand", "bow", "buff", "skill"] },

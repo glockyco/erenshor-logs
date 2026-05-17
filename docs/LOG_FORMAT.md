@@ -153,7 +153,7 @@ Records are immutable after first use except for safe retroactive enrichment.
 ```
 
 `kind` is one of `skill`, `spell`, `auto`, `dot`, `hot`, `proc`,
-`environmental`, or `unknown`.
+`environmental`, `areaEffect`, or `unknown`.
 
 ### EffectRecord
 

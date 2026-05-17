@@ -54,6 +54,26 @@ public sealed class ProtocolSessionStateTests
   }
 
   [Fact]
+  public void Append_AreaEffectAbilityMapsToAreaEffectKind()
+  {
+    var session = new CombatSession("playtest-23258843", "2026.5.17.14");
+    var state = new ProtocolSessionState(session);
+    var evt = CreateDamageEvent(session.StartTime + 250) with
+    {
+      Ability = new AbilityRef
+      {
+        Name = "Dragon Breath",
+        Type = AbilityType.AreaEffect,
+        StableKey = "area:dragon-breath",
+      },
+    };
+
+    state.Append(evt);
+
+    Assert.Equal("areaEffect", state.Registries.Abilities["area:dragon-breath"].Kind);
+  }
+
+  [Fact]
   public void Append_IgnoresSyntheticCombatLifecycleEvents()
   {
     var session = new CombatSession("main-22374607", "2026.5.17.14");

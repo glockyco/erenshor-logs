@@ -270,6 +270,7 @@ public sealed class ProtocolSessionState
       AbilityType.Dot => "dot",
       AbilityType.Hot => "hot",
       AbilityType.Environmental => "environmental",
+      AbilityType.AreaEffect => "areaEffect",
       _ => "unknown",
     };
 
