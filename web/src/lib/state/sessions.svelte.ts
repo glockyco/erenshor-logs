@@ -101,9 +101,10 @@ export function initSessionsPersistence(): () => void {
 export function applyLiveEnvelope(envelope: LiveEnvelope): void {
   switch (envelope.kind) {
     case "hello":
+      reconcileActiveSessionsFromHello(envelope);
       return;
     case "sessionSnapshot":
-      applySessionSnapshot(envelope.payload as SessionSnapshotPayload);
+      applySessionSnapshot(envelope.payload as SessionSnapshotPayload, envelope.sentAtMs);
       return;
     case "registryDelta":
       applyRegistryDelta(envelope.sessionId!, envelope.payload as RegistryDeltaPayload);
@@ -141,7 +142,23 @@ export function applyLiveEnvelope(envelope: LiveEnvelope): void {
   }
 }
 
-export function applySessionSnapshot(snapshot: SessionSnapshotPayload): void {
+function reconcileActiveSessionsFromHello(envelope: LiveEnvelope): void {
+  if (envelope.kind !== "hello") return;
+
+  const payload = envelope.payload as { activeSessionId?: string };
+  if (payload.activeSessionId) return;
+
+  endStaleActiveSessions(
+    undefined,
+    envelope.sentAtMs,
+    "Server reported no active session on reconnect."
+  );
+}
+
+export function applySessionSnapshot(
+  snapshot: SessionSnapshotPayload,
+  receivedAtMs?: number
+): void {
   const session: Session = {
     id: snapshot.sessionId,
     mode: snapshot.mode,
@@ -162,8 +179,18 @@ export function applySessionSnapshot(snapshot: SessionSnapshotPayload): void {
     events: [],
     protocolErrors: [],
   };
+  if (snapshot.state === "active") {
+    endStaleActiveSessions(
+      snapshot.sessionId,
+      receivedAtMs ?? snapshot.startedAtUtcMs,
+      "A new active session snapshot replaced it."
+    );
+  }
+
   sessions.set(snapshot.sessionId, session);
-  state.activeSessionId = snapshot.sessionId;
+  if (snapshot.state === "active") {
+    state.activeSessionId = snapshot.sessionId;
+  }
 }
 
 export function applyRegistryDelta(sessionId: string, delta: RegistryDeltaPayload): void {
@@ -271,6 +298,38 @@ export function applySessionEnded(ended: SessionEndedPayload): void {
     durationMs: ended.durationMs,
     diagnostics: ended.diagnostics ?? session.diagnostics,
   });
+}
+
+function endStaleActiveSessions(
+  exceptSessionId: string | undefined,
+  endedAtUtcMs: number,
+  reason: string
+): void {
+  for (const [sessionId, session] of sessions) {
+    if (sessionId === exceptSessionId || session.state !== "active") continue;
+
+    const error = {
+      code: "stale_active_session",
+      message: reason,
+      sessionId,
+    };
+
+    sessions.set(sessionId, {
+      ...session,
+      state: "ended",
+      endedAtUtcMs,
+      endReason: "error",
+      durationMs: Math.max(0, endedAtUtcMs - session.startedAtUtcMs),
+      completeness: "partial",
+      loss: {
+        eventsDropped: session.loss?.eventsDropped ?? 0,
+        framesDropped: session.loss?.framesDropped ?? 1,
+        reason,
+      },
+      protocolErrors: [...session.protocolErrors, error],
+    });
+    recordProtocolError(error);
+  }
 }
 
 function recordProtocolError(error: ProtocolError): void {

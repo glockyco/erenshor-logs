@@ -91,6 +91,52 @@ describe("protocol v2 session state", () => {
     expect(session.endReason).toBe("inactivity");
   });
 
+  it("ends stale active sessions when hello reports no active session", () => {
+    applyLiveEnvelope(snapshotFrame as LiveEnvelope);
+
+    applyLiveEnvelope({
+      protocol: "erenshor.logs.live",
+      protocolVersion: "2.0.0",
+      schemaVersion: "2.0.0",
+      kind: "hello",
+      frameSeq: 99,
+      sentAtMs: 1800000010000,
+      payload: {
+        producer: { name: "ErenshorLogsMod", modVersion: "2.0.0" },
+        capabilities: ["sessionSnapshot", "registryDelta"],
+      },
+    } as LiveEnvelope);
+
+    const session = sessions.get("session-1")!;
+    expect(session.state).toBe("ended");
+    expect(session.endReason).toBe("error");
+    expect(session.endedAtUtcMs).toBe(1800000010000);
+    expect(session.completeness).toBe("partial");
+    expect(session.loss?.reason).toBe("Server reported no active session on reconnect.");
+  });
+
+  it("ends previous active session when a different active snapshot arrives", () => {
+    applyLiveEnvelope(snapshotFrame as LiveEnvelope);
+
+    const nextSnapshot = clone(snapshotFrame) as LiveEnvelope;
+    nextSnapshot.sessionId = "session-2";
+    nextSnapshot.sentAtMs = 1800000020000;
+    nextSnapshot.payload = {
+      ...(nextSnapshot.payload as Record<string, unknown>),
+      sessionId: "session-2",
+      startedAtUtcMs: 1800000020000,
+    };
+    applyLiveEnvelope(nextSnapshot);
+
+    const previous = sessions.get("session-1")!;
+    expect(previous.state).toBe("ended");
+    expect(previous.endReason).toBe("error");
+    expect(previous.endedAtUtcMs).toBe(1800000020000);
+    expect(previous.completeness).toBe("partial");
+    expect(previous.loss?.reason).toBe("A new active session snapshot replaced it.");
+    expect(sessions.get("session-2")?.state).toBe("active");
+  });
+
   it("records error frames as protocol errors", () => {
     applyLiveEnvelope({
       protocol: "erenshor.logs.live",
