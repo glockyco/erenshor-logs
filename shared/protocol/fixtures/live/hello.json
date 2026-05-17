@@ -1,0 +1,18 @@
+{
+  "protocol": "erenshor.logs.live",
+  "protocolVersion": "2.0.0",
+  "schemaVersion": "2.0.0",
+  "kind": "hello",
+  "frameSeq": 1,
+  "sentAtMs": 1800000000000,
+  "payload": {
+    "producer": {
+      "name": "ErenshorLogsMod",
+      "modVersion": "2026.5.17.14",
+      "gameVersion": "playtest-23258843",
+      "buildCommit": "14d8862"
+    },
+    "activeSessionId": "session-1",
+    "capabilities": ["registryDelta", "sessionSnapshot", "gzipFileExport"]
+  }
+}

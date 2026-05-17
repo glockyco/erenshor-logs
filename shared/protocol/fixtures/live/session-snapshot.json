@@ -1,0 +1,71 @@
+{
+  "protocol": "erenshor.logs.live",
+  "protocolVersion": "2.0.0",
+  "schemaVersion": "2.0.0",
+  "kind": "sessionSnapshot",
+  "frameSeq": 2,
+  "sessionId": "session-1",
+  "sentAtMs": 1800000000100,
+  "payload": {
+    "sessionId": "session-1",
+    "state": "active",
+    "mode": "automatic",
+    "startedAtUtcMs": 1800000000000,
+    "producer": {
+      "name": "ErenshorLogsMod",
+      "modVersion": "2026.5.17.14",
+      "gameVersion": "playtest-23258843"
+    },
+    "playerActorId": "a1",
+    "registryRevision": 3,
+    "lastEventSeq": 0,
+    "eventCount": 0,
+    "completeness": "complete",
+    "registries": {
+      "revision": 3,
+      "actors": {
+        "a1": {
+          "id": "a1",
+          "name": "Player",
+          "kind": "player",
+          "class": "Duelist",
+          "level": 20,
+          "faction": "friendly",
+          "isPlayerControlled": true
+        },
+        "a2": {
+          "id": "a2",
+          "name": "Backstabber",
+          "kind": "simPlayer",
+          "class": "Assassin",
+          "level": 20,
+          "faction": "friendly"
+        },
+        "a3": {
+          "id": "a3",
+          "name": "Raid Boss",
+          "kind": "npc",
+          "level": 25,
+          "faction": "hostile"
+        }
+      },
+      "abilities": {
+        "ab1": {
+          "id": "ab1",
+          "name": "Backstab",
+          "kind": "skill",
+          "stableKey": "skill:101",
+          "damageType": "physical"
+        }
+      },
+      "effects": {}
+    },
+    "diagnostics": {
+      "hookWarnings": [],
+      "attributionFailures": 0,
+      "droppedEvents": 0,
+      "droppedFrames": 0,
+      "serializationErrors": 0
+    }
+  }
+}

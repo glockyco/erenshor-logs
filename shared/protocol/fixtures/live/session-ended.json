@@ -1,0 +1,23 @@
+{
+  "protocol": "erenshor.logs.live",
+  "protocolVersion": "2.0.0",
+  "schemaVersion": "2.0.0",
+  "kind": "sessionEnded",
+  "frameSeq": 5,
+  "sessionId": "session-1",
+  "sentAtMs": 1800000020000,
+  "payload": {
+    "sessionId": "session-1",
+    "endedAtUtcMs": 1800000019000,
+    "endedAtEventSeq": 6,
+    "reason": "inactivity",
+    "durationMs": 19000,
+    "diagnostics": {
+      "hookWarnings": [],
+      "attributionFailures": 0,
+      "droppedEvents": 0,
+      "droppedFrames": 0,
+      "serializationErrors": 0
+    }
+  }
+}

@@ -1,0 +1,431 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://erenshor-logs.local/schemas/erenshor-log-v2.schema.json",
+  "title": "Erenshor Logs Protocol V2",
+  "oneOf": [
+    { "$ref": "#/$defs/liveEnvelope" },
+    { "$ref": "#/$defs/combatLogFile" }
+  ],
+  "$defs": {
+    "semverMajor2": {
+      "type": "string",
+      "pattern": "^2\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$"
+    },
+    "producerInfo": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "enum": ["ErenshorLogsMod", "ErenshorLogsWeb"] },
+        "modVersion": { "type": "string" },
+        "webVersion": { "type": "string" },
+        "gameVersion": { "type": "string" },
+        "buildCommit": { "type": "string" }
+      }
+    },
+    "liveEnvelope": {
+      "type": "object",
+      "required": ["protocol", "protocolVersion", "schemaVersion", "kind", "frameSeq", "sentAtMs", "payload"],
+      "properties": {
+        "protocol": { "const": "erenshor.logs.live" },
+        "protocolVersion": { "$ref": "#/$defs/semverMajor2" },
+        "schemaVersion": { "$ref": "#/$defs/semverMajor2" },
+        "kind": {
+          "enum": ["hello", "sessionSnapshot", "registryDelta", "events", "sessionEnded", "error", "heartbeat", "serverStats"]
+        },
+        "frameSeq": { "type": "integer", "minimum": 1 },
+        "sessionId": { "type": "string", "minLength": 1 },
+        "sentAtMs": { "type": "integer", "minimum": 0 },
+        "payload": {}
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "hello" } } },
+          "then": { "properties": { "payload": { "$ref": "#/$defs/helloPayload" } } }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "sessionSnapshot" } } },
+          "then": {
+            "required": ["sessionId"],
+            "properties": { "payload": { "$ref": "#/$defs/sessionSnapshotPayload" } }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "registryDelta" } } },
+          "then": {
+            "required": ["sessionId"],
+            "properties": { "payload": { "$ref": "#/$defs/registryDeltaPayload" } }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "events" } } },
+          "then": {
+            "required": ["sessionId"],
+            "properties": { "payload": { "$ref": "#/$defs/eventsPayload" } }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "sessionEnded" } } },
+          "then": {
+            "required": ["sessionId"],
+            "properties": { "payload": { "$ref": "#/$defs/sessionEndedPayload" } }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "error" } } },
+          "then": { "properties": { "payload": { "$ref": "#/$defs/errorPayload" } } }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "heartbeat" } } },
+          "then": { "properties": { "payload": { "type": "object" } } }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "serverStats" } } },
+          "then": { "properties": { "payload": { "$ref": "#/$defs/serverStatsPayload" } } }
+        }
+      ]
+    },
+    "helloPayload": {
+      "type": "object",
+      "required": ["producer", "capabilities"],
+      "properties": {
+        "producer": { "$ref": "#/$defs/producerInfo" },
+        "activeSessionId": { "type": "string" },
+        "capabilities": {
+          "type": "array",
+          "items": { "enum": ["registryDelta", "sessionSnapshot", "gzipFileExport", "perMessageDeflate"] }
+        },
+        "requiredCapabilities": {
+          "type": "array",
+          "items": { "enum": ["registryDelta", "sessionSnapshot", "gzipFileExport", "perMessageDeflate"] }
+        }
+      }
+    },
+    "sessionSnapshotPayload": {
+      "type": "object",
+      "required": ["sessionId", "state", "mode", "startedAtUtcMs", "producer", "registryRevision", "lastEventSeq", "eventCount", "completeness", "registries"],
+      "properties": {
+        "sessionId": { "type": "string" },
+        "state": { "enum": ["active", "ended"] },
+        "mode": { "enum": ["automatic", "manual", "imported"] },
+        "startedAtUtcMs": { "type": "integer", "minimum": 0 },
+        "endedAtUtcMs": { "type": "integer", "minimum": 0 },
+        "endReason": { "$ref": "#/$defs/sessionEndReason" },
+        "durationMs": { "type": "integer", "minimum": 0 },
+        "producer": { "$ref": "#/$defs/producerInfo" },
+        "playerActorId": { "type": "string" },
+        "registryRevision": { "type": "integer", "minimum": 0 },
+        "lastEventSeq": { "type": "integer", "minimum": 0 },
+        "eventCount": { "type": "integer", "minimum": 0 },
+        "completeness": { "enum": ["complete", "partial"] },
+        "loss": { "$ref": "#/$defs/lossCounters" },
+        "registries": { "$ref": "#/$defs/registries" },
+        "diagnostics": { "$ref": "#/$defs/sessionDiagnostics" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "completeness": { "const": "partial" } } },
+          "then": { "required": ["loss"] }
+        }
+      ]
+    },
+    "registryDeltaPayload": {
+      "type": "object",
+      "required": ["revision"],
+      "properties": {
+        "revision": { "type": "integer", "minimum": 0 },
+        "actors": { "type": "object", "additionalProperties": { "$ref": "#/$defs/actorRecord" } },
+        "abilities": { "type": "object", "additionalProperties": { "$ref": "#/$defs/abilityRecord" } },
+        "effects": { "type": "object", "additionalProperties": { "$ref": "#/$defs/effectRecord" } }
+      }
+    },
+    "eventsPayload": {
+      "type": "object",
+      "description": "Consumers must also verify eventSeq values are contiguous from eventSeqStart to eventSeqEnd.",
+      "required": ["sessionId", "registryRevision", "eventSeqStart", "eventSeqEnd", "events"],
+      "properties": {
+        "sessionId": { "type": "string" },
+        "registryRevision": { "type": "integer", "minimum": 0 },
+        "eventSeqStart": { "type": "integer", "minimum": 1 },
+        "eventSeqEnd": { "type": "integer", "minimum": 1 },
+        "events": { "type": "array", "items": { "$ref": "#/$defs/combatEventRecord" } }
+      }
+    },
+    "sessionEndedPayload": {
+      "type": "object",
+      "required": ["sessionId", "endedAtUtcMs", "endedAtEventSeq", "reason", "durationMs"],
+      "properties": {
+        "sessionId": { "type": "string" },
+        "endedAtUtcMs": { "type": "integer", "minimum": 0 },
+        "endedAtEventSeq": { "type": "integer", "minimum": 0 },
+        "reason": { "$ref": "#/$defs/sessionEndReason" },
+        "durationMs": { "type": "integer", "minimum": 0 },
+        "diagnostics": { "$ref": "#/$defs/sessionDiagnostics" }
+      }
+    },
+    "errorPayload": {
+      "type": "object",
+      "required": ["code", "severity", "message", "recoverable"],
+      "properties": {
+        "code": { "type": "string" },
+        "severity": { "enum": ["info", "warning", "error", "fatal"] },
+        "message": { "type": "string" },
+        "recoverable": { "type": "boolean" },
+        "sessionId": { "type": "string" },
+        "eventSeq": { "type": "integer", "minimum": 1 },
+        "details": { "type": "object" }
+      }
+    },
+    "serverStatsPayload": {
+      "type": "object",
+      "required": ["connectedClients", "eventsCaptured", "eventsSent", "registryRevision", "queuedFrames", "droppedEvents", "attributionFailures", "hookWarnings"],
+      "properties": {
+        "connectedClients": { "type": "integer", "minimum": 0 },
+        "eventsCaptured": { "type": "integer", "minimum": 0 },
+        "eventsSent": { "type": "integer", "minimum": 0 },
+        "registryRevision": { "type": "integer", "minimum": 0 },
+        "queuedFrames": { "type": "integer", "minimum": 0 },
+        "droppedEvents": { "type": "integer", "minimum": 0 },
+        "attributionFailures": { "type": "integer", "minimum": 0 },
+        "hookWarnings": { "type": "integer", "minimum": 0 },
+        "bytesSent": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "sessionEndReason": {
+      "enum": ["inactivity", "manual", "shutdown", "newSession", "error"]
+    },
+    "lossCounters": {
+      "type": "object",
+      "required": ["eventsDropped", "framesDropped"],
+      "properties": {
+        "eventsDropped": { "type": "integer", "minimum": 0 },
+        "framesDropped": { "type": "integer", "minimum": 0 },
+        "reason": { "type": "string" }
+      }
+    },
+    "sessionDiagnostics": {
+      "type": "object",
+      "required": ["hookWarnings", "attributionFailures", "droppedEvents", "droppedFrames", "serializationErrors"],
+      "properties": {
+        "hookWarnings": { "type": "array", "items": { "type": "string" } },
+        "attributionFailures": { "type": "integer", "minimum": 0 },
+        "droppedEvents": { "type": "integer", "minimum": 0 },
+        "droppedFrames": { "type": "integer", "minimum": 0 },
+        "serializationErrors": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "registries": {
+      "type": "object",
+      "required": ["revision", "actors", "abilities", "effects"],
+      "properties": {
+        "revision": { "type": "integer", "minimum": 0 },
+        "actors": { "type": "object", "additionalProperties": { "$ref": "#/$defs/actorRecord" } },
+        "abilities": { "type": "object", "additionalProperties": { "$ref": "#/$defs/abilityRecord" } },
+        "effects": { "type": "object", "additionalProperties": { "$ref": "#/$defs/effectRecord" } }
+      }
+    },
+    "actorRecord": {
+      "type": "object",
+      "required": ["id", "name", "kind"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "kind": { "enum": ["player", "simPlayer", "npc", "pet", "environment", "unknown"] },
+        "class": { "type": "string" },
+        "level": { "type": "integer" },
+        "ownerActorId": { "type": "string" },
+        "faction": { "enum": ["friendly", "hostile", "neutral", "unknown"] },
+        "isPlayerControlled": { "type": "boolean" },
+        "firstSeenEventSeq": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "abilityRecord": {
+      "type": "object",
+      "required": ["id", "name", "kind"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "kind": { "enum": ["skill", "spell", "auto", "dot", "hot", "proc", "environmental", "unknown"] },
+        "stableKey": { "type": "string" },
+        "damageType": { "$ref": "#/$defs/damageType" },
+        "procSource": { "enum": ["weapon", "wand", "bow", "buff", "skill"] },
+        "parentAbilityId": { "type": "string" }
+      }
+    },
+    "effectRecord": {
+      "type": "object",
+      "required": ["id", "name", "kind"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "kind": { "enum": ["buff", "debuff", "unknown"] },
+        "stableKey": { "type": "string" },
+        "sourceAbilityId": { "type": "string" },
+        "defaultDurationMs": { "type": "integer", "minimum": 0 },
+        "maxStacks": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "damageType": { "enum": ["physical", "magic", "elemental", "void", "poison", "unknown"] },
+    "combatEventRecord": {
+      "oneOf": [
+        { "$ref": "#/$defs/damageEvent" },
+        { "$ref": "#/$defs/healEvent" },
+        { "$ref": "#/$defs/resourceEvent" },
+        { "$ref": "#/$defs/effectEvent" },
+        { "$ref": "#/$defs/deathEvent" },
+        { "$ref": "#/$defs/interruptEvent" }
+      ]
+    },
+    "eventBase": {
+      "type": "object",
+      "required": ["eventSeq", "offsetMs", "kind", "action", "data"],
+      "properties": {
+        "eventSeq": { "type": "integer", "minimum": 1 },
+        "offsetMs": { "type": "integer", "minimum": 0 },
+        "kind": { "type": "string" },
+        "action": { "type": "string" },
+        "sourceActorId": { "type": "string" },
+        "creditActorId": { "type": "string" },
+        "targetActorId": { "type": "string" },
+        "abilityId": { "type": "string" },
+        "effectId": { "type": "string" },
+        "causeEventSeq": { "type": "integer", "minimum": 1 },
+        "attribution": { "enum": ["verified", "context", "effectTracker", "inferred", "unknown"] },
+        "debug": { "type": "object" },
+        "data": { "type": "object" }
+      }
+    },
+    "damageEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        { "properties": { "kind": { "const": "damage" }, "action": { "enum": ["hit", "tick", "reflect"] }, "data": { "$ref": "#/$defs/damageData" } } }
+      ]
+    },
+    "healEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        { "properties": { "kind": { "const": "heal" }, "action": { "enum": ["direct", "tick", "lifesteal", "regen"] }, "data": { "$ref": "#/$defs/healData" } } }
+      ]
+    },
+    "resourceEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        { "properties": { "kind": { "const": "resource" }, "action": { "enum": ["spend", "restore", "regen"] }, "data": { "$ref": "#/$defs/resourceData" } } }
+      ]
+    },
+    "effectEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        { "properties": { "kind": { "const": "effect" }, "action": { "enum": ["apply", "refresh", "fade"] }, "data": { "$ref": "#/$defs/effectData" } } }
+      ]
+    },
+    "deathEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        { "properties": { "kind": { "const": "death" }, "action": { "const": "die" }, "data": { "$ref": "#/$defs/deathData" } } }
+      ]
+    },
+    "interruptEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        { "properties": { "kind": { "const": "interrupt" }, "action": { "const": "interrupt" }, "data": { "$ref": "#/$defs/interruptData" } } }
+      ]
+    },
+    "damageData": {
+      "type": "object",
+      "required": ["amount", "damageType", "outcome"],
+      "additionalProperties": false,
+      "properties": {
+        "amount": { "type": "integer", "minimum": 0 },
+        "rawAmount": { "type": "integer", "minimum": 0 },
+        "mitigatedAmount": { "type": "integer", "minimum": 0 },
+        "overkillAmount": { "type": "integer", "minimum": 0 },
+        "damageType": { "$ref": "#/$defs/damageType" },
+        "outcome": { "type": "object" }
+      }
+    },
+    "healData": {
+      "type": "object",
+      "required": ["amount"],
+      "additionalProperties": false,
+      "properties": {
+        "amount": { "type": "integer", "minimum": 0 },
+        "rawAmount": { "type": "integer", "minimum": 0 },
+        "overhealAmount": { "type": "integer", "minimum": 0 },
+        "critical": { "const": true }
+      }
+    },
+    "resourceData": {
+      "type": "object",
+      "required": ["resource", "delta"],
+      "additionalProperties": false,
+      "properties": {
+        "resource": { "const": "mana" },
+        "delta": { "type": "integer" },
+        "current": { "type": "integer", "minimum": 0 },
+        "max": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "effectData": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "stacks": { "type": "integer", "minimum": 1 },
+        "durationMs": { "type": "integer", "minimum": 0 },
+        "remainingMs": { "type": "integer", "minimum": 0 },
+        "reason": { "enum": ["expired", "dispelled", "consumed", "overwritten", "unknown"] }
+      }
+    },
+    "deathData": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "killingBlowEventSeq": { "type": "integer", "minimum": 1 } }
+    },
+    "interruptData": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "interruptedAbilityId": { "type": "string" } }
+    },
+    "combatLogFile": {
+      "type": "object",
+      "required": ["format", "schemaVersion", "exportedAtMs", "producer", "sessions"],
+      "properties": {
+        "format": { "const": "erenshor.logs.export" },
+        "schemaVersion": { "$ref": "#/$defs/semverMajor2" },
+        "exportedAtMs": { "type": "integer", "minimum": 0 },
+        "producer": { "$ref": "#/$defs/producerInfo" },
+        "sessions": { "type": "array", "items": { "$ref": "#/$defs/combatLogSession" } }
+      }
+    },
+    "combatLogSession": {
+      "type": "object",
+      "required": ["snapshot", "events"],
+      "properties": {
+        "snapshot": { "$ref": "#/$defs/sessionSnapshotPayload" },
+        "events": { "type": "array", "items": { "$ref": "#/$defs/combatEventRecord" } },
+        "ended": { "$ref": "#/$defs/sessionEndedPayload" },
+        "derived": { "$ref": "#/$defs/derivedData" }
+      }
+    },
+    "derivedData": {
+      "type": "object",
+      "required": ["algorithmVersion", "computedAtMs", "computedFromEventSeq", "summary"],
+      "properties": {
+        "algorithmVersion": { "type": "string" },
+        "computedAtMs": { "type": "integer", "minimum": 0 },
+        "computedFromEventSeq": { "type": "integer", "minimum": 0 },
+        "summary": { "$ref": "#/$defs/derivedSummary" }
+      }
+    },
+    "derivedSummary": {
+      "type": "object",
+      "required": ["totalDamage", "totalHealing", "totalDamageTaken", "totalHealingReceived", "durationMs"],
+      "properties": {
+        "totalDamage": { "type": "integer", "minimum": 0 },
+        "totalHealing": { "type": "integer", "minimum": 0 },
+        "totalDamageTaken": { "type": "integer", "minimum": 0 },
+        "totalHealingReceived": { "type": "integer", "minimum": 0 },
+        "durationMs": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

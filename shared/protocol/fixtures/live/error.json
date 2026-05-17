@@ -1,0 +1,16 @@
+{
+  "protocol": "erenshor.logs.live",
+  "protocolVersion": "2.0.0",
+  "schemaVersion": "2.0.0",
+  "kind": "error",
+  "frameSeq": 6,
+  "sentAtMs": 1800000021000,
+  "payload": {
+    "code": "hookCompatibilityWarning",
+    "severity": "warning",
+    "message": "Optional status-effect overload was not found in this game build.",
+    "recoverable": true,
+    "sessionId": "session-1",
+    "details": { "hook": "Stats.AddStatusEffect" }
+  }
+}

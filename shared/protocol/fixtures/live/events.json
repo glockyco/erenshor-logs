@@ -1,0 +1,90 @@
+{
+  "protocol": "erenshor.logs.live",
+  "protocolVersion": "2.0.0",
+  "schemaVersion": "2.0.0",
+  "kind": "events",
+  "frameSeq": 4,
+  "sessionId": "session-1",
+  "sentAtMs": 1800000000300,
+  "payload": {
+    "sessionId": "session-1",
+    "registryRevision": 5,
+    "eventSeqStart": 1,
+    "eventSeqEnd": 6,
+    "events": [
+      {
+        "eventSeq": 1,
+        "offsetMs": 120,
+        "kind": "damage",
+        "action": "hit",
+        "sourceActorId": "a2",
+        "creditActorId": "a2",
+        "targetActorId": "a3",
+        "abilityId": "ab1",
+        "attribution": "context",
+        "data": {
+          "amount": 350,
+          "rawAmount": 400,
+          "mitigatedAmount": 50,
+          "damageType": "physical",
+          "outcome": { "result": "landed", "critical": true }
+        }
+      },
+      {
+        "eventSeq": 2,
+        "offsetMs": 1000,
+        "kind": "heal",
+        "action": "direct",
+        "sourceActorId": "a1",
+        "creditActorId": "a1",
+        "targetActorId": "a2",
+        "abilityId": "ab3",
+        "attribution": "verified",
+        "data": { "amount": 125, "rawAmount": 160, "overhealAmount": 35 }
+      },
+      {
+        "eventSeq": 3,
+        "offsetMs": 1250,
+        "kind": "resource",
+        "action": "spend",
+        "sourceActorId": "a1",
+        "targetActorId": "a1",
+        "abilityId": "ab3",
+        "data": { "resource": "mana", "delta": -35, "current": 465, "max": 500 }
+      },
+      {
+        "eventSeq": 4,
+        "offsetMs": 1400,
+        "kind": "effect",
+        "action": "apply",
+        "sourceActorId": "a2",
+        "creditActorId": "a2",
+        "targetActorId": "a3",
+        "abilityId": "ab2",
+        "effectId": "ef1",
+        "data": { "stacks": 1, "durationMs": 12000 }
+      },
+      {
+        "eventSeq": 5,
+        "offsetMs": 5200,
+        "kind": "interrupt",
+        "action": "interrupt",
+        "sourceActorId": "a2",
+        "targetActorId": "a3",
+        "abilityId": "ab1",
+        "data": { "interruptedAbilityId": "ab4" }
+      },
+      {
+        "eventSeq": 6,
+        "offsetMs": 18000,
+        "kind": "death",
+        "action": "die",
+        "sourceActorId": "a2",
+        "creditActorId": "a2",
+        "targetActorId": "a3",
+        "causeEventSeq": 1,
+        "data": { "killingBlowEventSeq": 1 }
+      }
+    ]
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "protocol": "erenshor.logs.live",
+  "protocolVersion": "2.0.0",
+  "schemaVersion": "2.0.0",
+  "kind": "registryDelta",
+  "frameSeq": 3,
+  "sessionId": "session-1",
+  "sentAtMs": 1800000000200,
+  "payload": {
+    "revision": 5,
+    "abilities": {
+      "ab2": {
+        "id": "ab2",
+        "name": "Poisoned Wound",
+        "kind": "dot",
+        "stableKey": "spell:202",
+        "damageType": "poison",
+        "parentAbilityId": "ab1"
+      },
+      "ab3": {
+        "id": "ab3",
+        "name": "Heal",
+        "kind": "spell",
+        "stableKey": "spell:303"
+      },
+      "ab4": {
+        "id": "ab4",
+        "name": "Meteor",
+        "kind": "spell",
+        "stableKey": "spell:404",
+        "damageType": "magic"
+      }
+    },
+    "effects": {
+      "ef1": {
+        "id": "ef1",
+        "name": "Poisoned Wound",
+        "kind": "debuff",
+        "stableKey": "spell:202",
+        "sourceAbilityId": "ab2",
+        "defaultDurationMs": 12000,
+        "maxStacks": 1
+      }
+    }
+  }
+}
