@@ -2,10 +2,14 @@ import type {
   AbilityRecord,
   CombatEventRecord,
   DamageEvent,
+  DeathEvent,
   EffectEvent,
   EffectRecord,
   HealEvent,
-} from "$lib/types";
+  InterruptEvent,
+  MechanicEvent,
+  ResourceEvent,
+} from "$lib/types/schemas";
 
 export function createAbilityRecord(overrides: Partial<AbilityRecord> = {}): AbilityRecord {
   return {
@@ -56,6 +60,70 @@ export function createHealEvent(overrides: Partial<HealEvent> = {}): HealEvent {
     abilityId: "heal-1",
     data: {
       amount: 500,
+    },
+    ...overrides,
+  };
+}
+
+export function createResourceEvent(overrides: Partial<ResourceEvent> = {}): ResourceEvent {
+  return {
+    eventSeq: 1,
+    offsetMs: 0,
+    kind: "resource",
+    action: "drain",
+    sourceActorId: "npc-1",
+    targetActorId: "player-1",
+    abilityId: "ability-1",
+    data: {
+      resource: "mana",
+      delta: -300,
+    },
+    ...overrides,
+  };
+}
+
+export function createDeathEvent(overrides: Partial<DeathEvent> = {}): DeathEvent {
+  return {
+    eventSeq: 1,
+    offsetMs: 0,
+    kind: "death",
+    action: "die",
+    sourceActorId: "npc-1",
+    targetActorId: "player-1",
+    abilityId: "ability-1",
+    data: {},
+    ...overrides,
+  };
+}
+
+export function createInterruptEvent(overrides: Partial<InterruptEvent> = {}): InterruptEvent {
+  return {
+    eventSeq: 1,
+    offsetMs: 0,
+    kind: "interrupt",
+    action: "interrupt",
+    sourceActorId: "player-1",
+    targetActorId: "npc-1",
+    abilityId: "ability-1",
+    data: {
+      interruptedAbilityId: "spell-1",
+    },
+    ...overrides,
+  };
+}
+
+export function createMechanicEvent(overrides: Partial<MechanicEvent> = {}): MechanicEvent {
+  return {
+    eventSeq: 1,
+    offsetMs: 0,
+    kind: "mechanic",
+    action: "invulnerability",
+    sourceActorId: "npc-1",
+    targetActorId: "npc-1",
+    abilityId: "ability-1",
+    data: {
+      name: "Sprinkles wards",
+      value: true,
     },
     ...overrides,
   };

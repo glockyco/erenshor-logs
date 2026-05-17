@@ -60,6 +60,15 @@ export function createSessionStats(overrides: Partial<SessionStats> = {}): Sessi
     // Meta
     durationMs: 0,
     actorBreakdown: [],
+    eventCounts: {
+      damage: 0,
+      heal: 0,
+      resource: 0,
+      effect: 0,
+      death: 0,
+      interrupt: 0,
+      mechanic: 0,
+    },
     ...overrides,
   };
 }

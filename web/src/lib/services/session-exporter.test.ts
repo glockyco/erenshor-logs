@@ -17,6 +17,7 @@ describe("createCombatLogFile", () => {
     expect(exported.sessions[0].snapshot.registries.actors.a1.name).toBe("Player");
     expect(exported.sessions[0].events[0].eventSeq).toBe(1);
     expect(exported.sessions[0].derived?.summary.totalDamage).toBe(350);
+    expect(exported.sessions[0].events).toEqual(imported.sessions[0].events);
   });
 
   it("fails fast when exporting an empty session list", () => {

@@ -8,6 +8,10 @@ export {
   createHealEvent,
   createCriticalDamageEvent,
   createBuffEvent,
+  createResourceEvent,
+  createDeathEvent,
+  createMechanicEvent,
+  createInterruptEvent,
   createTimedEvents,
 } from "./events";
 

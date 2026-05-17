@@ -16,6 +16,7 @@ describe("importSessions", () => {
     expect(result.sessions[0].registries.actors.a2.name).toBe("Backstabber");
     expect(result.sessions[0].events).toHaveLength(6);
     expect(result.sessions[0].protocolErrors).toEqual([]);
+    expect(result.sessions[0].events).toEqual(singleSessionFile.sessions[0].events);
   });
 
   it("freezes active exports as ended imported sessions", () => {

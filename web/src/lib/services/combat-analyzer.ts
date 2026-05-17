@@ -61,6 +61,17 @@ export function calculateSessionStats(
     0
   );
 
+  const eventCounts = {
+    damage: 0,
+    heal: 0,
+    resource: 0,
+    effect: 0,
+    death: 0,
+    interrupt: 0,
+    mechanic: 0,
+  };
+  for (const event of events) eventCounts[event.kind] += 1;
+
   return {
     totalDamage,
     totalHealing,
@@ -73,6 +84,7 @@ export function calculateSessionStats(
     totalMitigated,
     mitigationRate: calculatePercentage(totalMitigated, totalRawDamage),
     durationMs,
+    eventCounts,
     actorBreakdown: aggregateByActor(session, durationMs),
   };
 }

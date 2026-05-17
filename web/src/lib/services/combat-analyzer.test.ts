@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { calculateSessionStats } from "./combat-analyzer";
-import { createDamageEvent, createHealEvent, createSession } from "$lib/testing";
+import {
+  createDamageEvent,
+  createBuffEvent,
+  createHealEvent,
+  createMechanicEvent,
+  createDeathEvent,
+  createInterruptEvent,
+  createResourceEvent,
+  createSession,
+} from "$lib/testing";
 
 function sessionWith(events = [] as ReturnType<typeof createDamageEvent>[]) {
   return createSession({
@@ -60,6 +69,41 @@ describe("calculateSessionStats", () => {
     expect(stats.totalHealing).toBe(250);
     expect(stats.totalHealingReceived).toBe(250);
     expect(stats.hps).toBeCloseTo(250);
+  });
+
+  it("counts healing without counting resource or mechanics as damage", () => {
+    const session = createSession({
+      durationMs: 1000,
+      lastEventSeq: 7,
+      eventCount: 7,
+      events: [
+        createDamageEvent({
+          eventSeq: 1,
+          data: { amount: 1000, damageType: "physical", outcome: { result: "landed" } },
+        }),
+        createHealEvent({
+          eventSeq: 2,
+          data: { amount: 250 },
+          sourceActorId: "sim-1",
+          targetActorId: "player-1",
+        }),
+        createResourceEvent({ eventSeq: 3 }),
+        createBuffEvent({ eventSeq: 4 }),
+        createDeathEvent({ eventSeq: 5 }),
+        createInterruptEvent({ eventSeq: 6 }),
+        createMechanicEvent({ eventSeq: 7 }),
+      ],
+    });
+
+    const stats = calculateSessionStats(session, 1000);
+
+    expect(stats.totalDamage).toBe(1000);
+    expect(stats.totalHealing).toBe(250);
+    expect(stats.eventCounts.resource).toBe(1);
+    expect(stats.eventCounts.mechanic).toBe(1);
+    expect(stats.eventCounts.effect).toBe(1);
+    expect(stats.eventCounts.death).toBe(1);
+    expect(stats.eventCounts.interrupt).toBe(1);
   });
 
   it("uses mitigation fields from v2 damage data", () => {

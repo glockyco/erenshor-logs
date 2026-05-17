@@ -736,6 +736,17 @@ export const ActorStatsSchema = z.object({
 });
 export type ActorStats = z.infer<typeof ActorStatsSchema>;
 
+export const EventFamilyCountsSchema = z.object({
+  damage: z.number().int().nonnegative(),
+  heal: z.number().int().nonnegative(),
+  resource: z.number().int().nonnegative(),
+  effect: z.number().int().nonnegative(),
+  death: z.number().int().nonnegative(),
+  interrupt: z.number().int().nonnegative(),
+  mechanic: z.number().int().nonnegative(),
+});
+export type EventFamilyCounts = z.infer<typeof EventFamilyCountsSchema>;
+
 export const SessionStatsSchema = z.object({
   // Outgoing metrics (dealt by player faction)
   totalDamage: z.number(),
@@ -752,6 +763,7 @@ export const SessionStatsSchema = z.object({
   mitigationRate: z.number(),
   // Duration
   durationMs: z.number(),
+  eventCounts: EventFamilyCountsSchema,
   // Actor breakdown (complete bidirectional tracking)
   actorBreakdown: z.array(ActorStatsSchema),
 });

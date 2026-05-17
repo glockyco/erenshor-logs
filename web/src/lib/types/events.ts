@@ -13,6 +13,8 @@ export type {
   EffectRecord,
   HealEvent,
   InterruptEvent,
+  MechanicData,
+  MechanicEvent,
   Registries,
   ResourceEvent,
 } from "./schemas";
@@ -30,6 +32,8 @@ export {
   EffectRecordSchema,
   HealEventSchema,
   InterruptEventSchema,
+  MechanicDataSchema,
+  MechanicEventSchema,
   RegistriesSchema,
   ResourceEventSchema,
 } from "./schemas";
