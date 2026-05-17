@@ -138,7 +138,9 @@ Records are immutable after first use except for safe retroactive enrichment.
 
 `kind` is one of `player`, `simPlayer`, `npc`, `pet`, `environment`, or
 `unknown`. Player-controlled records may include `class` and
-`isPlayerControlled`. Pets use `ownerActorId`.
+`isPlayerControlled`. Pets use `ownerActorId`. Raid participants may include
+`raidGroup` (`1` through `3`) and `raidRole` (`tank`, `healer`, `dps`,
+`puller`, or `unknown`).
 
 ### AbilityRecord
 
@@ -220,11 +222,12 @@ Event families:
 | Kind | Actions |
 | --- | --- |
 | `damage` | `hit`, `tick`, `reflect` |
-| `heal` | `direct`, `tick`, `lifesteal`, `regen` |
-| `resource` | `spend`, `restore`, `regen` |
+| `heal` | `direct`, `scripted`, `tick`, `lifesteal`, `regen` |
+| `resource` | `spend`, `drain`, `restore`, `regen` |
 | `effect` | `apply`, `refresh`, `fade` |
 | `death` | `die` |
 | `interrupt` | `interrupt` |
+| `mechanic` | `invulnerability`, `spawn`, `despawn`, `phase`, `statChange` |
 
 `combatStart` and `combatEnd` are not combat event records in v2. Session
 lifecycle is represented by `sessionSnapshot` and `sessionEnded` frames.

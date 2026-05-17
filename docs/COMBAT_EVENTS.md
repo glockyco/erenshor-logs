@@ -16,6 +16,7 @@ This document catalogs all combat-related events in Erenshor based on game sourc
 - [Death Events](#death-events)
 - [Combat State](#combat-state)
 - [Resource Events](#resource-events)
+- [Encounter Mechanics](#encounter-mechanics)
 - [Spell Interrupts](#spell-interrupts)
 - [Combat Avoidance](#combat-avoidance)
 - [Pet/Charmed Mechanics](#petcharmed-mechanics)
@@ -173,21 +174,20 @@ All healing events should include: source actor, target actor, heal amount, abil
 
 ### Direct Healing (Simple)
 
-**Method**: `Stats.HealMe(int _amt)`  
-**File**: `reference/game-source/Stats.cs:1432`  
-**EventType**: `heal/direct` (if from spell) or derive from context
+**Method**: `Stats.HealMe(int _amt)`
+**File**: `reference/game-source/playtest/Stats.cs:1620`
+**Protocol event**: `heal` with `action: "direct"` or `action: "scripted"`
 
 **Process**:
-- Simple HP addition: `CurrentHP += _amt`
-- Caps at `CurrentMaxHP`
-- No attribution information at this level
+1. Adds HP directly: `CurrentHP += _amt`
+2. Caps at `CurrentMaxHP`
+3. Carries no source parameter, so attribution comes from the active combat
+   context or from the scripted call-site patch.
 
-**Called by**:
-- Lifesteal (from DamageMe at Character.cs:1183, 1305)
-- Spell resolution (via other HealMe overload)
-- Various game systems
-
-**Hook strategy**: Cannot hook here directly - lacks attribution. Hook at call sites instead.
+**Hook strategy**: `HealMePatch` captures before and after HP snapshots and
+emits effective healing plus overheal. Scripted raid heals add context in
+`GraceEvent.DoEventScript`, `FernallaFightEvent.PhaseHandler`, and
+`LighthouseHealBox.OnTriggerEnter`.
 
 ---
 
@@ -519,10 +519,9 @@ Character death triggers when HP reaches zero.
    - Updates corpse name plate (line 685-686)
    - Handles loot/XP if player participated (lines 691-894)
 
-**Hook strategy**: Prefix on `DoDeath()` to emit death event with:
-- Dead actor
-- Killer (if available from `LastHitBy` field)
-- Overkill amount
+**Hook strategy**: `DeathEventPatch` patches `Character.DoDeath()` and emits
+`death/die` when an actor transitions from alive to dead. `KillingBlowTracker`
+links the event to the latest damage event against the dead actor when known.
 
 ---
 
@@ -570,6 +569,19 @@ Track mana consumption and regeneration for efficiency analysis.
 - Ability that consumed it (requires context tracking)
 - Remaining mana
 
+
+### Raid Mana Drain and Restore Scripts
+
+**Methods**:
+- `AEManaDrainEvent.Update`
+- `FernallaFightEvent.PhaseHandler`
+
+**Protocol events**:
+- `resource/drain` for raid AE mana drain
+- `resource/restore` for scripted Fernalla mana restoration
+
+**Hook strategy**: `ResourceChangePatch` snapshots mana before and after the
+scripted method and emits one event per affected raid member.
 ---
 
 ### Mana Regeneration (Natural)
@@ -596,6 +608,61 @@ Track mana consumption and regeneration for efficiency analysis.
 3. Both directly modify `CurrentMana`
 
 **Hook strategy**: Hook `TickEffects` to emit mana restore events from effects.
+
+---
+
+## Encounter Mechanics
+
+Raid mechanic hooks capture health-affecting scripted encounter changes that do
+not always flow through normal damage, healing, resource, or status methods.
+
+### Area Effect Damage Context
+
+**Method**: `AEEvent.TriggerAE`
+
+**Hook strategy**: `AEEventTriggerPatch` pushes area-effect context before the
+AE applies damage so downstream damage hooks can attribute the hit.
+
+### Death Touch
+
+**Method**: `DeathTouch.Update`
+
+**Hook strategy**: `DeathTouchPatch` pushes `mechanic:death-touch` context for
+the death-touch damage and resulting death event.
+
+### Mizuki Aggro and Final Phase
+
+**Methods**:
+- `MizukiEvent.SetNewAggro`
+- `MizukiEvent.DoFinal`
+
+**Hook strategy**: `MizukiEventPatch` attributes dagger target-swap damage.
+`MizukiFinalPhasePatch` emits `mechanic/phase` and `mechanic/statChange` when
+the final phase changes AE behavior.
+
+### Sprinkles Wards and AE Growth
+
+**Methods**:
+- `SprinklesEvent.Update`
+- `SprinklesEvent.CleanList`
+- `SprinklesEvent.spawnWards`
+
+**Hook strategy**: Sprinkles mechanic patches emit invulnerability changes,
+ward spawns, forced ward despawns, and AE damage or resist stat changes.
+
+### DPS Check AE Growth
+
+**Method**: `DPSCheckAEEvent.Update`
+
+**Hook strategy**: `DpsCheckAeMechanicPatch` emits `mechanic/statChange` when
+the scripted DPS check increases AE damage or resist modifiers.
+
+### Faith Heal Adds
+
+**Method**: `FaithEvent.DoEventScript`
+
+**Hook strategy**: `FaithEventMechanicPatch` emits `mechanic/spawn` when the
+script registers a heal object as a raid loose add.
 
 ---
 

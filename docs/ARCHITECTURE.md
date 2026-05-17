@@ -82,11 +82,15 @@ Harmony patches that intercept game methods:
 | `Character.DamageMe` | Capture physical damage |
 | `Character.MagicDamageMe` | Capture magic/spell damage |
 | `Character.BleedDamageMe` | Capture DoT ticks |
-| `Stats.HealMe` | Capture all healing |
 | `UseSkill.DoSkill` | Track skill activation (context) |
 | `CastSpell.StartSpell` | Track spell casting (context) |
 | `Stats.AddStatusEffect` | Track buff/debuff application |
 | `Stats.TickEffects` | Attribute DoT damage to source |
+| `Stats.RemoveStatusEffect` | Track buff/debuff fade |
+| `Stats.HealMe` | Capture direct and scripted healing |
+| `AEManaDrainEvent.Update` | Capture raid mana drains |
+| `RaidManager.UpdateGroupAuras` | Attribute raid aura ownership |
+| Encounter scripts | Capture raid mechanics, death touch, scripted health |
 
 ### Context Manager
 
@@ -195,7 +199,8 @@ type CombatEventRecord =
   | ResourceEvent
   | EffectEvent
   | DeathEvent
-  | InterruptEvent;
+  | InterruptEvent
+  | MechanicEvent;
 ```
 
 Combat events reference actors, abilities, and effects by registry ID. This
