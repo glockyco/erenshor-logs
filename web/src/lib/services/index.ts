@@ -25,7 +25,7 @@ export {
 export {
   exportSession,
   exportSessions,
-  type ExportedSession,
-  type ExportedSessions,
+  createCombatLogFile,
+  createCombatLogSession,
 } from "./session-exporter";
 export { importSessions, readFileAsText, type ImportResult } from "./session-importer";

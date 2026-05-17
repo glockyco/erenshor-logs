@@ -6,6 +6,7 @@ export type {
   EventsPayload,
   HelloPayload,
   LiveEnvelope,
+  DerivedData,
   LiveEnvelopeKind,
   ParseError,
   ParseErrorCode,

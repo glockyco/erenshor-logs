@@ -1,72 +1,113 @@
-/**
- * Session export service.
- * Exports sessions as JSON for sharing and debugging.
- */
-
-import type { Session } from "$lib/types";
+import type {
+  CombatLogFile,
+  CombatLogSession,
+  DerivedData,
+  Session,
+  SessionEndedPayload,
+  SessionSnapshotPayload,
+} from "$lib/types";
+import { VERSION } from "$lib/version";
 import { downloadJSON } from "$lib/utils/download";
+import { calculateSessionStats } from "./combat-analyzer";
 
-/**
- * Format for exported session data.
- * Simple wrapper around Session with metadata.
- */
-export interface ExportedSession {
-  version: string;
-  exportedAt: number;
-  session: Session;
-}
+const SCHEMA_VERSION = "2.0.0";
+const DERIVED_ALGORITHM_VERSION = "2.0.0";
 
-/**
- * Format for exporting multiple sessions.
- */
-export interface ExportedSessions {
-  version: string;
-  exportedAt: number;
-  sessions: Session[];
-}
+export function createCombatLogFile(sessions: Session[], exportedAtMs = Date.now()): CombatLogFile {
+  if (sessions.length === 0) throw new Error("Cannot export an empty session list");
 
-const EXPORT_VERSION = "1.0.0";
-
-/**
- * Exports a single session as a downloadable JSON file.
- * Generates filename: erenshor-session-{sessionId}-{timestamp}.json
- *
- * @param session - Session to export
- */
-export function exportSession(session: Session): void {
-  const exported: ExportedSession = {
-    version: EXPORT_VERSION,
-    exportedAt: Date.now(),
-    session,
+  return {
+    format: "erenshor.logs.export",
+    schemaVersion: SCHEMA_VERSION,
+    exportedAtMs,
+    producer: {
+      name: "ErenshorLogsWeb",
+      webVersion: VERSION,
+    },
+    sessions: sessions.map((session) => createCombatLogSession(session, exportedAtMs)),
   };
+}
 
+export function createCombatLogSession(
+  session: Session,
+  computedAtMs = Date.now()
+): CombatLogSession {
+  return {
+    snapshot: createSessionSnapshot(session),
+    events: session.events,
+    ended: session.state === "ended" ? createSessionEnded(session) : undefined,
+    derived: createDerivedData(session, computedAtMs),
+  };
+}
+
+export function exportSession(session: Session): void {
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5);
   const shortId = session.id.slice(0, 8);
-  const filename = `erenshor-session-${shortId}-${timestamp}`;
+  const filename = `erenshor-session-${shortId}-${timestamp}.erenshorlog`;
 
-  downloadJSON(exported, filename);
+  downloadJSON(createCombatLogFile([session]), filename);
 }
 
-/**
- * Exports multiple sessions as a single downloadable JSON file.
- * Generates filename: erenshor-sessions-{count}-{timestamp}.json
- *
- * @param sessions - Array of sessions to export
- */
 export function exportSessions(sessions: Session[]): void {
-  if (sessions.length === 0) {
-    console.warn("exportSessions called with empty array");
-    return;
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5);
+  const filename = `erenshor-sessions-${sessions.length}-${timestamp}.erenshorlog`;
+
+  downloadJSON(createCombatLogFile(sessions), filename);
+}
+
+function createSessionSnapshot(session: Session): SessionSnapshotPayload {
+  return {
+    sessionId: session.id,
+    state: session.state,
+    mode: session.mode,
+    startedAtUtcMs: session.startedAtUtcMs,
+    endedAtUtcMs: session.endedAtUtcMs,
+    endReason: session.endReason,
+    durationMs: session.durationMs,
+    producer: session.producer,
+    playerActorId: session.playerActorId,
+    registryRevision: session.registryRevision,
+    lastEventSeq: session.lastEventSeq,
+    eventCount: session.eventCount,
+    completeness: session.completeness,
+    loss: session.loss,
+    registries: session.registries,
+    diagnostics: session.diagnostics,
+  };
+}
+
+function createSessionEnded(session: Session): SessionEndedPayload | undefined {
+  if (
+    session.endedAtUtcMs === undefined ||
+    session.endReason === undefined ||
+    session.durationMs === undefined
+  ) {
+    return undefined;
   }
 
-  const exported: ExportedSessions = {
-    version: EXPORT_VERSION,
-    exportedAt: Date.now(),
-    sessions,
+  return {
+    sessionId: session.id,
+    endedAtUtcMs: session.endedAtUtcMs,
+    endedAtEventSeq: session.lastEventSeq,
+    reason: session.endReason,
+    durationMs: session.durationMs,
+    diagnostics: session.diagnostics,
   };
+}
 
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5);
-  const filename = `erenshor-sessions-${sessions.length}-${timestamp}`;
+function createDerivedData(session: Session, computedAtMs: number): DerivedData {
+  const summary = calculateSessionStats(session, session.durationMs);
 
-  downloadJSON(exported, filename);
+  return {
+    algorithmVersion: DERIVED_ALGORITHM_VERSION,
+    computedAtMs,
+    computedFromEventSeq: session.lastEventSeq,
+    summary: {
+      totalDamage: summary.totalDamage,
+      totalHealing: summary.totalHealing,
+      totalDamageTaken: summary.totalDamageTaken,
+      totalHealingReceived: summary.totalHealingReceived,
+      durationMs: summary.durationMs,
+    },
+  };
 }
