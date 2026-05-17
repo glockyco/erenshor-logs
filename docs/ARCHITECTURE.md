@@ -66,6 +66,13 @@ This document describes the technical architecture of Erenshor Logs.
 
 ## Mod Components
 
+### Build References
+
+The mod targets the current Erenshor Playtest assemblies. Playtest-only raid
+members and raid target APIs are compiled directly instead of accessed through
+reflection. Main game compatibility is intentionally out of scope for the raid
+tracking update.
+
 ### Hook Layer
 
 Harmony patches that intercept game methods:

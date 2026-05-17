@@ -1,6 +1,7 @@
 """Copy game DLLs to mod/lib/ for compilation."""
 
 import shutil
+from pathlib import Path
 
 import click
 
@@ -11,18 +12,33 @@ REQUIRED_DLLS = [
     "Assembly-CSharp.dll",
     "UnityEngine.dll",
     "UnityEngine.CoreModule.dll",
+    "UnityEngine.InputLegacyModule.dll",
 ]
 
 
+def resolve_managed_source(erenshor_path: Path, variant: str) -> Path:
+    """Resolve the managed assembly source for the supported game variant."""
+    if variant != "playtest":
+        raise ValueError("Erenshor Logs currently targets the playtest build")
+    return erenshor_path / "Erenshor_Data" / "Managed"
+
+
 @click.command()
-def setup() -> None:
+@click.option(
+    "--variant",
+    type=click.Choice(["playtest"]),
+    default="playtest",
+    show_default=True,
+    help="Game build to copy references from.",
+)
+def setup(variant: str) -> None:
     """Copy game DLLs to mod/lib/ for compilation.
 
-    This copies the required game assemblies from your Erenshor installation
-    to the mod/lib/ directory so the mod can be compiled.
+    This copies the required game assemblies from your Erenshor Playtest
+    installation to the mod/lib/ directory so the mod can be compiled.
     """
     config = load_config()
-    managed_path = config.managed_path
+    managed_path = resolve_managed_source(config.erenshor_path, variant)
     lib_path = get_project_root() / "mod" / "lib"
 
     if not managed_path.exists():
