@@ -18,9 +18,11 @@ internal static class HealthEventCapture
     Character? source,
     AbilityRef ability,
     int amount,
-    int rawAmount,
-    int overhealAmount,
-    MechanicData? mechanic
+    int? rawAmount,
+    int? overhealAmount,
+    MechanicData? mechanic,
+    EventFlags? flags,
+    AttributionMethod attribution
   )
   {
     if (EventBuilder == null || Emitter == null)
@@ -48,17 +50,14 @@ internal static class HealthEventCapture
       ability,
       amount,
       rawAmount,
-      overhealAmount
+      overhealAmount,
+      flags
     );
 
     if (evt == null)
       return;
 
-    evt = evt with
-    {
-      Mechanic = mechanic,
-      Attribution = mechanic != null ? AttributionMethod.Verified : AttributionMethod.Context,
-    };
+    evt = evt with { Mechanic = mechanic, Attribution = attribution };
 
     LogDebug?.Invoke(
       $"Heal: {evt.Source?.Name ?? "Unknown"} -> {evt.Target?.Name ?? "Unknown"} for {amount}"
@@ -85,16 +84,17 @@ internal static class HealthEventCapture
     if (effective <= 0)
       return;
 
-    var raw = Math.Max(before.RawAmount, effective);
     EmitHeal(
       EventType.HealSpell,
       target,
-      source: target,
-      ability,
-      effective,
-      raw,
-      Math.Max(0, raw - effective),
-      new MechanicData { Name = mechanicName, Action = "scripted" }
+      source: null,
+      ability: ability,
+      amount: effective,
+      rawAmount: null,
+      overhealAmount: null,
+      mechanic: new MechanicData { Name = mechanicName, Action = "scripted" },
+      flags: null,
+      attribution: AttributionMethod.Verified
     );
   }
 }

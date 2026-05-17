@@ -82,7 +82,8 @@ public sealed class CombatEventBuilder<TCharacter>
     AbilityRef ability,
     int amount,
     int? rawAmount,
-    int? overhealAmount
+    int? overhealAmount,
+    EventFlags? flags = null
   )
   {
     var targetRef = _resolveActor(target);
@@ -100,6 +101,7 @@ public sealed class CombatEventBuilder<TCharacter>
       Amount = amount,
       RawAmount = rawAmount,
       OverhealAmount = overhealAmount,
+      Flags = flags,
     };
   }
 

@@ -119,6 +119,39 @@ public sealed class ProtocolSessionStateTests
   }
 
   [Fact]
+  public void Append_CriticalHealEvent_SerializesCriticalFlag()
+  {
+    var session = new CombatSession("playtest-raid", "2026.5.17.1");
+    var state = new ProtocolSessionState(session);
+    var evt = CreateHealEvent(session.StartTime + 500, EventType.HealSpell) with
+    {
+      Flags = new EventFlags { Critical = true },
+    };
+
+    var record = state.Append(evt)!;
+
+    Assert.True(record["data"]!.Value<bool>("critical"));
+  }
+
+  [Fact]
+  public void Append_ScriptedHealWithUnknownRaw_OmitsRawAndOverheal()
+  {
+    var session = new CombatSession("playtest-raid", "2026.5.17.1");
+    var state = new ProtocolSessionState(session);
+    var evt = CreateHealEvent(session.StartTime + 500, EventType.HealSpell) with
+    {
+      RawAmount = null,
+      OverhealAmount = null,
+      Mechanic = new EventMechanicData { Name = "Grace Echoes", Action = "scripted" },
+    };
+
+    var record = state.Append(evt)!;
+
+    Assert.Null(record["data"]!["rawAmount"]);
+    Assert.Null(record["data"]!["overhealAmount"]);
+  }
+
+  [Fact]
   public void Append_ResourceDrain_SerializesResourceRecord()
   {
     var session = new CombatSession("playtest-raid", "2026.5.17.1");

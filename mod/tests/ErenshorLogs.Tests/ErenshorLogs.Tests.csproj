@@ -30,8 +30,11 @@
       <HintPath>../../lib/UnityEngine.CoreModule.dll</HintPath>
       <Private>true</Private>
     </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>../../lib/Assembly-CSharp.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
   </ItemGroup>
-
 
   <ItemGroup>
     <ProjectReference Include="../../ErenshorLogs.csproj" />

@@ -160,7 +160,7 @@ public class ModConfig
     SessionKeepAliveEvents = config.Bind(
       "Session",
       "SessionKeepAliveEvents",
-      "damagePhysical,damageMagic,damageDot,damageSkill,damageSpell,damageMelee,damageProc,damagePet,damageReflect",
+      "damagePhysical,damageMagic,damageDot,damageSkill,damageSpell,damageMelee,damageProc,damagePet,damageReflect,healSpell,healHot,healLifesteal,healRegen",
       "Event types that EXTEND an active session (reset inactivity timer).\n"
         + $"Available: {eventTypeList}"
     );

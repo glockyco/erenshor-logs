@@ -147,6 +147,28 @@ public class SessionManagerTests
   }
 
   [Fact]
+  public void OnCombatEvent_WhenHealEventIsConfiguredAsKeepAlive_ExtendsSession()
+  {
+    var emitter = new FakeEventEmitter();
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider();
+    var manager = CreateManager(
+      emitter,
+      versionProvider,
+      timeProvider,
+      startEvents: EventType.DamagePhysical.ToString(),
+      keepAliveEvents: $"{EventType.DamagePhysical},{EventType.HealSpell}"
+    );
+
+    manager.OnCombatEvent(EventType.DamagePhysical, eventTimestamp: 1_000);
+    timeProvider.CurrentTime = 4.0f;
+    manager.OnCombatEvent(EventType.HealSpell, eventTimestamp: 4_000);
+    manager.CheckInactivityTimeout(currentTime: 8.0f);
+
+    Assert.NotNull(manager.CurrentSession);
+  }
+
+  [Fact]
   public void OnCombatEvent_CapturesVersionInfo()
   {
     var emitter = new FakeEventEmitter();

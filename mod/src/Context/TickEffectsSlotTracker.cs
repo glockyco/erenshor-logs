@@ -114,6 +114,19 @@ public static class TickEffectsSlotTracker
     return null;
   }
 
+  public static int? GetCurrentReapAndRenewSlot(Character target)
+  {
+    if (!_isInTickEffects || _currentCharacter != target || _lastProcessedSlot < 0)
+      return null;
+
+    var statusEffect = target.MyStats.StatusEffects[_lastProcessedSlot];
+    var spell = statusEffect?.Effect;
+    if (spell?.ReapAndRenew == true && statusEffect!.Duration > 0f)
+      return _lastProcessedSlot;
+
+    return null;
+  }
+
   public static void RecordHealthDelta(int slot, int amount)
   {
     if (!_isInTickEffects || amount == 0)

@@ -91,6 +91,20 @@ public sealed class StatusEventBuilderTests
     Assert.Equal(expected, StatusEffectChange.Classify(previousStableKey, nextStableKey));
   }
 
+  [Fact]
+  public void AbilityTypeForStatusEffect_MapsHealSpellTypeToHot()
+  {
+    var dotType = Enum.GetValues<Spell.SpellType>()
+      .First(value => value != Spell.SpellType.Beneficial && value != Spell.SpellType.Heal);
+
+    Assert.Equal(AbilityType.Hot, StatusEventCapture.AbilityTypeFor(Spell.SpellType.Beneficial));
+    Assert.Equal(AbilityType.Hot, StatusEventCapture.AbilityTypeFor(Spell.SpellType.Heal));
+    Assert.Equal(AbilityType.Dot, StatusEventCapture.AbilityTypeFor(dotType));
+    Assert.Equal(AbilityType.Hot, EffectTracker.AbilityTypeFor(Spell.SpellType.Beneficial));
+    Assert.Equal(AbilityType.Hot, EffectTracker.AbilityTypeFor(Spell.SpellType.Heal));
+    Assert.Equal(AbilityType.Dot, EffectTracker.AbilityTypeFor(dotType));
+  }
+
   private static void LoadGameAssemblies()
   {
     var libPath = Path.GetFullPath(

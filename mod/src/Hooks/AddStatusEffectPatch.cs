@@ -160,7 +160,7 @@ internal static class StatusEventCapture
     var ability = new AbilityRef
     {
       Name = spell.SpellName,
-      Type = spell.Type == Spell.SpellType.Beneficial ? AbilityType.Hot : AbilityType.Dot,
+      Type = AbilityTypeFor(spell.Type),
       StableKey = $"spell:{spell.Id}",
     };
     var effect = new EffectRef
@@ -189,6 +189,11 @@ internal static class StatusEventCapture
     if (evt != null)
       CombatEventDispatcher.Dispatch(evt with { Attribution = attribution }, HealMePatch.Emitter);
   }
+
+  internal static AbilityType AbilityTypeFor(Spell.SpellType spellType) =>
+    spellType == Spell.SpellType.Beneficial || spellType == Spell.SpellType.Heal
+      ? AbilityType.Hot
+      : AbilityType.Dot;
 
   private static EventType EventTypeFor(Spell spell, StatusEffectChangeKind change)
   {

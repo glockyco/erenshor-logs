@@ -45,10 +45,7 @@ public sealed class EffectTracker
 
     var key = (target.GetHashCode(), slotIndex);
 
-    // Determine ability type based on spell type
-    var abilityType =
-      sourceSpell.Type == Spell.SpellType.Beneficial ? AbilityType.Hot : AbilityType.Dot;
-
+    var abilityType = AbilityTypeFor(sourceSpell.Type);
     var context = new AbilityContext
     {
       Name = sourceSpell.SpellName,
@@ -65,6 +62,11 @@ public sealed class EffectTracker
       context
     );
   }
+
+  internal static AbilityType AbilityTypeFor(Spell.SpellType spellType) =>
+    spellType == Spell.SpellType.Beneficial || spellType == Spell.SpellType.Heal
+      ? AbilityType.Hot
+      : AbilityType.Dot;
 
   /// <summary>
   /// Get ability context for an effect tick.

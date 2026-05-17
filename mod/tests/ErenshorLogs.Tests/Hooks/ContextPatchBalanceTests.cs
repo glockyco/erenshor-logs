@@ -37,7 +37,7 @@ public sealed class ContextPatchBalanceTests : IDisposable
   {
     PushOuterContext();
 
-    ResolveSpellPatch.Finalizer(false);
+    ResolveSpellPatch.Finalizer(default);
 
     Assert.Equal("Outer", CombatContext.CurrentAbility()?.Name);
   }
@@ -67,7 +67,7 @@ public sealed class ContextPatchBalanceTests : IDisposable
     new()
     {
       AEEventUpdatePatch.Finalizer,
-      AEEventTriggerPatch.Finalizer,
+      pushed => AEEventTriggerPatch.Finalizer(new AeEventTriggerContextState(pushed, null)),
       AEEvent2UpdatePatch.Finalizer,
       AstraBreathScriptUpdatePatch.Finalizer,
       NPCFightEventBreathAttackPatch.Finalizer,
@@ -79,6 +79,7 @@ public sealed class ContextPatchBalanceTests : IDisposable
   public void Dispose()
   {
     CombatContext.Clear();
+    HealingContext.Clear();
   }
 
   private static void PushOuterContext()

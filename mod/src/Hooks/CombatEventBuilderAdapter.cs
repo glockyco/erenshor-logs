@@ -56,7 +56,8 @@ public sealed class CombatEventBuilderAdapter : ICombatEventBuilder
     AbilityRef ability,
     int amount,
     int? rawAmount,
-    int? overhealAmount
+    int? overhealAmount,
+    EventFlags? flags = null
   )
   {
     return _inner.CreateHealEvent(
@@ -66,7 +67,8 @@ public sealed class CombatEventBuilderAdapter : ICombatEventBuilder
       ability,
       amount,
       rawAmount,
-      overhealAmount
+      overhealAmount,
+      flags
     );
   }
 

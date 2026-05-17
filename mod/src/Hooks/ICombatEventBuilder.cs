@@ -38,7 +38,8 @@ public interface ICombatEventBuilder
     AbilityRef ability,
     int amount,
     int? rawAmount,
-    int? overhealAmount
+    int? overhealAmount,
+    EventFlags? flags = null
   );
 
   CombatEvent? CreateResourceEvent(

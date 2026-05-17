@@ -11,6 +11,9 @@ namespace ErenshorLogs.Hooks;
 [HarmonyPatch(typeof(SpellVessel), "ResolveSpell")]
 public static class ResolveSpellPatch
 {
+  private static readonly AccessTools.FieldRef<SpellVessel, CastSpell> SpellSourceRef =
+    AccessTools.FieldRefAccess<SpellVessel, CastSpell>("SpellSource");
+
   /// <summary>
   /// Prefix: Push spell context onto stack before resolution.
   /// This allows subsequent damage/heal hooks to attribute effects to this spell.
@@ -18,12 +21,12 @@ public static class ResolveSpellPatch
   /// <param name="__instance">The SpellVessel instance containing the spell being resolved.</param>
   /// <param name="__state">Whether this prefix pushed context.</param>
   [HarmonyPrefix]
-  public static void Prefix(SpellVessel __instance, out bool __state)
+  public static void Prefix(SpellVessel __instance, out ResolveSpellContextState __state)
   {
-    __state = false;
-    // SpellVessel has public field: Spell spell
+    __state = default;
     if (__instance.spell == null)
       return;
+
     var context = new AbilityContext
     {
       Name = __instance.spell.SpellName,
@@ -32,7 +35,25 @@ public static class ResolveSpellPatch
     };
 
     CombatContext.PushAbility(context);
-    __state = true;
+    __state = __state with { PushedCombatContext = true };
+
+    if (!__instance.spell.Lifetap)
+      return;
+
+    __state = __state with
+    {
+      HealingScope = HealingContext.Push(
+        SpellSourceRef(__instance)?.MyChar,
+        new AbilityRef
+        {
+          Name = __instance.spell.SpellName,
+          Type = AbilityType.Spell,
+          StableKey = $"spell:{__instance.spell.Id}",
+        },
+        EventType.HealLifesteal,
+        AttributionMethod.Verified
+      ),
+    };
   }
 
   /// <summary>
@@ -40,9 +61,15 @@ public static class ResolveSpellPatch
   /// Uses Finalizer instead of Postfix to ensure cleanup even if ResolveSpell throws.
   /// </summary>
   [HarmonyFinalizer]
-  public static void Finalizer(bool __state)
+  public static void Finalizer(ResolveSpellContextState __state)
   {
-    if (__state)
+    __state.HealingScope?.Dispose();
+    if (__state.PushedCombatContext)
       CombatContext.PopAbility();
   }
 }
+
+public readonly record struct ResolveSpellContextState(
+  bool PushedCombatContext,
+  IDisposable? HealingScope
+);

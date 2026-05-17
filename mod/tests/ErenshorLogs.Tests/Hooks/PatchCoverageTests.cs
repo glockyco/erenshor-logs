@@ -45,6 +45,66 @@ public class PatchCoverageTests
   }
 
   [Fact]
+  public void SpellHealMePatchTargetsSpellHealOverload()
+  {
+    LoadGameAssemblies();
+    var targetMethod = typeof(SpellHealMePatch).GetMethod(
+      "TargetMethod",
+      BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic
+    );
+
+    Assert.NotNull(targetMethod);
+    var method = Assert.IsAssignableFrom<MethodBase>(targetMethod!.Invoke(null, null));
+    Assert.Equal("HealMe", method.Name);
+    Assert.Equal(
+      [typeof(Spell), typeof(int), typeof(bool), typeof(bool), typeof(Character)],
+      method.GetParameters().Select(parameter => parameter.ParameterType)
+    );
+  }
+
+  [Fact]
+  public void RegenEffectsPatchTargetsStatsRegenEffects()
+  {
+    LoadGameAssemblies();
+    var targetMethod = typeof(RegenEffectsPatch).GetMethod(
+      "TargetMethod",
+      BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic
+    );
+
+    Assert.NotNull(targetMethod);
+    var method = Assert.IsAssignableFrom<MethodBase>(targetMethod!.Invoke(null, null));
+    Assert.Equal("RegenEffects", method.Name);
+    Assert.Equal(
+      [typeof(float)],
+      method.GetParameters().Select(parameter => parameter.ParameterType)
+    );
+  }
+
+  [Fact]
+  public void CoversNamedBossHealContextMethods()
+  {
+    LoadGameAssemblies();
+    AssertPatchTargetExists(
+      "NPCFightEvent",
+      "FixedUpdate",
+      "ErenshorLogs.Hooks.NpcFightEventHealContextPatch"
+    );
+
+    var siraethe = AppDomain
+      .CurrentDomain.GetAssemblies()
+      .Select(assembly => assembly.GetType("SiraetheEvent"))
+      .FirstOrDefault(type => type != null);
+    if (siraethe != null)
+    {
+      AssertPatchTargetExists(
+        "SiraetheEvent",
+        "Update",
+        "ErenshorLogs.Hooks.SiraetheHealContextPatch"
+      );
+    }
+  }
+
+  [Fact]
   public void BepInExManagerHidingHasStartupEntryPoint()
   {
     var method = typeof(BepInExManagerHiding).GetMethod(

@@ -49,6 +49,29 @@ public static class MagicDamageMePatch
   /// </summary>
   internal static bool CaptureDebugForAll { get; set; } = false;
 
+  [HarmonyPrefix]
+  public static void Prefix(Character _attacker, out IDisposable? __state)
+  {
+    __state = null;
+    if (!_attacker.IsValid() || _attacker.MyStats == null)
+      return;
+
+    if (_attacker.MyStats.PercentLifesteal <= 0f)
+      return;
+
+    __state = HealingContext.Push(
+      _attacker,
+      new AbilityRef
+      {
+        Name = "Lifesteal",
+        Type = AbilityType.Unknown,
+        StableKey = "proc:lifesteal",
+      },
+      EventType.HealLifesteal,
+      AttributionMethod.Verified
+    );
+  }
+
   /// <summary>
   /// Postfix hook that captures magic damage events after MagicDamageMe completes.
   /// </summary>
@@ -153,5 +176,11 @@ public static class MagicDamageMePatch
       );
       CombatEventDispatcher.Dispatch(evt, Emitter);
     }
+  }
+
+  [HarmonyFinalizer]
+  public static void Finalizer(IDisposable? __state)
+  {
+    __state?.Dispose();
   }
 }
