@@ -41,14 +41,15 @@ public class WebSocketServer : IWebSocketServer
   public void Start()
   {
     var port = _config.Port.Value;
-    var location = $"ws://0.0.0.0:{port}";
+    var allowLanConnections = _config.AllowLanConnections.Value;
+    var location = WebSocketEndpoint.CreateBindLocation(port, allowLanConnections);
 
     try
     {
       _server = new Fleck.WebSocketServer(location);
       _server.Start(ConfigureSocket);
-      _logger.LogInfo($"WebSocket server started on port {port}");
-      LogConnectionUrls(port);
+      _logger.LogInfo($"WebSocket server started on {location}");
+      LogConnectionUrls(port, allowLanConnections);
     }
     catch (Exception ex)
     {
@@ -60,9 +61,15 @@ public class WebSocketServer : IWebSocketServer
   /// <summary>
   /// Logs all available connection URLs (localhost + network IPs).
   /// </summary>
-  private void LogConnectionUrls(int port)
+  private void LogConnectionUrls(int port, bool allowLanConnections)
   {
     _logger.LogInfo($"→ Local:   ws://localhost:{port}");
+
+    if (!allowLanConnections)
+    {
+      _logger.LogInfo("LAN access disabled. Enable AllowLanConnections to bind all interfaces.");
+      return;
+    }
 
     var networkIPs = NetworkUtils.GetLocalIPv4Addresses();
 

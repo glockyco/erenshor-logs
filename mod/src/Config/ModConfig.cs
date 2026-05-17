@@ -20,6 +20,11 @@ public class ModConfig
   public ConfigEntry<int> BroadcastInterval { get; }
 
   /// <summary>
+  /// Bind the WebSocket server to all network interfaces instead of loopback.
+  /// </summary>
+  public ConfigEntry<bool> AllowLanConnections { get; }
+
+  /// <summary>
   /// Capture detailed debug info for Unknown ability attributions.
   /// Includes method name, parameters, stack trace, and context state.
   /// Always logged at Debug level to BepInEx log.
@@ -91,6 +96,13 @@ public class ModConfig
       "BroadcastInterval",
       100,
       "Interval in milliseconds between event broadcasts to clients"
+    );
+
+    AllowLanConnections = config.Bind(
+      "Server",
+      "AllowLanConnections",
+      false,
+      "Allow other devices on the LAN to connect. Disabled by default so the WebSocket server only listens on loopback."
     );
 
     CaptureDebugForUnknown = config.Bind(
