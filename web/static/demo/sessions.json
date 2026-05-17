@@ -23941,7 +23941,7 @@
         },
         "diagnostics": {
           "hookWarnings": [],
-          "attributionFailures": 0,
+          "attributionFailures": 6,
           "droppedEvents": 0,
           "droppedFrames": 0,
           "serializationErrors": 0
@@ -24422,7 +24422,21 @@
           "sourceActorId": "npc:23",
           "creditActorId": "npc:23",
           "targetActorId": "player:0",
-          "abilityId": "ability:unknown:unknown"
+          "abilityId": "ability:unknown:unknown",
+          "debug": {
+            "sourceMethod": "Character.MagicDamageMe",
+            "parameters": {
+              "damageType": "Magic",
+              "amount": "32",
+              "dmg": "32",
+              "fromPlayer": "False"
+            },
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
+            "context": {
+              "stackDepth": 0
+            }
+          },
+          "attribution": "unknown"
         },
         {
           "eventSeq": 29,
@@ -24796,7 +24810,21 @@
           "sourceActorId": "npc:23",
           "creditActorId": "npc:23",
           "targetActorId": "player:0",
-          "abilityId": "ability:unknown:unknown"
+          "abilityId": "ability:unknown:unknown",
+          "debug": {
+            "sourceMethod": "Character.MagicDamageMe",
+            "parameters": {
+              "damageType": "Magic",
+              "amount": "32",
+              "dmg": "32",
+              "fromPlayer": "False"
+            },
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
+            "context": {
+              "stackDepth": 0
+            }
+          },
+          "attribution": "unknown"
         },
         {
           "eventSeq": 51,
@@ -24813,7 +24841,21 @@
           "sourceActorId": "npc:23",
           "creditActorId": "npc:23",
           "targetActorId": "sim_player:8",
-          "abilityId": "ability:unknown:unknown"
+          "abilityId": "ability:unknown:unknown",
+          "debug": {
+            "sourceMethod": "Character.MagicDamageMe",
+            "parameters": {
+              "damageType": "Magic",
+              "amount": "52",
+              "dmg": "52",
+              "fromPlayer": "False"
+            },
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
+            "context": {
+              "stackDepth": 0
+            }
+          },
+          "attribution": "unknown"
         },
         {
           "eventSeq": 52,
@@ -24830,7 +24872,21 @@
           "sourceActorId": "npc:23",
           "creditActorId": "npc:23",
           "targetActorId": "sim_player:13",
-          "abilityId": "ability:unknown:unknown"
+          "abilityId": "ability:unknown:unknown",
+          "debug": {
+            "sourceMethod": "Character.MagicDamageMe",
+            "parameters": {
+              "damageType": "Magic",
+              "amount": "45",
+              "dmg": "45",
+              "fromPlayer": "False"
+            },
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
+            "context": {
+              "stackDepth": 0
+            }
+          },
+          "attribution": "unknown"
         },
         {
           "eventSeq": 53,
@@ -24847,7 +24903,21 @@
           "sourceActorId": "npc:23",
           "creditActorId": "npc:23",
           "targetActorId": "sim_player:10",
-          "abilityId": "ability:unknown:unknown"
+          "abilityId": "ability:unknown:unknown",
+          "debug": {
+            "sourceMethod": "Character.MagicDamageMe",
+            "parameters": {
+              "damageType": "Magic",
+              "amount": "37",
+              "dmg": "37",
+              "fromPlayer": "False"
+            },
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
+            "context": {
+              "stackDepth": 0
+            }
+          },
+          "attribution": "unknown"
         },
         {
           "eventSeq": 54,
@@ -24864,7 +24934,21 @@
           "sourceActorId": "npc:23",
           "creditActorId": "npc:23",
           "targetActorId": "sim_player:14",
-          "abilityId": "ability:unknown:unknown"
+          "abilityId": "ability:unknown:unknown",
+          "debug": {
+            "sourceMethod": "Character.MagicDamageMe",
+            "parameters": {
+              "damageType": "Magic",
+              "amount": "37",
+              "dmg": "37",
+              "fromPlayer": "False"
+            },
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
+            "context": {
+              "stackDepth": 0
+            }
+          },
+          "attribution": "unknown"
         },
         {
           "eventSeq": 55,
@@ -25062,7 +25146,7 @@
         "durationMs": 19502,
         "diagnostics": {
           "hookWarnings": [],
-          "attributionFailures": 0,
+          "attributionFailures": 6,
           "droppedEvents": 0,
           "droppedFrames": 0,
           "serializationErrors": 0
@@ -25240,7 +25324,7 @@
         },
         "diagnostics": {
           "hookWarnings": [],
-          "attributionFailures": 0,
+          "attributionFailures": 10,
           "droppedEvents": 0,
           "droppedFrames": 0,
           "serializationErrors": 0
@@ -25433,7 +25517,21 @@
           "sourceActorId": "npc:24",
           "creditActorId": "npc:24",
           "targetActorId": "player:0",
-          "abilityId": "ability:unknown:unknown"
+          "abilityId": "ability:unknown:unknown",
+          "debug": {
+            "sourceMethod": "Character.MagicDamageMe",
+            "parameters": {
+              "damageType": "Elemental",
+              "amount": "162",
+              "dmg": "162",
+              "fromPlayer": "False"
+            },
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
+            "context": {
+              "stackDepth": 0
+            }
+          },
+          "attribution": "unknown"
         },
         {
           "eventSeq": 12,
@@ -25450,7 +25548,21 @@
           "sourceActorId": "npc:24",
           "creditActorId": "npc:24",
           "targetActorId": "sim_player:10",
-          "abilityId": "ability:unknown:unknown"
+          "abilityId": "ability:unknown:unknown",
+          "debug": {
+            "sourceMethod": "Character.MagicDamageMe",
+            "parameters": {
+              "damageType": "Elemental",
+              "amount": "147",
+              "dmg": "147",
+              "fromPlayer": "False"
+            },
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
+            "context": {
+              "stackDepth": 0
+            }
+          },
+          "attribution": "unknown"
         },
         {
           "eventSeq": 13,
@@ -25467,7 +25579,21 @@
           "sourceActorId": "npc:24",
           "creditActorId": "npc:24",
           "targetActorId": "sim_player:13",
-          "abilityId": "ability:unknown:unknown"
+          "abilityId": "ability:unknown:unknown",
+          "debug": {
+            "sourceMethod": "Character.MagicDamageMe",
+            "parameters": {
+              "damageType": "Elemental",
+              "amount": "210",
+              "dmg": "210",
+              "fromPlayer": "False"
+            },
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
+            "context": {
+              "stackDepth": 0
+            }
+          },
+          "attribution": "unknown"
         },
         {
           "eventSeq": 14,
@@ -25484,7 +25610,21 @@
           "sourceActorId": "npc:24",
           "creditActorId": "npc:24",
           "targetActorId": "sim_player:8",
-          "abilityId": "ability:unknown:unknown"
+          "abilityId": "ability:unknown:unknown",
+          "debug": {
+            "sourceMethod": "Character.MagicDamageMe",
+            "parameters": {
+              "damageType": "Elemental",
+              "amount": "231",
+              "dmg": "231",
+              "fromPlayer": "False"
+            },
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
+            "context": {
+              "stackDepth": 0
+            }
+          },
+          "attribution": "unknown"
         },
         {
           "eventSeq": 15,
@@ -25501,7 +25641,21 @@
           "sourceActorId": "npc:24",
           "creditActorId": "npc:24",
           "targetActorId": "sim_player:14",
-          "abilityId": "ability:unknown:unknown"
+          "abilityId": "ability:unknown:unknown",
+          "debug": {
+            "sourceMethod": "Character.MagicDamageMe",
+            "parameters": {
+              "damageType": "Elemental",
+              "amount": "174",
+              "dmg": "174",
+              "fromPlayer": "False"
+            },
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
+            "context": {
+              "stackDepth": 0
+            }
+          },
+          "attribution": "unknown"
         },
         {
           "eventSeq": 16,
@@ -25773,7 +25927,21 @@
           "sourceActorId": "npc:24",
           "creditActorId": "npc:24",
           "targetActorId": "player:0",
-          "abilityId": "ability:unknown:unknown"
+          "abilityId": "ability:unknown:unknown",
+          "debug": {
+            "sourceMethod": "Character.MagicDamageMe",
+            "parameters": {
+              "damageType": "Elemental",
+              "amount": "162",
+              "dmg": "162",
+              "fromPlayer": "False"
+            },
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
+            "context": {
+              "stackDepth": 0
+            }
+          },
+          "attribution": "unknown"
         },
         {
           "eventSeq": 32,
@@ -25790,7 +25958,21 @@
           "sourceActorId": "npc:24",
           "creditActorId": "npc:24",
           "targetActorId": "sim_player:10",
-          "abilityId": "ability:unknown:unknown"
+          "abilityId": "ability:unknown:unknown",
+          "debug": {
+            "sourceMethod": "Character.MagicDamageMe",
+            "parameters": {
+              "damageType": "Elemental",
+              "amount": "147",
+              "dmg": "147",
+              "fromPlayer": "False"
+            },
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
+            "context": {
+              "stackDepth": 0
+            }
+          },
+          "attribution": "unknown"
         },
         {
           "eventSeq": 33,
@@ -25807,7 +25989,21 @@
           "sourceActorId": "npc:24",
           "creditActorId": "npc:24",
           "targetActorId": "sim_player:13",
-          "abilityId": "ability:unknown:unknown"
+          "abilityId": "ability:unknown:unknown",
+          "debug": {
+            "sourceMethod": "Character.MagicDamageMe",
+            "parameters": {
+              "damageType": "Elemental",
+              "amount": "210",
+              "dmg": "210",
+              "fromPlayer": "False"
+            },
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
+            "context": {
+              "stackDepth": 0
+            }
+          },
+          "attribution": "unknown"
         },
         {
           "eventSeq": 34,
@@ -25824,7 +26020,21 @@
           "sourceActorId": "npc:24",
           "creditActorId": "npc:24",
           "targetActorId": "sim_player:8",
-          "abilityId": "ability:unknown:unknown"
+          "abilityId": "ability:unknown:unknown",
+          "debug": {
+            "sourceMethod": "Character.MagicDamageMe",
+            "parameters": {
+              "damageType": "Elemental",
+              "amount": "231",
+              "dmg": "231",
+              "fromPlayer": "False"
+            },
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
+            "context": {
+              "stackDepth": 0
+            }
+          },
+          "attribution": "unknown"
         },
         {
           "eventSeq": 35,
@@ -25841,7 +26051,21 @@
           "sourceActorId": "npc:24",
           "creditActorId": "npc:24",
           "targetActorId": "sim_player:14",
-          "abilityId": "ability:unknown:unknown"
+          "abilityId": "ability:unknown:unknown",
+          "debug": {
+            "sourceMethod": "Character.MagicDamageMe",
+            "parameters": {
+              "damageType": "Elemental",
+              "amount": "174",
+              "dmg": "174",
+              "fromPlayer": "False"
+            },
+            "stackTrace": ["Character.DMD<Character::MagicDamageMe>", "AEEvent.Update"],
+            "context": {
+              "stackDepth": 0
+            }
+          },
+          "attribution": "unknown"
         },
         {
           "eventSeq": 36,
@@ -26090,7 +26314,7 @@
         "durationMs": 10270,
         "diagnostics": {
           "hookWarnings": [],
-          "attributionFailures": 0,
+          "attributionFailures": 10,
           "droppedEvents": 0,
           "droppedFrames": 0,
           "serializationErrors": 0

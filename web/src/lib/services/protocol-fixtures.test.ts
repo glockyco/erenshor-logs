@@ -37,6 +37,11 @@ describe("protocol v2 fixtures", () => {
 
     expect(file.sessions).toHaveLength(4);
     expect(file.sessions.reduce((sum, session) => sum + session.events.length, 0)).toBe(1483);
+    expect(
+      file.sessions.flatMap((session) =>
+        session.events.filter((event) => event.attribution === "unknown" && event.debug)
+      )
+    ).toHaveLength(16);
   });
 
   it("rejects event batches with gaps", () => {
