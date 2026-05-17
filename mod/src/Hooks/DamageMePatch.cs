@@ -128,6 +128,8 @@ public static class DamageMePatch
         isBleed: false,
         isHeal: false
       );
+      if (slot.HasValue)
+        TickEffectsSlotTracker.RecordHealthDelta(slot.Value, -amount);
 
       if (slot.HasValue && EffectTracker != null)
       {

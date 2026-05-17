@@ -54,8 +54,11 @@ internal static class HealthEventCapture
     if (evt == null)
       return;
 
-    if (mechanic != null)
-      evt = evt with { Mechanic = mechanic };
+    evt = evt with
+    {
+      Mechanic = mechanic,
+      Attribution = mechanic != null ? AttributionMethod.Verified : AttributionMethod.Context,
+    };
 
     LogDebug?.Invoke(
       $"Heal: {evt.Source?.Name ?? "Unknown"} -> {evt.Target?.Name ?? "Unknown"} for {amount}"

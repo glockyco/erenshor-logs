@@ -95,6 +95,20 @@ public sealed class HealthEventBuilderTests
     Assert.Equal(42, evt.KillingBlowEventSeq);
   }
 
+  [Theory]
+  [InlineData(900, 1000, 150, 100)]
+  [InlineData(500, 1000, 150, 150)]
+  [InlineData(1000, 1000, 150, 0)]
+  public void HotTickMath_ClampsEffectiveHealing(
+    int currentHp,
+    int maxHp,
+    int rawAmount,
+    int expectedEffective
+  )
+  {
+    Assert.Equal(expectedEffective, HotTickMath.EffectiveAmount(currentHp, maxHp, rawAmount));
+  }
+
   private static CombatEventBuilder<object> CreateBuilder(Dictionary<object, ActorRef> actors) =>
     new(actor => actor == null ? null : actors[actor], () => "evt-1", () => 1_800_000_000_000);
 }

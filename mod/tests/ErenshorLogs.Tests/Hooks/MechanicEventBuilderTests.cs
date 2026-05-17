@@ -56,4 +56,17 @@ public sealed class MechanicEventBuilderTests
     Assert.Equal("invulnerability", evt.Mechanic?.Action);
     Assert.Equal(true, evt.Mechanic?.Value);
   }
+
+  [Theory]
+  [InlineData("tickDmg", "damage")]
+  [InlineData("ResistMod", "resist")]
+  [InlineData("TickTime", null)]
+  [InlineData("TriggerOnly", null)]
+  public void MechanicAffectedStats_NormalizesToProtocolValues(
+    string gameStat,
+    string? protocolStat
+  )
+  {
+    Assert.Equal(protocolStat, MechanicAffectedStats.Normalize(gameStat));
+  }
 }

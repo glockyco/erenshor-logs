@@ -57,7 +57,13 @@ internal static class ResourceEventCapture
     HealMePatch.LogDebug?.Invoke(
       $"Mana {delta}: {evt.Source?.Name ?? "Unknown"} -> {evt.Target?.Name ?? "Unknown"}"
     );
-    CombatEventDispatcher.Dispatch(evt, HealMePatch.Emitter);
+    CombatEventDispatcher.Dispatch(
+      evt with
+      {
+        Attribution = AttributionMethod.Verified,
+      },
+      HealMePatch.Emitter
+    );
   }
 }
 

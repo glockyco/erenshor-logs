@@ -5,6 +5,20 @@ using HarmonyLib;
 
 namespace ErenshorLogs.Hooks;
 
+public static class MechanicAffectedStats
+{
+  public static string? Normalize(string? gameStat)
+  {
+    return gameStat switch
+    {
+      "tickDmg" => "damage",
+      "ResistMod" => "resist",
+      "hp" or "mana" or "damage" or "resist" or "armorPen" => gameStat,
+      _ => null,
+    };
+  }
+}
+
 internal static class EncounterMechanicEmitter
 {
   internal static ICombatEventBuilder? EventBuilder { get; set; }
@@ -52,7 +66,7 @@ internal static class EncounterMechanicEmitter
       Action = action,
       Value = value,
       PreviousValue = previousValue,
-      AffectedStat = affectedStat,
+      AffectedStat = MechanicAffectedStats.Normalize(affectedStat),
       Amount = amount,
     };
 
@@ -66,7 +80,7 @@ internal static class EncounterMechanicEmitter
     if (evt == null)
       return;
 
-    CombatEventDispatcher.Dispatch(evt, Emitter);
+    CombatEventDispatcher.Dispatch(evt with { Attribution = AttributionMethod.Verified }, Emitter);
     LogDebug?.Invoke($"Mechanic event captured: {name}/{action}");
   }
 }

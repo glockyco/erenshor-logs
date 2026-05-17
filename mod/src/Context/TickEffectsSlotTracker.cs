@@ -11,6 +11,8 @@ namespace ErenshorLogs.Context;
 /// 2. Resisted damage doesn't call DamageMe (so we don't advance)
 /// 3. We stay in perfect sync with the loop
 /// </remarks>
+public readonly record struct TickHealthDelta(int Slot, int Amount);
+
 public static class TickEffectsSlotTracker
 {
   /// <summary>
@@ -33,6 +35,9 @@ public static class TickEffectsSlotTracker
   [ThreadStatic]
   private static bool _isInTickEffects;
 
+  [ThreadStatic]
+  private static List<TickHealthDelta>? _healthDeltas;
+
   /// <summary>
   /// Called by TickEffectsPatch.Prefix when TickEffects starts.
   /// Initializes tracking state for this character's tick processing.
@@ -42,6 +47,7 @@ public static class TickEffectsSlotTracker
     _currentCharacter = stats.Myself;
     _lastProcessedSlot = -1;
     _isInTickEffects = true;
+    _healthDeltas = null;
   }
 
   /// <summary>
@@ -108,6 +114,20 @@ public static class TickEffectsSlotTracker
     return null;
   }
 
+  public static void RecordHealthDelta(int slot, int amount)
+  {
+    if (!_isInTickEffects || amount == 0)
+      return;
+
+    _healthDeltas ??= [];
+    _healthDeltas.Add(new TickHealthDelta(slot, amount));
+  }
+
+  public static IReadOnlyList<TickHealthDelta> GetHealthDeltas()
+  {
+    return _healthDeltas ?? [];
+  }
+
   /// <summary>
   /// Called by TickEffectsPatch.Finalizer when TickEffects completes.
   /// Cleans up tracking state.
@@ -117,6 +137,7 @@ public static class TickEffectsSlotTracker
     _currentCharacter = null;
     _lastProcessedSlot = -1;
     _isInTickEffects = false;
+    _healthDeltas = null;
   }
 
   /// <summary>

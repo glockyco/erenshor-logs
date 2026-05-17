@@ -139,8 +139,8 @@ public sealed class ProtocolSessionState
     AddOptional(result, "creditActorId", RegisterActor(evt.Source));
     AddOptional(result, "targetActorId", RegisterActor(evt.Target));
     AddOptional(result, "abilityId", RegisterAbility(evt.Ability));
-    AddOptional(result, "effectId", RegisterEffect(evt.Effect));
-    AddOptional(result, "attribution", evt.Flags?.AttributionFailed == true ? "unknown" : null);
+    AddOptional(result, "effectId", RegisterEffect(evt.Effect, evt.EventType));
+    AddOptional(result, "attribution", ToProtocolAttribution(evt));
 
     var data = (JObject)result["data"]!;
     AddOptional(data, "rawAmount", evt.RawAmount);
@@ -240,8 +240,8 @@ public sealed class ProtocolSessionState
     AddOptional(result, "creditActorId", RegisterActor(evt.Source));
     AddOptional(result, "targetActorId", RegisterActor(evt.Target));
     AddOptional(result, "abilityId", RegisterAbility(evt.Ability));
-    AddOptional(result, "effectId", RegisterEffect(evt.Effect));
-    AddOptional(result, "attribution", evt.Flags?.AttributionFailed == true ? "unknown" : null);
+    AddOptional(result, "effectId", RegisterEffect(evt.Effect, evt.EventType));
+    AddOptional(result, "attribution", ToProtocolAttribution(evt));
     AddDebug(result, evt.DebugInfo);
 
     return result;
@@ -297,7 +297,7 @@ public sealed class ProtocolSessionState
     return id;
   }
 
-  private string? RegisterEffect(EffectRef? effect)
+  private string? RegisterEffect(EffectRef? effect, EventType eventType)
   {
     if (effect == null)
       return null;
@@ -312,7 +312,7 @@ public sealed class ProtocolSessionState
       {
         Id = id,
         Name = effect.Name,
-        Kind = "unknown",
+        Kind = GetEffectKind(eventType),
         DefaultDurationMs = effect.Duration * 1000,
         MaxStacks = effect.Stacks,
       }
@@ -381,6 +381,32 @@ public sealed class ProtocolSessionState
     if (flags?.Critical == true)
       outcome["critical"] = true;
     return outcome;
+  }
+
+  private static string? ToProtocolAttribution(CombatEvent evt)
+  {
+    var attribution =
+      evt.Attribution ?? (evt.Flags?.AttributionFailed == true ? AttributionMethod.Unknown : null);
+
+    return attribution switch
+    {
+      AttributionMethod.Verified => "verified",
+      AttributionMethod.Context => "context",
+      AttributionMethod.EffectTracker => "effectTracker",
+      AttributionMethod.Inferred => "inferred",
+      AttributionMethod.Unknown => "unknown",
+      _ => null,
+    };
+  }
+
+  private static string GetEffectKind(EventType eventType)
+  {
+    return eventType switch
+    {
+      EventType.BuffApply or EventType.BuffRefresh or EventType.BuffFade => "buff",
+      EventType.DebuffApply or EventType.DebuffRefresh or EventType.DebuffFade => "debuff",
+      _ => "unknown",
+    };
   }
 
   private static string ToProtocolActorKind(ActorType type) =>

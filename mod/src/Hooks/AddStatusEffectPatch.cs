@@ -4,6 +4,26 @@ using HarmonyLib;
 
 namespace ErenshorLogs.Hooks;
 
+public enum StatusEffectChangeKind
+{
+  Apply,
+  Refresh,
+  Replace,
+}
+
+public static class StatusEffectChange
+{
+  public static StatusEffectChangeKind Classify(string? previousStableKey, string nextStableKey)
+  {
+    if (string.IsNullOrEmpty(previousStableKey))
+      return StatusEffectChangeKind.Apply;
+
+    return string.Equals(previousStableKey, nextStableKey, StringComparison.Ordinal)
+      ? StatusEffectChangeKind.Refresh
+      : StatusEffectChangeKind.Replace;
+  }
+}
+
 internal static class AddStatusEffectRegistration
 {
   internal static EffectTracker? Tracker { get; set; }
@@ -13,17 +33,37 @@ internal static class AddStatusEffectRegistration
     Spell spell,
     int slot,
     Character? source,
-    Character? credit
+    Character? credit,
+    AttributionMethod attribution
   )
   {
     if (Tracker == null || stats == null || spell == null)
       return;
 
-    if (slot >= 0 && slot < 30)
+    if (slot < 0 || slot >= 30)
+      return;
+
+    var previous = Tracker.GetTrackedEffect(stats.Myself, slot);
+    var nextStableKey = StableKeyFor(spell);
+    var change = StatusEffectChange.Classify(previous?.Context.StableKey, nextStableKey);
+
+    if (change == StatusEffectChangeKind.Refresh)
     {
       Tracker.RegisterEffect(stats.Myself, slot, spell, source, credit);
-      StatusEventCapture.EmitApply(stats.Myself, spell, source, credit, slot);
+      StatusEventCapture.EmitRefresh(stats.Myself, spell, source, credit, slot, attribution);
+      return;
     }
+
+    if (previous != null)
+      StatusEventCapture.EmitFade(previous, "overwritten");
+
+    Tracker.RegisterEffect(stats.Myself, slot, spell, source, credit);
+    StatusEventCapture.EmitApply(stats.Myself, spell, source, credit, slot, attribution);
+  }
+
+  private static string StableKeyFor(Spell spell)
+  {
+    return $"spell:{spell.Id}";
   }
 }
 
@@ -34,23 +74,57 @@ internal static class StatusEventCapture
     Spell spell,
     Character? source,
     Character? credit,
-    int slot
+    int slot,
+    AttributionMethod attribution
   )
   {
-    Emit(EventTypeFor(spell, apply: true), target, spell, source, credit, slot, "apply", null);
+    Emit(
+      EventTypeFor(spell, StatusEffectChangeKind.Apply),
+      target,
+      spell,
+      source,
+      credit,
+      slot,
+      "apply",
+      null,
+      attribution
+    );
+  }
+
+  internal static void EmitRefresh(
+    Character target,
+    Spell spell,
+    Character? source,
+    Character? credit,
+    int slot,
+    AttributionMethod attribution
+  )
+  {
+    Emit(
+      EventTypeFor(spell, StatusEffectChangeKind.Refresh),
+      target,
+      spell,
+      source,
+      credit,
+      slot,
+      "refresh",
+      null,
+      attribution
+    );
   }
 
   internal static void EmitFade(TrackedEffect tracked, string reason)
   {
     Emit(
-      EventTypeFor(tracked.Spell, apply: false),
+      EventTypeFor(tracked.Spell, StatusEffectChangeKind.Replace),
       tracked.Target,
       tracked.Spell,
       tracked.Source,
       tracked.Credit,
       tracked.Slot,
       "fade",
-      reason
+      reason,
+      AttributionMethod.EffectTracker
     );
   }
 
@@ -62,7 +136,8 @@ internal static class StatusEventCapture
     Character? credit,
     int slot,
     string action,
-    string? reason
+    string? reason,
+    AttributionMethod attribution
   )
   {
     _ = slot;
@@ -112,17 +187,19 @@ internal static class StatusEventCapture
     );
 
     if (evt != null)
-      CombatEventDispatcher.Dispatch(evt, HealMePatch.Emitter);
+      CombatEventDispatcher.Dispatch(evt with { Attribution = attribution }, HealMePatch.Emitter);
   }
 
-  private static EventType EventTypeFor(Spell spell, bool apply)
+  private static EventType EventTypeFor(Spell spell, StatusEffectChangeKind change)
   {
     var isBuff = spell.Type == Spell.SpellType.Beneficial || spell.Type == Spell.SpellType.Heal;
-    return (isBuff, apply) switch
+    return (isBuff, change) switch
     {
-      (true, true) => EventType.BuffApply,
-      (true, false) => EventType.BuffFade,
-      (false, true) => EventType.DebuffApply,
+      (true, StatusEffectChangeKind.Apply) => EventType.BuffApply,
+      (true, StatusEffectChangeKind.Refresh) => EventType.BuffRefresh,
+      (true, _) => EventType.BuffFade,
+      (false, StatusEffectChangeKind.Apply) => EventType.DebuffApply,
+      (false, StatusEffectChangeKind.Refresh) => EventType.DebuffRefresh,
       _ => EventType.DebuffFade,
     };
   }
@@ -142,7 +219,14 @@ public static class AddStatusEffectThreeArgPatch
   public static void Postfix(Stats __instance, Spell spell, int __result)
   {
     var source = RaidAuraContext.Resolve(spell);
-    AddStatusEffectRegistration.Register(__instance, spell, __result, source, source);
+    AddStatusEffectRegistration.Register(
+      __instance,
+      spell,
+      __result,
+      source,
+      source,
+      AttributionMethod.Context
+    );
   }
 }
 
@@ -170,7 +254,8 @@ public static class AddStatusEffectPatch
       spell,
       __result,
       _specificCaster,
-      _specificCaster
+      _specificCaster,
+      AttributionMethod.Verified
     );
   }
 }
@@ -193,7 +278,8 @@ public static class AddStatusEffectFiveArgPatch
       spell,
       __result,
       _specificCaster,
-      _specificCaster
+      _specificCaster,
+      AttributionMethod.Verified
     );
   }
 }

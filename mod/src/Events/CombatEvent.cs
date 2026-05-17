@@ -1,5 +1,14 @@
 namespace ErenshorLogs.Events;
 
+public enum AttributionMethod
+{
+  Verified,
+  Context,
+  EffectTracker,
+  Inferred,
+  Unknown,
+}
+
 /// <summary>
 /// A single combat event in the log.
 /// </summary>
@@ -73,6 +82,9 @@ public sealed record CombatEvent
 
   /// <summary>Event flags.</summary>
   public EventFlags? Flags { get; init; }
+
+  /// <summary>How source and ability attribution was determined.</summary>
+  public AttributionMethod? Attribution { get; init; }
 
   /// <summary>
   /// Debug information for attribution troubleshooting.

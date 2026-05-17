@@ -78,6 +78,19 @@ public sealed class StatusEventBuilderTests
     Assert.Contains(register.GetParameters(), parameter => parameter.Name == "credit");
   }
 
+  [Theory]
+  [InlineData(null, "spell:1", StatusEffectChangeKind.Apply)]
+  [InlineData("spell:1", "spell:1", StatusEffectChangeKind.Refresh)]
+  [InlineData("spell:1", "spell:2", StatusEffectChangeKind.Replace)]
+  public void StatusEffectChange_ClassifiesSlotReapplication(
+    string? previousStableKey,
+    string nextStableKey,
+    StatusEffectChangeKind expected
+  )
+  {
+    Assert.Equal(expected, StatusEffectChange.Classify(previousStableKey, nextStableKey));
+  }
+
   private static void LoadGameAssemblies()
   {
     var libPath = Path.GetFullPath(

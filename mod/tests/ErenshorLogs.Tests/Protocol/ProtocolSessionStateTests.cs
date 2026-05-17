@@ -187,6 +187,32 @@ public sealed class ProtocolSessionStateTests
   }
 
   [Fact]
+  public void Append_DebuffApply_RegistersDebuffEffectKind()
+  {
+    var session = new CombatSession("playtest-raid", "2026.5.17.1");
+    var state = new ProtocolSessionState(session);
+
+    state.Append(CreateEffectEvent(session.StartTime + 900));
+
+    Assert.Equal("debuff", state.Registries.Effects["effect:BleedRef"].Kind);
+  }
+
+  [Fact]
+  public void Append_SerializesExplicitAttribution()
+  {
+    var session = new CombatSession("playtest-raid", "2026.5.17.1");
+    var state = new ProtocolSessionState(session);
+    var evt = CreateEffectEvent(session.StartTime + 900) with
+    {
+      Attribution = AttributionMethod.EffectTracker,
+    };
+
+    var record = state.Append(evt)!;
+
+    Assert.Equal("effectTracker", record.Value<string>("attribution"));
+  }
+
+  [Fact]
   public void Append_Death_MapsToDieAction()
   {
     var session = new CombatSession("playtest-raid", "2026.5.17.1");
