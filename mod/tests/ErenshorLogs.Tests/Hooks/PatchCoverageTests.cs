@@ -32,6 +32,23 @@ public class PatchCoverageTests
     AssertPatchTargetExists("AEEvent", "TriggerAE", "ErenshorLogs.Hooks.AEEventTriggerPatch");
     AssertPatchTargetExists("DeathTouch", "Update", "ErenshorLogs.Hooks.DeathTouchPatch");
 
+    AssertPatchTargetExists("Stats", "HealMe", "ErenshorLogs.Hooks.HealMePatch");
+    AssertPatchTargetExists(
+      "GraceEvent",
+      "DoEventScript",
+      "ErenshorLogs.Hooks.GraceEventHealthPatch"
+    );
+    AssertPatchTargetExists(
+      "FernallaFightEvent",
+      "PhaseHandler",
+      "ErenshorLogs.Hooks.FernallaPhaseHealthPatch"
+    );
+    AssertPatchTargetExists(
+      "LighthouseHealBox",
+      "OnTriggerEnter",
+      "ErenshorLogs.Hooks.LighthouseHealPatch"
+    );
+
     var patchType = RequireModType("ErenshorLogs.Hooks.MizukiEventPatch");
     var mizukiTarget = patchType.GetMethod("TargetMethod")?.Invoke(null, null) as MethodBase;
     Assert.NotNull(mizukiTarget);
@@ -47,14 +64,17 @@ public class PatchCoverageTests
   {
     var targetType = RequireGameType(targetTypeName);
     var patchType = RequireModType(patchTypeName);
-    Assert.NotNull(
-      targetType.GetMethod(
-        methodName,
+    Assert.Contains(
+      targetType.GetMethods(
         BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic
-      )
+      ),
+      method => method.Name == methodName
     );
     Assert.NotNull(patchType.GetMethod("Prefix", BindingFlags.Public | BindingFlags.Static));
-    Assert.NotNull(patchType.GetMethod("Finalizer", BindingFlags.Public | BindingFlags.Static));
+    Assert.True(
+      patchType.GetMethod("Postfix", BindingFlags.Public | BindingFlags.Static) != null
+        || patchType.GetMethod("Finalizer", BindingFlags.Public | BindingFlags.Static) != null
+    );
   }
 
   private static void LoadGameAssemblies()

@@ -146,6 +146,12 @@ public sealed class Plugin : BaseUnityPlugin
     EnvironmentalDamageMePatch.CaptureDebugForUnknown = config.CaptureDebugForUnknown.Value;
     EnvironmentalDamageMePatch.CaptureDebugForAll = config.CaptureDebugForAll.Value;
 
+    HealMePatch.Emitter = emitter;
+    HealMePatch.EventBuilder = eventBuilder;
+    HealMePatch.LogDebug = msg => Logger.LogDebug(msg);
+    HealMePatch.RelevanceChecker = _relevanceChecker;
+    HealMePatch.SessionManager = sessionManager;
+
     // Wire EffectTracker to effect lifecycle hooks
     AddStatusEffectPatch.Tracker = effectTracker;
     RemoveStatusEffectPatch.Tracker = effectTracker;
