@@ -90,33 +90,40 @@ public sealed class CombatRelevanceChecker<TCharacter, TNpc>
   /// </summary>
   private bool IsRelevantCharacter(TCharacter character)
   {
-    var instanceId = _getInstanceId(character);
-
-    // Check cache first (O(1))
-    if (_relevantCharacterIds.Contains(instanceId))
-      return true;
-
-    // Not in cache - do full relevance check
-    var isRelevant =
-      IsPlayer(character)
-      || IsGroupedSimPlayer(character)
-      || IsGroupMember(character)
-      || IsPetOfPlayerOrGroup(character)
-      || IsNpcAttackingPlayer(character)
-      || IsGroupMateInCombat(character)
-      || IsGroupTarget(character)
-      || IsRaidTarget(character)
-      || IsLooseAdd(character)
-      || IsNpcWithGroupOnAggroTable(character)
-      || IsPetOfEngagedNpc(character);
-
-    // Cache if relevant
-    if (isRelevant)
+    try
     {
-      _relevantCharacterIds.Add(instanceId);
-    }
+      var instanceId = _getInstanceId(character);
 
-    return isRelevant;
+      // Check cache first (O(1))
+      if (_relevantCharacterIds.Contains(instanceId))
+        return true;
+
+      // Not in cache - do full relevance check
+      var isRelevant =
+        IsPlayer(character)
+        || IsGroupedSimPlayer(character)
+        || IsGroupMember(character)
+        || IsPetOfPlayerOrGroup(character)
+        || IsNpcAttackingPlayer(character)
+        || IsGroupMateInCombat(character)
+        || IsGroupTarget(character)
+        || IsRaidTarget(character)
+        || IsLooseAdd(character)
+        || IsNpcWithGroupOnAggroTable(character)
+        || IsPetOfEngagedNpc(character);
+
+      // Cache if relevant
+      if (isRelevant)
+      {
+        _relevantCharacterIds.Add(instanceId);
+      }
+
+      return isRelevant;
+    }
+    catch (NullReferenceException)
+    {
+      return false;
+    }
   }
 
   /// <summary>

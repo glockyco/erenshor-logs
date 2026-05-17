@@ -164,16 +164,61 @@ public class CombatRelevanceCheckerTests
     Assert.True(checker.IsRelevantCombat(other, add));
   }
 
+  [Fact]
+  public void IsRelevantCombat_WhenPlayerNameLookupThrowsNullReference_ReturnsFalse()
+  {
+    var destroyed = new MockCharacter
+    {
+      InstanceId = 1,
+      Name = "Destroyed",
+      Npc = new MockNpc(),
+    };
+    var other = new MockCharacter
+    {
+      InstanceId = 2,
+      Name = "Other",
+      Npc = new MockNpc(),
+    };
+    var checker = CreateChecker(getTransformName: c =>
+      c == destroyed ? throw new NullReferenceException("destroyed") : c.Name
+    );
+
+    var isRelevant = checker.IsRelevantCombat(destroyed, other);
+
+    Assert.False(isRelevant);
+  }
+
+  [Fact]
+  public void IsRelevantCombat_WhenNpcLookupThrowsNullReference_ReturnsFalse()
+  {
+    var destroyed = new MockCharacter { InstanceId = 1, Name = "Destroyed" };
+    var other = new MockCharacter
+    {
+      InstanceId = 2,
+      Name = "Other",
+      Npc = new MockNpc(),
+    };
+    var checker = CreateChecker(getMyNpc: c =>
+      c == destroyed ? throw new NullReferenceException("destroyed") : c.Npc
+    );
+
+    var isRelevant = checker.IsRelevantCombat(destroyed, other);
+
+    Assert.False(isRelevant);
+  }
+
   private static CombatRelevanceChecker<MockCharacter, MockNpc> CreateChecker(
     IReadOnlyList<MockCharacter>? groupMembers = null,
     IReadOnlyList<MockCharacter>? raidTargets = null,
-    IReadOnlyList<MockCharacter>? looseAdds = null
+    IReadOnlyList<MockCharacter>? looseAdds = null,
+    Func<MockCharacter, string>? getTransformName = null,
+    Func<MockCharacter, MockNpc?>? getMyNpc = null
   )
   {
     return new CombatRelevanceChecker<MockCharacter, MockNpc>(
       getInstanceId: c => c.InstanceId,
-      getTransformName: c => c.Name,
-      getMyNpc: c => c.Npc,
+      getTransformName: getTransformName ?? (c => c.Name),
+      getMyNpc: getMyNpc ?? (c => c.Npc),
       isSimPlayer: npc => npc.SimPlayer,
       isInGroup: npc => npc.InGroup || npc.MyRaidSlot != null,
       getMaster: c => c.Master,
