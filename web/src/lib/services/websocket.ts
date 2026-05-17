@@ -39,6 +39,7 @@ export function createWebSocketClient(
   let socket: WebSocket | null = null;
   let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   let shouldReconnect = autoReconnect;
+  let receivedHello = false;
 
   function connect(force: boolean = false): void {
     if (!shouldReconnect && !force) {
@@ -85,7 +86,7 @@ export function createWebSocketClient(
       callbacks.onDisconnected();
 
       if (shouldReconnect) {
-        if (!event.wasClean) {
+        if (!event.wasClean && receivedHello) {
           callbacks.onError(
             "unexpected_disconnect",
             `Connection closed unexpectedly (code: ${event.code})`
@@ -98,6 +99,7 @@ export function createWebSocketClient(
 
   function handleMessage(message: LiveEnvelope): void {
     if (message.kind === "hello") {
+      receivedHello = true;
       callbacks.onConnected(message);
     }
     callbacks.onFrame(message);

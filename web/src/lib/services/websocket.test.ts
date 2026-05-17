@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createWebSocketClient, type WebSocketCallbacks } from "./websocket";
+import hello from "../../../../shared/protocol/fixtures/live/hello.json";
 
 class FakeWebSocket {
   static instances: FakeWebSocket[] = [];
@@ -19,6 +20,10 @@ class FakeWebSocket {
 
   receive(data: unknown): void {
     this.onmessage?.(new MessageEvent("message", { data: JSON.stringify(data) }));
+  }
+
+  closeWith(code: number, wasClean: boolean): void {
+    this.onclose?.(new CloseEvent("close", { code, wasClean }));
   }
 }
 
@@ -56,5 +61,49 @@ describe("createWebSocketClient", () => {
     );
 
     client.disconnect();
+  });
+
+  it("does not report connection lost before a valid hello", () => {
+    vi.stubGlobal("WebSocket", FakeWebSocket);
+    const onError = vi.fn<WebSocketCallbacks["onError"]>();
+
+    createWebSocketClient(
+      {
+        onConnecting: vi.fn(),
+        onConnected: vi.fn(),
+        onFrame: vi.fn(),
+        onDisconnected: vi.fn(),
+        onError,
+      },
+      { url: "ws://localhost:38729", autoReconnect: true }
+    );
+
+    FakeWebSocket.instances[0].closeWith(1006, false);
+
+    expect(onError).not.toHaveBeenCalledWith("unexpected_disconnect", expect.any(String));
+  });
+
+  it("reports connection lost after a valid hello", () => {
+    vi.stubGlobal("WebSocket", FakeWebSocket);
+    const onError = vi.fn<WebSocketCallbacks["onError"]>();
+
+    createWebSocketClient(
+      {
+        onConnecting: vi.fn(),
+        onConnected: vi.fn(),
+        onFrame: vi.fn(),
+        onDisconnected: vi.fn(),
+        onError,
+      },
+      { url: "ws://localhost:38729", autoReconnect: true }
+    );
+
+    FakeWebSocket.instances[0].receive(hello);
+    FakeWebSocket.instances[0].closeWith(1006, false);
+
+    expect(onError).toHaveBeenCalledWith(
+      "unexpected_disconnect",
+      "Connection closed unexpectedly (code: 1006)"
+    );
   });
 });

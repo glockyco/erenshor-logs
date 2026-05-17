@@ -151,6 +151,26 @@ describe("connection state", () => {
 
       expect(connectionError.value).toBeNull();
     });
+
+    it("suppresses new errors until the next successful connection", () => {
+      setError("unexpected_disconnect", "Connection lost");
+      clearError();
+
+      setError("unexpected_disconnect", "Connection lost again");
+
+      expect(connectionError.value).toBeNull();
+    });
+
+    it("allows errors again after a successful connection", () => {
+      setError("unexpected_disconnect", "Connection lost");
+      clearError();
+      setConnected(helloFrame);
+
+      setError("unexpected_disconnect", "Connection lost again");
+
+      expect(connectionError.value?.code).toBe("unexpected_disconnect");
+      expect(connectionError.value?.message).toBe("Connection lost again");
+    });
   });
 
   describe("resetConnectionState", () => {

@@ -15,6 +15,7 @@ const state = $state({
   protocolVersion: null as string | null,
   modVersion: null as string | null,
   client: null as WebSocketClient | null,
+  suppressErrorsUntilConnected: false,
 });
 
 export const connectionStatus = {
@@ -48,6 +49,7 @@ export function setConnecting(): void {
 export function setConnected(hello: LiveEnvelope): void {
   state.connectionStatus = "connected";
   state.connectionError = null;
+  state.suppressErrorsUntilConnected = false;
   state.protocolVersion = hello.protocolVersion;
   state.modVersion =
     hello.kind === "hello"
@@ -62,6 +64,10 @@ export function setDisconnected(): void {
 }
 
 export function setError(code: ConnectionErrorCode, message: string): void {
+  if (state.suppressErrorsUntilConnected) {
+    return;
+  }
+
   state.connectionError = {
     code,
     message,
@@ -70,7 +76,9 @@ export function setError(code: ConnectionErrorCode, message: string): void {
 }
 
 export function clearError(): void {
+  const hadError = state.connectionError !== null;
   state.connectionError = null;
+  state.suppressErrorsUntilConnected = hadError;
 }
 
 export function setClient(client: WebSocketClient | null): void {
@@ -89,4 +97,5 @@ export function resetConnectionState(): void {
   state.protocolVersion = null;
   state.modVersion = null;
   state.client = null;
+  state.suppressErrorsUntilConnected = false;
 }
