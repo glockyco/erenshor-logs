@@ -62,6 +62,7 @@ public class PatchCoverageTests
 
     AssertPatchTargetExists("RaidManager", "UpdateGroupAuras", "ErenshorLogs.Hooks.RaidAuraPatch");
 
+    AssertPatchTargetExists("Character", "DoDeath", "ErenshorLogs.Hooks.DeathEventPatch");
     var patchType = RequireModType("ErenshorLogs.Hooks.MizukiEventPatch");
     var mizukiTarget = patchType.GetMethod("TargetMethod")?.Invoke(null, null) as MethodBase;
     Assert.NotNull(mizukiTarget);

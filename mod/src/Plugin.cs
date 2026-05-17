@@ -152,6 +152,11 @@ public sealed class Plugin : BaseUnityPlugin
     HealMePatch.RelevanceChecker = _relevanceChecker;
     HealMePatch.SessionManager = sessionManager;
 
+    DeathEventPatch.Emitter = emitter;
+    DeathEventPatch.EventBuilder = eventBuilder;
+    DeathEventPatch.LogDebug = msg => Logger.LogDebug(msg);
+    DeathEventPatch.RelevanceChecker = _relevanceChecker;
+    DeathEventPatch.SessionManager = sessionManager;
     // Wire EffectTracker to effect lifecycle hooks
     AddStatusEffectPatch.Tracker = effectTracker;
     RemoveStatusEffectPatch.Tracker = effectTracker;
