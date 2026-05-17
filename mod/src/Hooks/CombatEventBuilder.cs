@@ -74,4 +74,138 @@ public sealed class CombatEventBuilder<TCharacter>
       DebugInfo = debugInfo,
     };
   }
+
+  public CombatEvent? CreateHealEvent(
+    EventType eventType,
+    TCharacter target,
+    TCharacter? source,
+    AbilityRef ability,
+    int amount,
+    int? rawAmount,
+    int? overhealAmount
+  )
+  {
+    var targetRef = _resolveActor(target);
+    if (targetRef == null)
+      return null;
+
+    return new CombatEvent
+    {
+      Id = _generateId(),
+      Timestamp = _getTimestamp(),
+      EventType = eventType,
+      Source = _resolveActor(source),
+      Target = targetRef,
+      Ability = ability,
+      Amount = amount,
+      RawAmount = rawAmount,
+      OverhealAmount = overhealAmount,
+    };
+  }
+
+  public CombatEvent? CreateResourceEvent(
+    EventType eventType,
+    TCharacter target,
+    TCharacter? source,
+    AbilityRef ability,
+    string resourceType,
+    int delta,
+    int? current,
+    int? max
+  )
+  {
+    var targetRef = _resolveActor(target);
+    if (targetRef == null)
+      return null;
+
+    return new CombatEvent
+    {
+      Id = _generateId(),
+      Timestamp = _getTimestamp(),
+      EventType = eventType,
+      Source = _resolveActor(source),
+      Target = targetRef,
+      Ability = ability,
+      ResourceType = resourceType,
+      ResourceDelta = delta,
+      ResourceCurrent = current,
+      ResourceMax = max,
+    };
+  }
+
+  public CombatEvent? CreateEffectEvent(
+    EventType eventType,
+    TCharacter target,
+    TCharacter? source,
+    AbilityRef ability,
+    EffectRef effect,
+    string action,
+    string? reason
+  )
+  {
+    var targetRef = _resolveActor(target);
+    if (targetRef == null)
+      return null;
+
+    return new CombatEvent
+    {
+      Id = _generateId(),
+      Timestamp = _getTimestamp(),
+      EventType = eventType,
+      Source = _resolveActor(source),
+      Target = targetRef,
+      Ability = ability,
+      Effect = effect,
+      EffectAction = action,
+      EffectReason = reason,
+      EffectStacks = effect.Stacks,
+      EffectDurationMs = effect.Duration * 1000,
+    };
+  }
+
+  public CombatEvent? CreateDeathEvent(
+    TCharacter target,
+    TCharacter? source,
+    AbilityRef ability,
+    long? killingBlowEventSeq
+  )
+  {
+    var targetRef = _resolveActor(target);
+    if (targetRef == null)
+      return null;
+
+    return new CombatEvent
+    {
+      Id = _generateId(),
+      Timestamp = _getTimestamp(),
+      EventType = EventType.Death,
+      Source = _resolveActor(source),
+      Target = targetRef,
+      Ability = ability,
+      KillingBlowEventSeq = killingBlowEventSeq,
+    };
+  }
+
+  public CombatEvent? CreateMechanicEvent(
+    TCharacter? target,
+    TCharacter? source,
+    AbilityRef ability,
+    MechanicData mechanic
+  )
+  {
+    var targetRef = target == null ? null : _resolveActor(target);
+    if (target != null && targetRef == null)
+      return null;
+
+    return new CombatEvent
+    {
+      Id = _generateId(),
+      Timestamp = _getTimestamp(),
+      EventType = EventType.Mechanic,
+      Source = _resolveActor(source),
+      Target = targetRef,
+      Ability = ability,
+      Mechanic = mechanic,
+    };
+  }
 }

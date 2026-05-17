@@ -81,6 +81,9 @@ public enum EventType
   /// <summary>Entity died.</summary>
   Death,
 
+  /// <summary>Health-affecting encounter mechanic.</summary>
+  Mechanic,
+
   /// <summary>Combat began.</summary>
   CombatStart,
 

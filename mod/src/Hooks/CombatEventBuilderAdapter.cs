@@ -47,4 +47,86 @@ public sealed class CombatEventBuilderAdapter : ICombatEventBuilder
       debugInfo
     );
   }
+
+  /// <inheritdoc />
+  public CombatEvent? CreateHealEvent(
+    EventType eventType,
+    Character target,
+    Character? source,
+    AbilityRef ability,
+    int amount,
+    int? rawAmount,
+    int? overhealAmount
+  )
+  {
+    return _inner.CreateHealEvent(
+      eventType,
+      target,
+      source,
+      ability,
+      amount,
+      rawAmount,
+      overhealAmount
+    );
+  }
+
+  /// <inheritdoc />
+  public CombatEvent? CreateResourceEvent(
+    EventType eventType,
+    Character target,
+    Character? source,
+    AbilityRef ability,
+    string resourceType,
+    int delta,
+    int? current,
+    int? max
+  )
+  {
+    return _inner.CreateResourceEvent(
+      eventType,
+      target,
+      source,
+      ability,
+      resourceType,
+      delta,
+      current,
+      max
+    );
+  }
+
+  /// <inheritdoc />
+  public CombatEvent? CreateEffectEvent(
+    EventType eventType,
+    Character target,
+    Character? source,
+    AbilityRef ability,
+    EffectRef effect,
+    string action,
+    string? reason
+  )
+  {
+    return _inner.CreateEffectEvent(eventType, target, source, ability, effect, action, reason);
+  }
+
+  /// <inheritdoc />
+  public CombatEvent? CreateDeathEvent(
+    Character target,
+    Character? source,
+    AbilityRef ability,
+    long? killingBlowEventSeq
+  )
+  {
+    return _inner.CreateDeathEvent(target, source, ability, killingBlowEventSeq);
+  }
+
+  /// <inheritdoc />
+  public CombatEvent? CreateMechanicEvent(
+    Character? target,
+    Character? source,
+    AbilityRef ability,
+    MechanicData mechanic
+  )
+  {
+    return _inner.CreateMechanicEvent(target, source, ability, mechanic);
+  }
 }

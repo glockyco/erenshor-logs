@@ -30,4 +30,49 @@ public interface ICombatEventBuilder
     EventFlags? flags = null,
     AttributionDebugInfo? debugInfo = null
   );
+
+  CombatEvent? CreateHealEvent(
+    EventType eventType,
+    Character target,
+    Character? source,
+    AbilityRef ability,
+    int amount,
+    int? rawAmount,
+    int? overhealAmount
+  );
+
+  CombatEvent? CreateResourceEvent(
+    EventType eventType,
+    Character target,
+    Character? source,
+    AbilityRef ability,
+    string resourceType,
+    int delta,
+    int? current,
+    int? max
+  );
+
+  CombatEvent? CreateEffectEvent(
+    EventType eventType,
+    Character target,
+    Character? source,
+    AbilityRef ability,
+    EffectRef effect,
+    string action,
+    string? reason
+  );
+
+  CombatEvent? CreateDeathEvent(
+    Character target,
+    Character? source,
+    AbilityRef ability,
+    long? killingBlowEventSeq
+  );
+
+  CombatEvent? CreateMechanicEvent(
+    Character? target,
+    Character? source,
+    AbilityRef ability,
+    MechanicData mechanic
+  );
 }
