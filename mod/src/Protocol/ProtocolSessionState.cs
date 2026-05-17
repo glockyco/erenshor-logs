@@ -47,6 +47,18 @@ public sealed class ProtocolSessionState
       or EventType.DamagePet
       or EventType.DamageReflect
       or EventType.DamageEnvironmental => CreateDamageEvent(evt),
+      EventType.HealSpell or EventType.HealHot or EventType.HealLifesteal or EventType.HealRegen =>
+        CreateHealEvent(evt),
+      EventType.ManaUse or EventType.ManaRestore or EventType.ManaRegen => CreateResourceEvent(evt),
+      EventType.BuffApply
+      or EventType.BuffRefresh
+      or EventType.BuffFade
+      or EventType.DebuffApply
+      or EventType.DebuffRefresh
+      or EventType.DebuffFade => CreateEffectEvent(evt),
+      EventType.Death => CreateDeathEvent(evt),
+      EventType.SpellInterrupt => CreateInterruptEvent(evt),
+      EventType.Mechanic => CreateMechanicEvent(evt),
       _ => null,
     };
 
@@ -150,6 +162,91 @@ public sealed class ProtocolSessionState
     return result;
   }
 
+  private JObject CreateHealEvent(CombatEvent evt)
+  {
+    var data = new JObject { ["amount"] = evt.Amount ?? 0 };
+    AddOptional(data, "rawAmount", evt.RawAmount);
+    AddOptional(data, "overhealAmount", evt.OverhealAmount);
+    if (evt.Flags?.Critical == true)
+      data["critical"] = true;
+
+    return CreateEventRecord(evt, "heal", GetHealAction(evt), data);
+  }
+
+  private JObject CreateResourceEvent(CombatEvent evt)
+  {
+    var data = new JObject
+    {
+      ["resource"] = evt.ResourceType ?? "mana",
+      ["delta"] = evt.ResourceDelta ?? 0,
+    };
+    AddOptional(data, "current", evt.ResourceCurrent);
+    AddOptional(data, "max", evt.ResourceMax);
+
+    return CreateEventRecord(evt, "resource", GetResourceAction(evt), data);
+  }
+
+  private JObject CreateEffectEvent(CombatEvent evt)
+  {
+    var data = new JObject();
+    AddOptional(data, "stacks", evt.EffectStacks);
+    AddOptional(data, "durationMs", evt.EffectDurationMs);
+    AddOptional(data, "reason", evt.EffectReason);
+
+    return CreateEventRecord(evt, "effect", GetEffectAction(evt), data);
+  }
+
+  private JObject CreateDeathEvent(CombatEvent evt)
+  {
+    var data = new JObject();
+    AddOptional(data, "killingBlowEventSeq", evt.KillingBlowEventSeq);
+
+    return CreateEventRecord(evt, "death", "die", data);
+  }
+
+  private JObject CreateInterruptEvent(CombatEvent evt)
+  {
+    return CreateEventRecord(evt, "interrupt", "interrupt", new JObject());
+  }
+
+  private JObject CreateMechanicEvent(CombatEvent evt)
+  {
+    var mechanic =
+      evt.Mechanic
+      ?? new ErenshorLogs.Events.MechanicData { Name = evt.Ability.Name, Action = "phase" };
+    var data = new JObject { ["name"] = mechanic.Name };
+    AddOptional(data, "value", mechanic.Value);
+    AddOptional(data, "previousValue", mechanic.PreviousValue);
+    AddOptional(data, "affectedStat", mechanic.AffectedStat);
+    AddOptional(data, "amount", mechanic.Amount);
+
+    return CreateEventRecord(evt, "mechanic", mechanic.Action ?? "phase", data);
+  }
+
+  private JObject CreateEventRecord(CombatEvent evt, string kind, string action, JObject data)
+  {
+    LastEventSeq += 1;
+
+    var result = new JObject
+    {
+      ["eventSeq"] = LastEventSeq,
+      ["offsetMs"] = Math.Max(0, evt.Timestamp - _session.StartTime),
+      ["kind"] = kind,
+      ["action"] = action,
+      ["data"] = data,
+    };
+
+    AddOptional(result, "sourceActorId", RegisterActor(evt.Source));
+    AddOptional(result, "creditActorId", RegisterActor(evt.Source));
+    AddOptional(result, "targetActorId", RegisterActor(evt.Target));
+    AddOptional(result, "abilityId", RegisterAbility(evt.Ability));
+    AddOptional(result, "effectId", RegisterEffect(evt.Effect));
+    AddOptional(result, "attribution", evt.Flags?.AttributionFailed == true ? "unknown" : null);
+    AddDebug(result, evt.DebugInfo);
+
+    return result;
+  }
+
   private string? RegisterActor(ActorRef? actor)
   {
     if (actor == null)
@@ -216,7 +313,7 @@ public sealed class ProtocolSessionState
         Id = id,
         Name = effect.Name,
         Kind = "unknown",
-        DefaultDurationMs = effect.Duration,
+        DefaultDurationMs = effect.Duration * 1000,
         MaxStacks = effect.Stacks,
       }
     );
@@ -236,6 +333,41 @@ public sealed class ProtocolSessionState
       EventType.DamageReflect => "reflect",
       _ => "hit",
     };
+
+  private static string GetHealAction(CombatEvent evt) =>
+    evt.EventType switch
+    {
+      EventType.HealHot => "tick",
+      EventType.HealLifesteal => "lifesteal",
+      EventType.HealRegen => "regen",
+      EventType.HealSpell when evt.Mechanic?.Action == "scripted" => "scripted",
+      _ => "direct",
+    };
+
+  private static string GetResourceAction(CombatEvent evt) =>
+    evt.EventType switch
+    {
+      EventType.ManaRestore => "restore",
+      EventType.ManaRegen => "regen",
+      EventType.ManaUse
+        when evt.ResourceDelta < 0
+          && evt.Ability.StableKey?.StartsWith("mechanic:", StringComparison.Ordinal) == true =>
+        "drain",
+      _ => "spend",
+    };
+
+  private static string GetEffectAction(CombatEvent evt)
+  {
+    if (!string.IsNullOrWhiteSpace(evt.EffectAction))
+      return evt.EffectAction;
+
+    return evt.EventType switch
+    {
+      EventType.BuffRefresh or EventType.DebuffRefresh => "refresh",
+      EventType.BuffFade or EventType.DebuffFade => "fade",
+      _ => "apply",
+    };
+  }
 
   private static JObject CreateDamageOutcome(EventFlags? flags)
   {
@@ -285,6 +417,21 @@ public sealed class ProtocolSessionState
       _ => "unknown",
     };
 
+  private static void AddDebug(JObject result, AttributionDebugInfo? debugInfo)
+  {
+    if (debugInfo == null)
+      return;
+
+    result["debug"] = JObject.FromObject(
+      new AttributionDebug
+      {
+        SourceMethod = debugInfo.SourceMethod,
+        Parameters = debugInfo.Parameters,
+        Context = debugInfo.Context == null ? null : JObject.FromObject(debugInfo.Context),
+      }
+    );
+  }
+
   private static void AddOptional(JObject target, string property, string? value)
   {
     if (!string.IsNullOrEmpty(value))
@@ -295,5 +442,17 @@ public sealed class ProtocolSessionState
   {
     if (value.HasValue)
       target[property] = value.Value;
+  }
+
+  private static void AddOptional(JObject target, string property, int? value)
+  {
+    if (value.HasValue)
+      target[property] = value.Value;
+  }
+
+  private static void AddOptional(JObject target, string property, object? value)
+  {
+    if (value != null)
+      target[property] = JToken.FromObject(value);
   }
 }

@@ -3,6 +3,7 @@ using ErenshorLogs.Protocol;
 using ErenshorLogs.Session;
 using Newtonsoft.Json.Linq;
 using Xunit;
+using EventMechanicData = ErenshorLogs.Events.MechanicData;
 
 namespace ErenshorLogs.Tests.Protocol;
 
@@ -100,6 +101,104 @@ public sealed class ProtocolSessionStateTests
   }
 
   [Fact]
+  public void Append_HealEvent_SerializesHealRecord()
+  {
+    var session = new CombatSession("playtest-raid", "2026.5.17.1");
+    var state = new ProtocolSessionState(session);
+    var evt = CreateHealEvent(session.StartTime + 500, EventType.HealSpell) with
+    {
+      Mechanic = new EventMechanicData { Name = "Grace Echoes", Action = "scripted" },
+    };
+
+    var record = state.Append(evt)!;
+
+    Assert.Equal("heal", record.Value<string>("kind"));
+    Assert.Equal("scripted", record.Value<string>("action"));
+    Assert.Equal(200000, record["data"]!.Value<int>("amount"));
+    Assert.Equal(0, record["data"]!.Value<int>("overhealAmount"));
+  }
+
+  [Fact]
+  public void Append_ResourceDrain_SerializesResourceRecord()
+  {
+    var session = new CombatSession("playtest-raid", "2026.5.17.1");
+    var state = new ProtocolSessionState(session);
+    var evt = CreateResourceDrainEvent(session.StartTime + 750);
+
+    var record = state.Append(evt)!;
+
+    Assert.Equal("resource", record.Value<string>("kind"));
+    Assert.Equal("drain", record.Value<string>("action"));
+    Assert.Equal(-300, record["data"]!.Value<int>("delta"));
+  }
+
+  [Fact]
+  public void Append_MechanicEvent_SerializesMechanicRecord()
+  {
+    var session = new CombatSession("playtest-raid", "2026.5.17.1");
+    var state = new ProtocolSessionState(session);
+    var evt = CreateMechanicEvent(session.StartTime + 1500);
+
+    var record = state.Append(evt)!;
+
+    Assert.Equal("mechanic", record.Value<string>("kind"));
+    Assert.Equal("invulnerability", record.Value<string>("action"));
+    Assert.Equal("Sprinkles wards", record["data"]!.Value<string>("name"));
+    Assert.True(record["data"]!.Value<bool>("value"));
+  }
+
+  [Theory]
+  [InlineData(EventType.HealHot, "tick")]
+  [InlineData(EventType.HealLifesteal, "lifesteal")]
+  [InlineData(EventType.HealRegen, "regen")]
+  public void Append_HealEvents_MapProtocolActions(EventType eventType, string expectedAction)
+  {
+    var session = new CombatSession("playtest-raid", "2026.5.17.1");
+    var state = new ProtocolSessionState(session);
+
+    var record = state.Append(CreateHealEvent(session.StartTime + 500, eventType))!;
+
+    Assert.Equal(expectedAction, record.Value<string>("action"));
+  }
+
+  [Fact]
+  public void Append_ManaRestore_MapsToResourceRestore()
+  {
+    var session = new CombatSession("playtest-raid", "2026.5.17.1");
+    var state = new ProtocolSessionState(session);
+
+    var record = state.Append(CreateManaRestoreEvent(session.StartTime + 750))!;
+
+    Assert.Equal("restore", record.Value<string>("action"));
+  }
+
+  [Fact]
+  public void Append_DebuffApply_MapsToEffectApply()
+  {
+    var session = new CombatSession("playtest-raid", "2026.5.17.1");
+    var state = new ProtocolSessionState(session);
+
+    var record = state.Append(CreateEffectEvent(session.StartTime + 900))!;
+
+    Assert.Equal("effect", record.Value<string>("kind"));
+    Assert.Equal("apply", record.Value<string>("action"));
+    Assert.Equal(12000, record["data"]!.Value<int>("durationMs"));
+    Assert.Equal(12000, state.Registries.Effects["effect:BleedRef"].DefaultDurationMs);
+  }
+
+  [Fact]
+  public void Append_Death_MapsToDieAction()
+  {
+    var session = new CombatSession("playtest-raid", "2026.5.17.1");
+    var state = new ProtocolSessionState(session);
+
+    var record = state.Append(CreateDeathEvent(session.StartTime + 1200))!;
+
+    Assert.Equal("death", record.Value<string>("kind"));
+    Assert.Equal("die", record.Value<string>("action"));
+  }
+
+  [Fact]
   public void Append_IgnoresSyntheticCombatLifecycleEvents()
   {
     var session = new CombatSession("main-22374607", "2026.5.17.14");
@@ -177,5 +276,165 @@ public sealed class ProtocolSessionStateTests
       Mitigated = 50,
       DamageType = DamageType.Physical,
       Flags = new EventFlags { Critical = true },
+    };
+
+  private static CombatEvent CreateHealEvent(long timestamp, EventType eventType) =>
+    new()
+    {
+      Id = "evt-heal",
+      Timestamp = timestamp,
+      EventType = eventType,
+      Source = new ActorRef
+      {
+        Id = "npc:grace",
+        Name = "Grace",
+        Type = ActorType.Npc,
+      },
+      Target = new ActorRef
+      {
+        Id = "npc:grace",
+        Name = "Grace",
+        Type = ActorType.Npc,
+      },
+      Ability = new AbilityRef
+      {
+        Name = "Grace Echoes",
+        Type = AbilityType.AreaEffect,
+        StableKey = "mechanic:grace-echoes",
+      },
+      Amount = 200000,
+      RawAmount = 200000,
+      OverhealAmount = 0,
+    };
+
+  private static CombatEvent CreateResourceDrainEvent(long timestamp) =>
+    new()
+    {
+      Id = "evt-resource",
+      Timestamp = timestamp,
+      EventType = EventType.ManaUse,
+      Source = new ActorRef
+      {
+        Id = "npc:mana-drain",
+        Name = "Mana Drain",
+        Type = ActorType.Npc,
+      },
+      Target = new ActorRef
+      {
+        Id = "player:0",
+        Name = "Player",
+        Type = ActorType.Player,
+      },
+      Ability = new AbilityRef
+      {
+        Name = "Mana Drain",
+        Type = AbilityType.AreaEffect,
+        StableKey = "mechanic:mana-drain",
+      },
+      ResourceType = "mana",
+      ResourceDelta = -300,
+      ResourceCurrent = 1200,
+      ResourceMax = 1500,
+    };
+
+  private static CombatEvent CreateManaRestoreEvent(long timestamp) =>
+    CreateResourceDrainEvent(timestamp) with
+    {
+      EventType = EventType.ManaRestore,
+      ResourceDelta = 300,
+    };
+
+  private static CombatEvent CreateEffectEvent(long timestamp) =>
+    new()
+    {
+      Id = "evt-effect",
+      Timestamp = timestamp,
+      EventType = EventType.DebuffApply,
+      Source = new ActorRef
+      {
+        Id = "npc:mizuki",
+        Name = "Mizuki",
+        Type = ActorType.Npc,
+      },
+      Target = new ActorRef
+      {
+        Id = "player:0",
+        Name = "Player",
+        Type = ActorType.Player,
+      },
+      Ability = new AbilityRef
+      {
+        Name = "Dagger Bleed",
+        Type = AbilityType.Dot,
+        StableKey = "mechanic:mizuki-dagger",
+      },
+      Effect = new EffectRef
+      {
+        Name = "BleedRef",
+        Duration = 12,
+        Stacks = 1,
+      },
+      EffectAction = "apply",
+      EffectStacks = 1,
+      EffectDurationMs = 12000,
+    };
+
+  private static CombatEvent CreateDeathEvent(long timestamp) =>
+    new()
+    {
+      Id = "evt-death",
+      Timestamp = timestamp,
+      EventType = EventType.Death,
+      Source = new ActorRef
+      {
+        Id = "npc:death-touch",
+        Name = "Death Touch",
+        Type = ActorType.Npc,
+      },
+      Target = new ActorRef
+      {
+        Id = "sim:cleric",
+        Name = "Cleric",
+        Type = ActorType.SimPlayer,
+      },
+      Ability = new AbilityRef
+      {
+        Name = "Death Touch",
+        Type = AbilityType.AreaEffect,
+        StableKey = "mechanic:death-touch",
+      },
+      KillingBlowEventSeq = 1,
+    };
+
+  private static CombatEvent CreateMechanicEvent(long timestamp) =>
+    new()
+    {
+      Id = "evt-mechanic",
+      Timestamp = timestamp,
+      EventType = EventType.Mechanic,
+      Source = new ActorRef
+      {
+        Id = "npc:sprinkles",
+        Name = "Sprinkles",
+        Type = ActorType.Npc,
+      },
+      Target = new ActorRef
+      {
+        Id = "npc:sprinkles",
+        Name = "Sprinkles",
+        Type = ActorType.Npc,
+      },
+      Ability = new AbilityRef
+      {
+        Name = "Sprinkles Wards",
+        Type = AbilityType.AreaEffect,
+        StableKey = "mechanic:sprinkles-wards",
+      },
+      Mechanic = new EventMechanicData
+      {
+        Name = "Sprinkles wards",
+        Action = "invulnerability",
+        Value = true,
+      },
     };
 }
