@@ -3,38 +3,31 @@ using ErenshorLogs.Events;
 using ErenshorLogs.Protocol;
 using ErenshorLogs.Server;
 using ErenshorLogs.Session;
+using Newtonsoft.Json.Linq;
 
 namespace ErenshorLogs.Broadcast;
 
 /// <summary>
-/// Manages periodic broadcasting of combat events to WebSocket clients.
-/// Batches events for efficiency and handles session boundary messages.
+/// Manages periodic broadcasting of protocol v2 frames to WebSocket clients.
 /// </summary>
 public sealed class CombatEventBroadcaster : ICombatEventBroadcaster
 {
   private readonly IEventEmitter _eventEmitter;
   private readonly ISessionManager _sessionManager;
   private readonly IWebSocketServer _server;
-  private readonly ModConfig _config;
+  private readonly Func<int> _getBroadcastIntervalMs;
   private readonly string _modVersion;
   private readonly Action<string>? _log;
 
-  private readonly List<CombatEvent> _eventQueue = [];
+  private readonly List<JObject> _eventQueue = [];
   private readonly object _queueLock = new();
+  private readonly Dictionary<string, ProtocolSessionState> _sessionStates = new();
 
   private IDisposable? _eventSubscription;
+  private long _frameSeq;
   private float _elapsed;
   private bool _disposed;
 
-  /// <summary>
-  /// Creates a new CombatEventBroadcaster.
-  /// </summary>
-  /// <param name="eventEmitter">Event emitter to subscribe to for combat events.</param>
-  /// <param name="sessionManager">Session manager for session boundary events.</param>
-  /// <param name="server">WebSocket server for broadcasting.</param>
-  /// <param name="config">Configuration for broadcast interval.</param>
-  /// <param name="modVersion">Mod version string for handshake.</param>
-  /// <param name="log">Optional logging callback.</param>
   public CombatEventBroadcaster(
     IEventEmitter eventEmitter,
     ISessionManager sessionManager,
@@ -43,29 +36,51 @@ public sealed class CombatEventBroadcaster : ICombatEventBroadcaster
     string modVersion,
     Action<string>? log = null
   )
+    : this(
+      eventEmitter,
+      sessionManager,
+      server,
+      () => config.BroadcastInterval.Value,
+      modVersion,
+      log
+    ) { }
+
+  public CombatEventBroadcaster(
+    IEventEmitter eventEmitter,
+    ISessionManager sessionManager,
+    IWebSocketServer server,
+    int broadcastIntervalMs,
+    string modVersion,
+    Action<string>? log = null
+  )
+    : this(eventEmitter, sessionManager, server, () => broadcastIntervalMs, modVersion, log) { }
+
+  private CombatEventBroadcaster(
+    IEventEmitter eventEmitter,
+    ISessionManager sessionManager,
+    IWebSocketServer server,
+    Func<int> getBroadcastIntervalMs,
+    string modVersion,
+    Action<string>? log
+  )
   {
     _eventEmitter = eventEmitter;
     _sessionManager = sessionManager;
     _server = server;
-    _config = config;
+    _getBroadcastIntervalMs = getBroadcastIntervalMs;
     _modVersion = modVersion;
     _log = log;
 
-    // Subscribe to combat events
     _eventSubscription = _eventEmitter.Subscribe(OnCombatEvent);
-
-    // Subscribe to session events
     _sessionManager.SessionStarted += OnSessionStarted;
     _sessionManager.SessionEnded += OnSessionEnded;
   }
 
-  /// <inheritdoc />
   public void Tick(float deltaTime)
   {
     _elapsed += deltaTime;
 
-    // Convert interval from milliseconds to seconds
-    var intervalSeconds = _config.BroadcastInterval.Value / 1000f;
+    var intervalSeconds = _getBroadcastIntervalMs() / 1000f;
     if (_elapsed < intervalSeconds)
       return;
 
@@ -73,21 +88,38 @@ public sealed class CombatEventBroadcaster : ICombatEventBroadcaster
     BroadcastQueuedEvents();
   }
 
-  /// <inheritdoc />
   public void SendHandshakeToNewClient()
   {
-    // Skip if no clients connected
     if (_server.ClientCount == 0)
       return;
 
     try
     {
-      var session = _sessionManager.CurrentSession;
-      var sessionInfo = session != null ? new SessionInfo(session.Id, session.StartTime) : null;
+      BroadcastEnvelope(
+        "hello",
+        null,
+        new HelloPayload
+        {
+          Producer = new ProducerInfo { Name = "ErenshorLogsMod", ModVersion = _modVersion },
+          ActiveSessionId = _sessionManager.CurrentSession?.Id,
+          Capabilities = ["sessionSnapshot", "registryDelta"],
+        }
+      );
 
-      var handshake = HandshakeMessage.Create(_modVersion, sessionInfo);
-      var json = MessageSerializer.Serialize(handshake);
-      _server.Broadcast(json);
+      var currentSession = _sessionManager.CurrentSession;
+      if (currentSession != null && _sessionStates.TryGetValue(currentSession.Id, out var state))
+      {
+        BroadcastEnvelope("sessionSnapshot", currentSession.Id, state.CreateSnapshot());
+
+        if (state.Events.Count > 0)
+        {
+          BroadcastEnvelope(
+            "events",
+            currentSession.Id,
+            state.CreateEventsPayload([.. state.Events])
+          );
+        }
+      }
     }
     catch (Exception ex)
     {
@@ -95,7 +127,6 @@ public sealed class CombatEventBroadcaster : ICombatEventBroadcaster
     }
   }
 
-  /// <inheritdoc />
   public void Dispose()
   {
     if (_disposed)
@@ -110,46 +141,70 @@ public sealed class CombatEventBroadcaster : ICombatEventBroadcaster
 
   private void OnCombatEvent(CombatEvent evt)
   {
-    // Queue event for next broadcast
+    var session = _sessionManager.CurrentSession;
+    if (session == null)
+      return;
+
+    var state = GetOrCreateState(session);
+    var protocolEvent = state.Append(evt);
+    if (protocolEvent == null)
+      return;
+
     lock (_queueLock)
     {
-      _eventQueue.Add(evt);
+      _eventQueue.Add(protocolEvent);
     }
   }
 
   private void OnSessionStarted(CombatSession session)
   {
-    // Skip if no clients connected
+    var state = GetOrCreateState(session);
+
     if (_server.ClientCount == 0)
       return;
 
     try
     {
-      var sessionInfo = new SessionInfo(session.Id, session.StartTime);
-      var message = SessionStartMessage.Create(sessionInfo);
-      var json = MessageSerializer.Serialize(message);
-      _server.Broadcast(json);
+      BroadcastEnvelope("sessionSnapshot", session.Id, state.CreateSnapshot());
     }
     catch (Exception ex)
     {
-      _log?.Invoke($"Error broadcasting session start: {ex.Message}");
+      _log?.Invoke($"Error broadcasting session snapshot: {ex.Message}");
     }
   }
 
   private void OnSessionEnded(CombatSession session)
   {
-    // Broadcast any remaining events before sending session end
     BroadcastQueuedEvents();
 
-    // Skip if no clients connected
     if (_server.ClientCount == 0)
       return;
 
     try
     {
-      var message = SessionEndMessage.Create(session.Id, session.EndTime!.Value);
-      var json = MessageSerializer.Serialize(message);
-      _server.Broadcast(json);
+      var durationMs = session.EndTime.HasValue
+        ? session.EndTime.Value - session.StartTime
+        : session.Duration;
+      BroadcastEnvelope(
+        "sessionEnded",
+        session.Id,
+        new SessionEndedPayload
+        {
+          SessionId = session.Id,
+          EndedAtUtcMs = session.EndTime ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+          EndedAtEventSeq = GetOrCreateState(session).LastEventSeq,
+          Reason = "inactivity",
+          DurationMs = durationMs,
+          Diagnostics = new SessionDiagnostics
+          {
+            HookWarnings = [],
+            AttributionFailures = 0,
+            DroppedEvents = 0,
+            DroppedFrames = 0,
+            SerializationErrors = 0,
+          },
+        }
+      );
     }
     catch (Exception ex)
     {
@@ -159,19 +214,10 @@ public sealed class CombatEventBroadcaster : ICombatEventBroadcaster
 
   private void BroadcastQueuedEvents()
   {
-    // Skip if no clients connected
     if (_server.ClientCount == 0)
-    {
-      // Clear queue even if no clients - don't accumulate events
-      lock (_queueLock)
-      {
-        _eventQueue.Clear();
-      }
       return;
-    }
 
-    // Skip if no events queued
-    CombatEvent[] events;
+    JObject[] events;
     lock (_queueLock)
     {
       if (_eventQueue.Count == 0)
@@ -181,20 +227,42 @@ public sealed class CombatEventBroadcaster : ICombatEventBroadcaster
       _eventQueue.Clear();
     }
 
-    // Skip if no active session
     var session = _sessionManager.CurrentSession;
     if (session == null)
       return;
 
     try
     {
-      var message = CombatEventsMessage.Create(session.Id, events);
-      var json = MessageSerializer.Serialize(message);
-      _server.Broadcast(json);
+      var state = GetOrCreateState(session);
+      BroadcastEnvelope("events", session.Id, state.CreateEventsPayload(events));
     }
     catch (Exception ex)
     {
       _log?.Invoke($"Error broadcasting events: {ex.Message}");
     }
+  }
+
+  private ProtocolSessionState GetOrCreateState(CombatSession session)
+  {
+    if (_sessionStates.TryGetValue(session.Id, out var state))
+      return state;
+
+    state = new ProtocolSessionState(session);
+    _sessionStates.Add(session.Id, state);
+    return state;
+  }
+
+  private void BroadcastEnvelope(string kind, string? sessionId, object payload)
+  {
+    var envelope = new LiveEnvelope
+    {
+      Kind = kind,
+      FrameSeq = ++_frameSeq,
+      SessionId = sessionId,
+      SentAtMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+      Payload = payload,
+    };
+
+    _server.Broadcast(MessageSerializer.Serialize(envelope));
   }
 }
