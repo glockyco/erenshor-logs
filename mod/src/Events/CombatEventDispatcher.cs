@@ -4,13 +4,18 @@ namespace ErenshorLogs.Events;
 
 public static class CombatEventDispatcher
 {
-  public static void Dispatch(
-    CombatEvent evt,
-    IEventEmitter emitter,
-    ISessionManager? sessionManager
+  public static long PrepareForCapture(
+    EventType eventType,
+    ISessionManager? sessionManager,
+    long timestamp
   )
   {
-    sessionManager?.OnCombatEvent(evt.EventType, evt.Timestamp);
+    sessionManager?.OnCombatEvent(eventType, timestamp);
+    return timestamp;
+  }
+
+  public static void Dispatch(CombatEvent evt, IEventEmitter emitter)
+  {
     emitter.Emit(evt);
   }
 }

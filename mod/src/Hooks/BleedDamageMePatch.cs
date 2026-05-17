@@ -155,6 +155,12 @@ public static class BleedDamageMePatch
     );
 
     // Create and emit the event
+    CombatEventDispatcher.PrepareForCapture(
+      EventType.DamageDot,
+      SessionManager,
+      DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+    );
+
     var evt = EventBuilder.CreateDamageEvent(
       EventType.DamageDot,
       target: __instance,
@@ -172,7 +178,7 @@ public static class BleedDamageMePatch
         $"DoT damage: {evt.Source?.Name ?? "Unknown"} -> {evt.Target?.Name ?? "Unknown"} "
           + $"for {__result}"
       );
-      CombatEventDispatcher.Dispatch(evt, Emitter, SessionManager);
+      CombatEventDispatcher.Dispatch(evt, Emitter);
     }
   }
 }

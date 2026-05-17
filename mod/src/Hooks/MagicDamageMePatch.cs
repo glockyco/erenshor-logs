@@ -127,6 +127,12 @@ public static class MagicDamageMePatch
     );
 
     // Create and emit the event
+    CombatEventDispatcher.PrepareForCapture(
+      EventType.DamageMagic,
+      SessionManager,
+      DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+    );
+
     var evt = EventBuilder.CreateDamageEvent(
       EventType.DamageMagic,
       target: __instance,
@@ -145,7 +151,7 @@ public static class MagicDamageMePatch
           + $"for {amount} ({damageType})"
           + (flags.Resisted == true ? " [RESISTED]" : "")
       );
-      CombatEventDispatcher.Dispatch(evt, Emitter, SessionManager);
+      CombatEventDispatcher.Dispatch(evt, Emitter);
     }
   }
 }

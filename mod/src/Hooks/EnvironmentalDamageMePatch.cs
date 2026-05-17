@@ -94,6 +94,12 @@ public static class EnvironmentalDamageMePatch
       LogDebug
     );
 
+    CombatEventDispatcher.PrepareForCapture(
+      EventType.DamageEnvironmental,
+      SessionManager,
+      DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+    );
+
     var evt = EventBuilder.CreateDamageEvent(
       EventType.DamageEnvironmental,
       target: __instance,
@@ -109,7 +115,7 @@ public static class EnvironmentalDamageMePatch
     {
       LogDebug?.Invoke($"Environmental damage: {evt.Target?.Name ?? "Unknown"} took {__result}");
       // Environmental damage will not start sessions (filtered by config).
-      CombatEventDispatcher.Dispatch(evt, Emitter, SessionManager);
+      CombatEventDispatcher.Dispatch(evt, Emitter);
     }
   }
 }

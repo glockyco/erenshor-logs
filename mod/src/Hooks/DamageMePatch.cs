@@ -167,6 +167,12 @@ public static class DamageMePatch
     );
 
     // Create and emit the event
+    CombatEventDispatcher.PrepareForCapture(
+      EventType.DamagePhysical,
+      SessionManager,
+      DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+    );
+
     var evt = EventBuilder.CreateDamageEvent(
       EventType.DamagePhysical,
       target: __instance,
@@ -187,7 +193,7 @@ public static class DamageMePatch
           + (flags.Missed == true ? " [MISS]" : "")
           + (flags.Absorbed == true ? " [ABSORBED]" : "")
       );
-      CombatEventDispatcher.Dispatch(evt, Emitter, SessionManager);
+      CombatEventDispatcher.Dispatch(evt, Emitter);
     }
   }
 }

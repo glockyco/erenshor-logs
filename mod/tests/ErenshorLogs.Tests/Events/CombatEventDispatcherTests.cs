@@ -7,7 +7,26 @@ namespace ErenshorLogs.Tests.Events;
 public sealed class CombatEventDispatcherTests
 {
   [Fact]
-  public void Dispatch_NotifiesSessionManagerBeforeEmittingEvent()
+  public void PrepareForCapture_NotifiesSessionManagerBeforeActorResolution()
+  {
+    var calls = new List<string>();
+    var sessionManager = new RecordingSessionManager(calls);
+
+    var timestamp = CombatEventDispatcher.PrepareForCapture(
+      EventType.DamagePhysical,
+      sessionManager,
+      123
+    );
+    calls.Add("resolve-actors");
+
+    Assert.Equal(["session", "resolve-actors"], calls);
+    Assert.Equal(EventType.DamagePhysical, sessionManager.EventType);
+    Assert.Equal(123, sessionManager.Timestamp);
+    Assert.Equal(123, timestamp);
+  }
+
+  [Fact]
+  public void Dispatch_EmitsPreparedEventWithoutRenotifyingSessionManager()
   {
     var calls = new List<string>();
     var sessionManager = new RecordingSessionManager(calls);
@@ -20,13 +39,61 @@ public sealed class CombatEventDispatcherTests
       Ability = new AbilityRef { Name = "Backstab", Type = AbilityType.Skill },
     };
 
-    CombatEventDispatcher.Dispatch(evt, emitter, sessionManager);
+    CombatEventDispatcher.Dispatch(evt, emitter);
 
-    Assert.Equal(["session", "emit"], calls);
-    Assert.Equal(EventType.DamagePhysical, sessionManager.EventType);
-    Assert.Equal(123, sessionManager.Timestamp);
+    Assert.Equal(["emit"], calls);
+    Assert.Null(sessionManager.EventType);
+    Assert.Null(sessionManager.Timestamp);
     Assert.Same(evt, emitter.Event);
   }
+
+  [Fact]
+  public void PrepareBeforeActorResolution_KeepsActorIdsStableAcrossSessionStart()
+  {
+    var player = new MockCharacter(1, "Ceevia", ActorType.Player);
+    var bear = new MockCharacter(2, "A Brown Bear Cub", ActorType.Npc);
+    var drone = new MockCharacter(3, "A Faerie Drone", ActorType.Npc);
+    var registry = new ErenshorLogs.Registry.ActorRegistry<MockCharacter>(
+      c => c.InstanceId,
+      c => c.Type,
+      c => new ErenshorLogs.Registry.ActorData { Name = c.Name }
+    );
+    var sessionManager = new RecordingSessionManager([]);
+    sessionManager.SessionStarted += _ => registry.Clear();
+    long currentTimestamp = 0;
+    var builder = new ErenshorLogs.Hooks.CombatEventBuilder<MockCharacter>(
+      registry.GetOrCreate,
+      () => "event",
+      () => currentTimestamp
+    );
+
+    currentTimestamp = CombatEventDispatcher.PrepareForCapture(
+      EventType.DamagePhysical,
+      sessionManager,
+      100
+    );
+    var first = builder.CreateDamageEvent(
+      EventType.DamagePhysical,
+      target: drone,
+      source: bear,
+      amount: 4,
+      DamageType.Physical,
+      new AbilityRef { Name = "Scratch", Type = AbilityType.Auto }
+    )!;
+    registry.GetOrCreate(player);
+    var second = builder.CreateDamageEvent(
+      EventType.DamagePhysical,
+      target: drone,
+      source: player,
+      amount: 314,
+      DamageType.Physical,
+      new AbilityRef { Name = "Attack", Type = AbilityType.Auto }
+    )!;
+
+    Assert.Equal(first.Target!.Id, second.Target!.Id);
+  }
+
+  private sealed record MockCharacter(int InstanceId, string Name, ActorType Type);
 
   private sealed class RecordingEmitter(List<string> calls) : IEventEmitter
   {
