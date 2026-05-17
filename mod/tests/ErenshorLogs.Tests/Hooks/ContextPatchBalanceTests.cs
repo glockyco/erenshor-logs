@@ -67,10 +67,13 @@ public sealed class ContextPatchBalanceTests : IDisposable
     new()
     {
       AEEventUpdatePatch.Finalizer,
+      AEEventTriggerPatch.Finalizer,
       AEEvent2UpdatePatch.Finalizer,
       AstraBreathScriptUpdatePatch.Finalizer,
       NPCFightEventBreathAttackPatch.Finalizer,
       SableheartEventUpdatePatch.Finalizer,
+      DeathTouchPatch.Finalizer,
+      MizukiEventPatch.Finalizer,
     };
 
   public void Dispose()

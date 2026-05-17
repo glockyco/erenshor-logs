@@ -1,5 +1,4 @@
 using ErenshorLogs.Context;
-using ErenshorLogs.Events;
 using HarmonyLib;
 
 namespace ErenshorLogs.Hooks;
@@ -13,26 +12,14 @@ namespace ErenshorLogs.Hooks;
 public static class AEEventUpdatePatch
 {
   /// <summary>
-  /// Prefix: Push area effect context onto stack before Update processes damage ticks.
-  /// Uses DamageReason field for ability name, falling back to "Area Effect" if not set.
+  /// Prefix: Do not push context here. AEEvent.Update delegates damage to TriggerAE,
+  /// which has its own patch and also covers direct TriggerAE calls.
   /// </summary>
-  /// <param name="__instance">The AEEvent instance processing damage.</param>
-  /// <param name="__state">Whether this prefix pushed context.</param>
+  /// <param name="__state">Always false so the finalizer does not pop.</param>
   [HarmonyPrefix]
-  public static void Prefix(AEEvent __instance, out bool __state)
+  public static void Prefix(out bool __state)
   {
     __state = false;
-    if (__instance == null)
-      return;
-    var context = new AbilityContext
-    {
-      Name = __instance.DamageReason ?? "Area Effect",
-      Type = AbilityType.AreaEffect,
-      StableKey = null,
-    };
-
-    CombatContext.PushAbility(context);
-    __state = true;
   }
 
   /// <summary>
