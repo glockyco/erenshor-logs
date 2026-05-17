@@ -7,10 +7,11 @@ import { z } from "zod";
  * Returns null if not in browser, key doesn't exist, or validation fails.
  */
 export function loadFromStorage<T>(key: string, schema: z.ZodType<T>): T | null {
-  if (typeof window === "undefined") return null;
+  const storage = getUsableStorage();
+  if (!storage) return null;
 
   try {
-    const stored = localStorage.getItem(key);
+    const stored = storage.getItem(key);
     if (!stored) return null;
 
     const parsed: unknown = JSON.parse(stored);
@@ -36,10 +37,11 @@ export function loadFromStorage<T>(key: string, schema: z.ZodType<T>): T | null 
  * No-op if not in browser.
  */
 export function saveToStorage<T>(key: string, data: T): void {
-  if (typeof window === "undefined") return;
+  const storage = getUsableStorage();
+  if (!storage) return;
 
   try {
-    localStorage.setItem(key, JSON.stringify(data));
+    storage.setItem(key, JSON.stringify(data));
   } catch (error) {
     console.error(`Failed to save "${key}" to localStorage:`, error);
   }
@@ -50,8 +52,9 @@ export function saveToStorage<T>(key: string, data: T): void {
  * No-op if not in browser.
  */
 export function removeFromStorage(key: string): void {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem(key);
+  const storage = getUsableStorage();
+  if (!storage) return;
+  storage.removeItem(key);
 }
 
 /**
@@ -59,4 +62,15 @@ export function removeFromStorage(key: string): void {
  */
 export function isBrowser(): boolean {
   return typeof window !== "undefined";
+}
+
+function getUsableStorage(): Storage | null {
+  if (!isBrowser()) return null;
+
+  const storage = globalThis.localStorage;
+  return typeof storage?.getItem === "function" &&
+    typeof storage.setItem === "function" &&
+    typeof storage.removeItem === "function"
+    ? storage
+    : null;
 }

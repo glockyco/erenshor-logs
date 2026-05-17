@@ -34,11 +34,12 @@ export default defineConfig({
     name: "unit",
     globals: true,
     environment: "jsdom",
-    setupFiles: ["./src/lib/testing/setup.ts"],
+    setupFiles: ["./src/lib/testing/setup-storage.ts", "./src/lib/testing/setup.ts"],
     include: [
       "src/lib/services/**/*.test.ts",
       "src/lib/utils/**/*.test.ts",
       "src/lib/state/**/*.test.ts",
+      "src/lib/testing/**/*.test.ts",
     ],
 
     // Performance

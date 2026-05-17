@@ -1,5 +1,4 @@
-import { beforeEach, afterEach } from "vitest";
-import { installStorageMock } from "./storage-mock";
+import { afterEach } from "vitest";
 import {
   resetConnectionState,
   resetSessionsState,
@@ -13,18 +12,6 @@ import {
  *
  * Automatically cleans up state after each test to ensure isolation.
  */
-
-// =============================================================================
-// Storage Mocking
-// =============================================================================
-
-beforeEach(() => {
-  // Install fresh Storage mocks for each test to ensure isolation
-  // Only needed if jsdom's native Storage is broken
-  if (typeof globalThis.localStorage?.getItem !== "function") {
-    installStorageMock();
-  }
-});
 
 // =============================================================================
 // Test Cleanup
