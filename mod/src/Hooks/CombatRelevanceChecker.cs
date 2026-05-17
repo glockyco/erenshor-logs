@@ -94,6 +94,7 @@ public sealed class CombatRelevanceChecker<TCharacter, TNpc>
     var isRelevant =
       IsPlayer(character)
       || IsGroupedSimPlayer(character)
+      || IsGroupMember(character)
       || IsPetOfPlayerOrGroup(character)
       || IsNpcAttackingPlayer(character)
       || IsGroupMateInCombat(character)
@@ -131,6 +132,14 @@ public sealed class CombatRelevanceChecker<TCharacter, TNpc>
   }
 
   /// <summary>
+  /// Checks if the character is present in the player's group member slots.
+  /// </summary>
+  private bool IsGroupMember(TCharacter character)
+  {
+    return _getGroupMembers().Contains(character);
+  }
+
+  /// <summary>
   /// Checks if the character is a pet of the player or a grouped SimPlayer.
   /// </summary>
   private bool IsPetOfPlayerOrGroup(TCharacter character)
@@ -140,7 +149,7 @@ public sealed class CombatRelevanceChecker<TCharacter, TNpc>
       return false;
 
     // Check if master is player or grouped SimPlayer
-    return IsPlayer(master) || IsGroupedSimPlayer(master);
+    return IsPlayer(master) || IsGroupedSimPlayer(master) || IsGroupMember(master);
   }
 
   /// <summary>
@@ -197,7 +206,7 @@ public sealed class CombatRelevanceChecker<TCharacter, TNpc>
     // Check if any player on the aggro table is the player or a grouped SimPlayer
     foreach (var player in aggroTablePlayers)
     {
-      if (IsPlayer(player) || IsGroupedSimPlayer(player))
+      if (IsPlayer(player) || IsGroupedSimPlayer(player) || IsGroupMember(player))
         return true;
     }
 

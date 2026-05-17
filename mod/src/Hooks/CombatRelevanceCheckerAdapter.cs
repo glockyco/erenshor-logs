@@ -7,6 +7,10 @@ public sealed class CombatRelevanceCheckerAdapter : ICombatRelevanceChecker
 {
   private readonly CombatRelevanceChecker<Character, NPC> _inner;
 
+  private static readonly System.Reflection.FieldInfo? MyRaidSlotField = typeof(NPC).GetField(
+    "MyRaidSlot"
+  );
+
   /// <summary>
   /// Creates a new CombatRelevanceCheckerAdapter.
   /// </summary>
@@ -22,7 +26,7 @@ public sealed class CombatRelevanceCheckerAdapter : ICombatRelevanceChecker
       // IsSimPlayer
       npc => npc.SimPlayer,
       // IsInGroup
-      npc => npc.InGroup,
+      IsInPlayerGroupOrRaid,
       // GetMaster
       c => c.Master,
       // GetAttackingPlayer
@@ -60,6 +64,11 @@ public sealed class CombatRelevanceCheckerAdapter : ICombatRelevanceChecker
         return players;
       }
     );
+  }
+
+  private static bool IsInPlayerGroupOrRaid(NPC npc)
+  {
+    return npc.InGroup || MyRaidSlotField?.GetValue(npc) != null;
   }
 
   /// <inheritdoc />
