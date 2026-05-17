@@ -16,11 +16,15 @@ class Config:
         crossover_bottle: str | None = None,
         crossover_path: Path | None = None,
         dotnet8_root: Path | None = None,
+        steam_username: str = "anonymous",
+        steam_platform: str = "windows",
     ):
         self.erenshor_path = erenshor_path
         self.crossover_bottle = crossover_bottle
         self.crossover_path = crossover_path or Path("/Applications/CrossOver.app")
         self.dotnet8_root = dotnet8_root
+        self.steam_username = steam_username
+        self.steam_platform = steam_platform
 
     @property
     def managed_path(self) -> Path:
@@ -126,10 +130,14 @@ def load_config() -> Config:
     crossover_path = Path(crossover_path_str) if crossover_path_str else None
     dotnet8_root_str = os.getenv("DOTNET8_ROOT")
     dotnet8_root = Path(dotnet8_root_str) if dotnet8_root_str else None
+    steam_username = os.getenv("STEAM_USERNAME", "anonymous")
+    steam_platform = os.getenv("STEAMCMD_PLATFORM", "windows")
 
     return Config(
         erenshor_path=erenshor_path,
         crossover_bottle=crossover_bottle,
         crossover_path=crossover_path,
         dotnet8_root=dotnet8_root,
+        steam_username=steam_username,
+        steam_platform=steam_platform,
     )

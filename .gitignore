@@ -67,6 +67,7 @@ web/src/lib/version.ts
 # Game source reference (not distributable - see reference/README.md)
 reference/game-source/*
 !reference/game-source/README.md
+reference/game-downloads/
 
 *storybook.log
 storybook-static
