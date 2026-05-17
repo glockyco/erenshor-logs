@@ -16,12 +16,13 @@ public static class DeliverDamagePatch
   /// Distinguishes between wand (magic) and bow (physical) based on DmgType field.
   /// </summary>
   /// <param name="__instance">The WandBolt instance delivering damage.</param>
+  /// <param name="__state">Whether this prefix pushed context.</param>
   [HarmonyPrefix]
-  public static void Prefix(WandBolt __instance)
+  public static void Prefix(WandBolt __instance, out bool __state)
   {
+    __state = false;
     if (__instance == null)
       return;
-
     // Determine ability name based on damage type
     // WandBolt.DmgType is Magic for wands, Physical for bows
     var abilityName =
@@ -35,6 +36,7 @@ public static class DeliverDamagePatch
     };
 
     CombatContext.PushAbility(context);
+    __state = true;
   }
 
   /// <summary>
@@ -42,8 +44,9 @@ public static class DeliverDamagePatch
   /// Uses Finalizer instead of Postfix to ensure cleanup even if DeliverDamage throws.
   /// </summary>
   [HarmonyFinalizer]
-  public static void Finalizer()
+  public static void Finalizer(bool __state)
   {
-    CombatContext.PopAbility();
+    if (__state)
+      CombatContext.PopAbility();
   }
 }

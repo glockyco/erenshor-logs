@@ -16,12 +16,13 @@ public static class DoSkillPatch
   /// This allows subsequent damage hooks to attribute damage to this skill.
   /// </summary>
   /// <param name="_skill">The skill being executed.</param>
+  /// <param name="__state">Whether this prefix pushed context.</param>
   [HarmonyPrefix]
-  public static void Prefix(Skill _skill)
+  public static void Prefix(Skill _skill, out bool __state)
   {
+    __state = false;
     if (_skill == null)
       return;
-
     var context = new AbilityContext
     {
       Name = _skill.SkillName,
@@ -30,6 +31,7 @@ public static class DoSkillPatch
     };
 
     CombatContext.PushAbility(context);
+    __state = true;
   }
 
   /// <summary>
@@ -37,8 +39,9 @@ public static class DoSkillPatch
   /// Uses Finalizer instead of Postfix to ensure cleanup even if DoSkill throws.
   /// </summary>
   [HarmonyFinalizer]
-  public static void Finalizer()
+  public static void Finalizer(bool __state)
   {
-    CombatContext.PopAbility();
+    if (__state)
+      CombatContext.PopAbility();
   }
 }

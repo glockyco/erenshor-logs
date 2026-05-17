@@ -16,13 +16,14 @@ public static class ResolveSpellPatch
   /// This allows subsequent damage/heal hooks to attribute effects to this spell.
   /// </summary>
   /// <param name="__instance">The SpellVessel instance containing the spell being resolved.</param>
+  /// <param name="__state">Whether this prefix pushed context.</param>
   [HarmonyPrefix]
-  public static void Prefix(SpellVessel __instance)
+  public static void Prefix(SpellVessel __instance, out bool __state)
   {
+    __state = false;
     // SpellVessel has public field: Spell spell
     if (__instance.spell == null)
       return;
-
     var context = new AbilityContext
     {
       Name = __instance.spell.SpellName,
@@ -31,6 +32,7 @@ public static class ResolveSpellPatch
     };
 
     CombatContext.PushAbility(context);
+    __state = true;
   }
 
   /// <summary>
@@ -38,8 +40,9 @@ public static class ResolveSpellPatch
   /// Uses Finalizer instead of Postfix to ensure cleanup even if ResolveSpell throws.
   /// </summary>
   [HarmonyFinalizer]
-  public static void Finalizer()
+  public static void Finalizer(bool __state)
   {
-    CombatContext.PopAbility();
+    if (__state)
+      CombatContext.PopAbility();
   }
 }
