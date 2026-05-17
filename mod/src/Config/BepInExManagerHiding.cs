@@ -1,12 +1,12 @@
 using BepInEx.Bootstrap;
-using BepInEx.Logging;
+using ErenshorLogs.Logging;
 using UnityEngine;
 
 namespace ErenshorLogs.Config;
 
 internal static class BepInExManagerHiding
 {
-  public static void Enforce(ManualLogSource log)
+  public static void Enforce(ModLog log)
   {
     var managerObject = Chainloader.ManagerObject;
     if (managerObject == null)
@@ -20,7 +20,7 @@ internal static class BepInExManagerHiding
     }
 
     managerObject.hideFlags = updatedFlags;
-    log.LogInfo("Enabled BepInEx manager object hiding");
+    log.Debug("Enabled BepInEx manager object hiding");
   }
 
   internal static bool EnsureHiddenFlags(HideFlags currentFlags, out HideFlags updatedFlags)

@@ -10,6 +10,11 @@ namespace ErenshorLogs.Config;
 public class ModConfig
 {
   /// <summary>
+  /// Enable Erenshor Logs diagnostic logging.
+  /// </summary>
+  public ConfigEntry<bool> EnableLogging { get; }
+
+  /// <summary>
   /// WebSocket server port. Clients connect to ws://localhost:{port}
   /// </summary>
   public ConfigEntry<int> Port { get; }
@@ -84,6 +89,13 @@ public class ModConfig
   /// <param name="config">BepInEx configuration file.</param>
   public ModConfig(ConfigFile config)
   {
+    EnableLogging = config.Bind(
+      "Logging",
+      "EnableLogging",
+      true,
+      "Enable Erenshor Logs diagnostic logging. When false, the mod suppresses all log messages it emits."
+    );
+
     Port = config.Bind(
       "Server",
       "Port",

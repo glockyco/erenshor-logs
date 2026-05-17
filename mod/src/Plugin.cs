@@ -5,6 +5,7 @@ using ErenshorLogs.Config;
 using ErenshorLogs.Context;
 using ErenshorLogs.Events;
 using ErenshorLogs.Hooks;
+using ErenshorLogs.Logging;
 using ErenshorLogs.Registry;
 using ErenshorLogs.Server;
 using ErenshorLogs.Session;
@@ -27,21 +28,26 @@ public sealed class Plugin : BaseUnityPlugin
   private ISessionManager? _sessionManager;
   private IWebSocketServer? _server;
   private ICombatEventBroadcaster? _broadcaster;
+  private ModLog? _log;
   private ModConfig? _config;
 
   private void Awake()
   {
     Log = Logger;
-    BepInExManagerHiding.Enforce(Logger);
+    var config = new ModConfig(Config);
+    _config = config;
+    _log = new ModLog(Logger, () => config.EnableLogging.Value);
 
-    _services = ConfigureServices();
+    BepInExManagerHiding.Enforce(_log);
+
+    _services = ConfigureServices(config, _log);
     _harmony = new Harmony(PluginInfo.GUID);
 
     ConfigureDamagePatches();
     ConfigureWebSocket();
     _harmony.PatchAll();
 
-    Log.LogInfo($"{PluginInfo.Name} v{PluginInfo.Version} loaded");
+    _log.Info($"{PluginInfo.Name} v{PluginInfo.Version} loaded");
   }
 
   private void Update()
@@ -59,8 +65,9 @@ public sealed class Plugin : BaseUnityPlugin
     }
 
     // Manual session control via hotkeys
-    if (_config != null && _sessionManager != null)
+    if (_config != null && _sessionManager != null && _log != null)
     {
+      var log = _log;
       var startKey = _config.ManualSessionStartKey.Value;
       var stopKey = _config.ManualSessionStopKey.Value;
 
@@ -73,12 +80,12 @@ public sealed class Plugin : BaseUnityPlugin
           if (_sessionManager.CurrentSession != null)
           {
             _sessionManager.EndManualSession();
-            Logger.LogInfo("Session toggled off");
+            log.Info("Session toggled off");
           }
           else
           {
             _sessionManager.StartManualSession();
-            Logger.LogInfo("Session toggled on");
+            log.Info("Session toggled on");
           }
         }
       }
@@ -105,6 +112,7 @@ public sealed class Plugin : BaseUnityPlugin
     var eventBuilder = services.GetRequiredService<ICombatEventBuilder>();
     var sessionManager = services.GetRequiredService<ISessionManager>();
     var config = services.GetRequiredService<ModConfig>();
+    var log = _log!;
 
     // Create and store relevance checker
     _relevanceChecker = new CombatRelevanceCheckerAdapter();
@@ -115,7 +123,7 @@ public sealed class Plugin : BaseUnityPlugin
 
     DamageMePatch.Emitter = emitter;
     DamageMePatch.EventBuilder = eventBuilder;
-    DamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
+    DamageMePatch.LogDebug = log.DebugAction;
     DamageMePatch.RelevanceChecker = _relevanceChecker;
     DamageMePatch.SessionManager = sessionManager;
     DamageMePatch.CaptureDebugForUnknown = config.CaptureDebugForUnknown.Value;
@@ -124,7 +132,7 @@ public sealed class Plugin : BaseUnityPlugin
 
     MagicDamageMePatch.Emitter = emitter;
     MagicDamageMePatch.EventBuilder = eventBuilder;
-    MagicDamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
+    MagicDamageMePatch.LogDebug = log.DebugAction;
     MagicDamageMePatch.RelevanceChecker = _relevanceChecker;
     MagicDamageMePatch.SessionManager = sessionManager;
     MagicDamageMePatch.CaptureDebugForUnknown = config.CaptureDebugForUnknown.Value;
@@ -132,7 +140,7 @@ public sealed class Plugin : BaseUnityPlugin
 
     BleedDamageMePatch.Emitter = emitter;
     BleedDamageMePatch.EventBuilder = eventBuilder;
-    BleedDamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
+    BleedDamageMePatch.LogDebug = log.DebugAction;
     BleedDamageMePatch.RelevanceChecker = _relevanceChecker;
     BleedDamageMePatch.SessionManager = sessionManager;
     BleedDamageMePatch.CaptureDebugForUnknown = config.CaptureDebugForUnknown.Value;
@@ -141,7 +149,7 @@ public sealed class Plugin : BaseUnityPlugin
 
     EnvironmentalDamageMePatch.Emitter = emitter;
     EnvironmentalDamageMePatch.EventBuilder = eventBuilder;
-    EnvironmentalDamageMePatch.LogDebug = msg => Logger.LogDebug(msg);
+    EnvironmentalDamageMePatch.LogDebug = log.DebugAction;
     EnvironmentalDamageMePatch.RelevanceChecker = _relevanceChecker;
     EnvironmentalDamageMePatch.SessionManager = sessionManager;
     EnvironmentalDamageMePatch.CaptureDebugForUnknown = config.CaptureDebugForUnknown.Value;
@@ -149,19 +157,19 @@ public sealed class Plugin : BaseUnityPlugin
 
     HealMePatch.Emitter = emitter;
     HealMePatch.EventBuilder = eventBuilder;
-    HealMePatch.LogDebug = msg => Logger.LogDebug(msg);
+    HealMePatch.LogDebug = log.DebugAction;
     HealMePatch.RelevanceChecker = _relevanceChecker;
     HealMePatch.SessionManager = sessionManager;
 
     DeathEventPatch.Emitter = emitter;
     DeathEventPatch.EventBuilder = eventBuilder;
-    DeathEventPatch.LogDebug = msg => Logger.LogDebug(msg);
+    DeathEventPatch.LogDebug = log.DebugAction;
     DeathEventPatch.RelevanceChecker = _relevanceChecker;
     DeathEventPatch.SessionManager = sessionManager;
 
     EncounterMechanicEmitter.Emitter = emitter;
     EncounterMechanicEmitter.EventBuilder = eventBuilder;
-    EncounterMechanicEmitter.LogDebug = msg => Logger.LogDebug(msg);
+    EncounterMechanicEmitter.LogDebug = log.DebugAction;
     EncounterMechanicEmitter.RelevanceChecker = _relevanceChecker;
     EncounterMechanicEmitter.SessionManager = sessionManager;
     // Wire EffectTracker to effect lifecycle hooks
@@ -176,12 +184,13 @@ public sealed class Plugin : BaseUnityPlugin
     var eventEmitter = services.GetRequiredService<IEventEmitter>();
     var sessionManager = services.GetRequiredService<ISessionManager>();
     var actorRegistry = services.GetRequiredService<IActorRegistry>();
+    var log = _log!;
     // Store references for Update() method
     _config = config;
     _sessionManager = sessionManager;
 
     // Create WebSocket server
-    _server = new WebSocketServer(config, Logger);
+    _server = new WebSocketServer(config, log);
     _server.Start();
 
     // Create broadcaster
@@ -191,7 +200,7 @@ public sealed class Plugin : BaseUnityPlugin
       _server,
       config,
       PluginInfo.Version,
-      log: msg => Logger.LogDebug(msg)
+      log: log.Debug
     );
 
     // Clear session-scoped caches when combat sessions turn over.
@@ -201,20 +210,19 @@ public sealed class Plugin : BaseUnityPlugin
     // Send handshake when clients connect
     _server.ClientConnected += client =>
     {
-      Logger.LogDebug("Client connected, sending handshake");
+      log.Debug("Client connected, sending handshake");
       _broadcaster.SendHandshakeToNewClient(client);
     };
   }
 
-  private ServiceProvider ConfigureServices()
+  private ServiceProvider ConfigureServices(ModConfig config, ModLog log)
   {
     var services = new ServiceCollection();
 
     // Configuration
-    services.AddSingleton(new ModConfig(Config));
-
+    services.AddSingleton(config);
     // Event system
-    services.AddSingleton<IEventEmitter>(new EventEmitter(msg => Logger.LogError(msg)));
+    services.AddSingleton<IEventEmitter>(new EventEmitter(log.Error));
 
     // Actor registry
     services.AddSingleton<IActorTypeResolver, ActorTypeResolver>();
@@ -222,7 +230,7 @@ public sealed class Plugin : BaseUnityPlugin
     services.AddSingleton<IActorRegistry>(sp => new ActorRegistryAdapter(
       sp.GetRequiredService<IActorTypeResolver>(),
       sp.GetRequiredService<IActorDataExtractor>(),
-      msg => Logger.LogWarning(msg)
+      log.Warning
     ));
 
     // Combat event building
@@ -250,16 +258,16 @@ public sealed class Plugin : BaseUnityPlugin
           switch (level)
           {
             case Logging.LogLevel.Debug:
-              Logger.LogDebug(msg);
+              log.Debug(msg);
               break;
             case Logging.LogLevel.Info:
-              Logger.LogInfo(msg);
+              log.Info(msg);
               break;
             case Logging.LogLevel.Warning:
-              Logger.LogWarning(msg);
+              log.Warning(msg);
               break;
             case Logging.LogLevel.Error:
-              Logger.LogError(msg);
+              log.Error(msg);
               break;
           }
         }

@@ -422,4 +422,56 @@ public class SessionManagerTests
     Assert.NotNull(manager.CurrentSession);
     Assert.True(manager.CurrentSession.IsManual);
   }
+
+  [Fact]
+  public void Constructor_LogsConfigurationSummaryAtDebugLevel()
+  {
+    var emitter = new FakeEventEmitter();
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider();
+    var entries = new List<(ErenshorLogs.Logging.LogLevel Level, string Message)>();
+
+    _ = new SessionManager(
+      emitter,
+      versionProvider,
+      timeProvider,
+      "0.1.0",
+      autoDetectionEnabled: true,
+      inactivityTimeoutSeconds: 5.0f,
+      sessionStartEvents: DefaultStartEvents,
+      sessionKeepAliveEvents: DefaultKeepAliveEvents,
+      log: (level, message) => entries.Add((level, message))
+    );
+
+    Assert.Contains(entries, entry => entry.Level == ErenshorLogs.Logging.LogLevel.Debug);
+    Assert.DoesNotContain(entries, entry => entry.Level == ErenshorLogs.Logging.LogLevel.Info);
+  }
+
+  [Fact]
+  public void Constructor_LogsInvalidConfigurationAtWarningLevel()
+  {
+    var emitter = new FakeEventEmitter();
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider();
+    var entries = new List<(ErenshorLogs.Logging.LogLevel Level, string Message)>();
+
+    _ = new SessionManager(
+      emitter,
+      versionProvider,
+      timeProvider,
+      "0.1.0",
+      autoDetectionEnabled: true,
+      inactivityTimeoutSeconds: 5.0f,
+      sessionStartEvents: "NotARealEvent",
+      sessionKeepAliveEvents: DefaultKeepAliveEvents,
+      log: (level, message) => entries.Add((level, message))
+    );
+
+    Assert.Contains(
+      entries,
+      entry =>
+        entry.Level == ErenshorLogs.Logging.LogLevel.Warning
+        && entry.Message.Contains("Unknown event type", StringComparison.Ordinal)
+    );
+  }
 }

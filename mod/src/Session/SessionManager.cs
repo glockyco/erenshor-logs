@@ -109,7 +109,7 @@ public sealed class SessionManager : ISessionManager
     if (elapsed >= _inactivityTimeoutSeconds)
     {
       _log?.Invoke(
-        LogLevel.Info,
+        LogLevel.Debug,
         $"Session {_currentSession.Id} ended after {elapsed:F1}s inactivity"
       );
 
@@ -126,13 +126,13 @@ public sealed class SessionManager : ISessionManager
     {
       var sessionType = _currentSession.IsManual ? "manual" : "automatic";
       _log?.Invoke(
-        LogLevel.Info,
+        LogLevel.Debug,
         $"Ending existing {sessionType} session {_currentSession.Id} for manual start"
       );
       EndSession(null, SessionEndReasons.NewSession); // End at current time
     }
 
-    _log?.Invoke(LogLevel.Info, "Starting manual session via hotkey");
+    _log?.Invoke(LogLevel.Debug, "Starting manual session via hotkey");
     StartSession(isManual: true);
   }
 
@@ -148,7 +148,7 @@ public sealed class SessionManager : ISessionManager
     // Allow ending any session (manual or automatic)
     var sessionType = _currentSession.IsManual ? "manual" : "automatic";
     _log?.Invoke(
-      LogLevel.Info,
+      LogLevel.Debug,
       $"Manually ending {sessionType} session {_currentSession.Id} via hotkey"
     );
 
@@ -161,7 +161,7 @@ public sealed class SessionManager : ISessionManager
     if (_currentSession == null)
       return;
 
-    _log?.Invoke(LogLevel.Info, $"Ending session {_currentSession.Id} during shutdown");
+    _log?.Invoke(LogLevel.Debug, $"Ending session {_currentSession.Id} during shutdown");
     EndSession(null, SessionEndReasons.Shutdown);
   }
 
@@ -171,7 +171,7 @@ public sealed class SessionManager : ISessionManager
     _currentSession = new CombatSession(gameVersion, _modVersion, isManual);
 
     _log?.Invoke(
-      LogLevel.Info,
+      LogLevel.Debug,
       $"{(isManual ? "Manual" : "Automatic")} session started: {_currentSession.Id}"
     );
 
@@ -194,7 +194,7 @@ public sealed class SessionManager : ISessionManager
     }
 
     _log?.Invoke(
-      LogLevel.Info,
+      LogLevel.Debug,
       $"Session ended: {_currentSession.Id} (Duration: {_currentSession.Duration}ms)"
     );
 
@@ -259,21 +259,21 @@ public sealed class SessionManager : ISessionManager
   {
     // Log configuration summary
     _log?.Invoke(
-      LogLevel.Info,
+      LogLevel.Debug,
       $"Session auto-detection: {(_autoDetectionEnabled ? "enabled" : "disabled")}"
     );
 
     if (_autoDetectionEnabled)
     {
       _log?.Invoke(
-        LogLevel.Info,
+        LogLevel.Debug,
         $"Session start events: {string.Join(", ", _sessionStartEvents)}"
       );
       _log?.Invoke(
-        LogLevel.Info,
+        LogLevel.Debug,
         $"Session keep-alive events: {string.Join(", ", _sessionKeepAliveEvents)}"
       );
-      _log?.Invoke(LogLevel.Info, $"Inactivity timeout: {_inactivityTimeoutSeconds}s");
+      _log?.Invoke(LogLevel.Debug, $"Inactivity timeout: {_inactivityTimeoutSeconds}s");
     }
 
     // Warn if start events not in keep-alive events
