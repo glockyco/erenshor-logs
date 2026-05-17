@@ -44,26 +44,33 @@ export function readFileAsText(file: File): Promise<string> {
 }
 
 function toSession(logSession: CombatLogSession): Session {
-  const { snapshot, ended } = logSession;
+  const { snapshot, ended, events } = logSession;
+  const lastEvent = events.length > 0 ? events[events.length - 1] : undefined;
+  const endedAtUtcMs =
+    ended?.endedAtUtcMs ??
+    snapshot.endedAtUtcMs ??
+    snapshot.startedAtUtcMs + (lastEvent?.offsetMs ?? 0);
+  const durationMs =
+    ended?.durationMs ?? snapshot.durationMs ?? endedAtUtcMs - snapshot.startedAtUtcMs;
 
   return {
     id: snapshot.sessionId,
-    mode: snapshot.mode,
-    state: ended ? "ended" : snapshot.state,
+    mode: "imported",
+    state: "ended",
     startedAtUtcMs: snapshot.startedAtUtcMs,
-    endedAtUtcMs: ended?.endedAtUtcMs ?? snapshot.endedAtUtcMs,
+    endedAtUtcMs,
     endReason: ended?.reason ?? snapshot.endReason,
-    durationMs: ended?.durationMs ?? snapshot.durationMs,
+    durationMs,
     producer: snapshot.producer,
     playerActorId: snapshot.playerActorId,
     registryRevision: snapshot.registryRevision,
-    lastEventSeq: snapshot.lastEventSeq,
-    eventCount: snapshot.eventCount,
+    lastEventSeq: lastEvent?.eventSeq ?? 0,
+    eventCount: events.length,
     completeness: snapshot.completeness,
     loss: snapshot.loss,
     registries: snapshot.registries,
     diagnostics: ended?.diagnostics ?? snapshot.diagnostics,
-    events: logSession.events,
+    events,
     protocolErrors: [],
   };
 }
