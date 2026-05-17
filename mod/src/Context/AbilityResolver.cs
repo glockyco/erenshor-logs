@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using ErenshorLogs.Events;
 
 namespace ErenshorLogs.Context;

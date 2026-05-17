@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using ErenshorLogs.Context;
 using ErenshorLogs.Events;
 using ErenshorLogs.Session;
