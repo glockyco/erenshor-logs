@@ -776,6 +776,7 @@ export type WebSocketMessage = z.infer<typeof WebSocketMessageSchema>;
 export const ParseErrorCodeSchema = z.enum([
   "invalid_json",
   "missing_protocol",
+  "legacy_mod",
   "unknown_protocol",
   "unsupported_version",
   "unknown_kind",

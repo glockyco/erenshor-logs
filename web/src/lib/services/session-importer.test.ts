@@ -60,7 +60,7 @@ describe("importSessions", () => {
     expect(result.sessions.map((session) => session.id)).toEqual(["session-1", "session-2"]);
   });
 
-  it("rejects legacy wrapper files instead of silently migrating", () => {
+  it("rejects legacy wrapper files with a clear compatibility message", () => {
     const result = importSessions(
       JSON.stringify({
         version: "1.0.0",
@@ -72,7 +72,7 @@ describe("importSessions", () => {
     expect(result).toEqual({
       success: false,
       error:
-        "File does not match the Erenshor Logs v2 export format or uses an unsupported schema version.",
+        "This log uses the old Erenshor Logs v1 format. Importing v1 logs is no longer supported; use a protocol v2 export.",
     });
   });
 });

@@ -24,7 +24,7 @@ export function parseMessage(json: string): LiveEnvelope | ParseError {
     };
   }
 
-  if (typeof parsed !== "object" || parsed === null || !("protocol" in parsed)) {
+  if (typeof parsed !== "object" || parsed === null) {
     return {
       code: "missing_protocol",
       message: "Message missing 'protocol' field",
@@ -33,6 +33,31 @@ export function parseMessage(json: string): LiveEnvelope | ParseError {
   }
 
   const record = parsed as Record<string, unknown>;
+  if (!("protocol" in record)) {
+    if ("type" in record) {
+      const modVersion =
+        typeof record.modVersion === "string" ? ` Mod version: ${record.modVersion}.` : "";
+      const protocolVersion =
+        typeof record.protocolVersion === "string"
+          ? ` Protocol version: ${record.protocolVersion}.`
+          : "";
+      return {
+        code: "legacy_mod",
+        message:
+          "An old Erenshor Logs mod connected. Update the mod to a protocol v2 build." +
+          protocolVersion +
+          modVersion,
+        raw: json.slice(0, 200),
+      };
+    }
+
+    return {
+      code: "missing_protocol",
+      message: "Message missing 'protocol' field",
+      raw: json.slice(0, 200),
+    };
+  }
+
   if (record.protocol !== "erenshor.logs.live") {
     return {
       code: "unknown_protocol",

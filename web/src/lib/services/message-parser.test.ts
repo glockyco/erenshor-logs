@@ -14,14 +14,16 @@ describe("parseMessage", () => {
     expect(result.kind).toBe("hello");
   });
 
-  it("rejects legacy type-based frames", () => {
+  it("reports legacy type-based frames as old mod connections", () => {
     const result = parseMessage(
       asJson({ type: "handshake", protocolVersion: "1.0.0", modVersion: "1.0.0" })
     );
 
     expect(isParseError(result)).toBe(true);
     if (isParseError(result)) {
-      expect(result.code).toBe("missing_protocol");
+      expect(result.code).toBe("legacy_mod");
+      expect(result.message).toContain("old Erenshor Logs mod");
+      expect(result.message).toContain("1.0.0");
     }
   });
 

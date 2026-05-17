@@ -3,6 +3,8 @@ import type { CombatLogSession, Session } from "$lib/types";
 
 const INVALID_FORMAT_ERROR =
   "File does not match the Erenshor Logs v2 export format or uses an unsupported schema version.";
+const LEGACY_FORMAT_ERROR =
+  "This log uses the old Erenshor Logs v1 format. Importing v1 logs is no longer supported; use a protocol v2 export.";
 
 export type ImportResult =
   | { success: true; sessions: Session[] }
@@ -17,6 +19,13 @@ export function importSessions(jsonText: string): ImportResult {
     return {
       success: false,
       error: `Invalid JSON: ${err instanceof Error ? err.message : "Parse error"}`,
+    };
+  }
+
+  if (isLegacyExport(parsed)) {
+    return {
+      success: false,
+      error: LEGACY_FORMAT_ERROR,
     };
   }
 
@@ -41,6 +50,17 @@ export function readFileAsText(file: File): Promise<string> {
     reader.onerror = () => reject(new Error("Failed to read file"));
     reader.readAsText(file);
   });
+}
+
+function isLegacyExport(value: unknown): boolean {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "version" in value &&
+    "exportedAt" in value &&
+    "sessions" in value &&
+    !("format" in value)
+  );
 }
 
 function toSession(logSession: CombatLogSession): Session {
