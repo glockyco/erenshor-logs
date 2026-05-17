@@ -26,6 +26,24 @@ public class PatchCoverageTests
   }
 
   [Fact]
+  public void HealMePatchTargetsSingleIntOverload()
+  {
+    LoadGameAssemblies();
+    var targetMethod = typeof(HealMePatch).GetMethod(
+      "TargetMethod",
+      BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic
+    );
+
+    Assert.NotNull(targetMethod);
+    var method = Assert.IsAssignableFrom<MethodBase>(targetMethod!.Invoke(null, null));
+    Assert.Equal("HealMe", method.Name);
+    Assert.Equal(
+      [typeof(int)],
+      method.GetParameters().Select(parameter => parameter.ParameterType)
+    );
+  }
+
+  [Fact]
   public void CoversPlaytestRaidMechanicContextMethods()
   {
     LoadGameAssemblies();

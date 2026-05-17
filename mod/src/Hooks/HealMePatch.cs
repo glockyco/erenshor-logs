@@ -1,3 +1,4 @@
+using System.Reflection;
 using ErenshorLogs.Context;
 using ErenshorLogs.Events;
 using ErenshorLogs.Session;
@@ -5,7 +6,7 @@ using HarmonyLib;
 
 namespace ErenshorLogs.Hooks;
 
-[HarmonyPatch(typeof(Stats), nameof(Stats.HealMe))]
+[HarmonyPatch]
 public static class HealMePatch
 {
   internal static ICombatEventBuilder? EventBuilder { get; set; }
@@ -13,6 +14,17 @@ public static class HealMePatch
   internal static ICombatRelevanceChecker? RelevanceChecker { get; set; }
   internal static ISessionManager? SessionManager { get; set; }
   internal static Action<string>? LogDebug { get; set; }
+
+  public static MethodBase TargetMethod()
+  {
+    return typeof(Stats).GetMethod(
+      nameof(Stats.HealMe),
+      BindingFlags.Instance | BindingFlags.Public,
+      null,
+      [typeof(int)],
+      null
+    );
+  }
 
   [HarmonyPrefix]
   public static void Prefix(Stats __instance, int _amt, out HealthSnapshot __state)
