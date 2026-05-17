@@ -88,14 +88,12 @@ public sealed class CombatEventBroadcaster : ICombatEventBroadcaster
     BroadcastQueuedEvents();
   }
 
-  public void SendHandshakeToNewClient()
+  public void SendHandshakeToNewClient(IWebSocketClient client)
   {
-    if (_server.ClientCount == 0)
-      return;
-
     try
     {
-      BroadcastEnvelope(
+      SendEnvelope(
+        client,
         "hello",
         null,
         new HelloPayload
@@ -109,11 +107,12 @@ public sealed class CombatEventBroadcaster : ICombatEventBroadcaster
       var currentSession = _sessionManager.CurrentSession;
       if (currentSession != null && _sessionStates.TryGetValue(currentSession.Id, out var state))
       {
-        BroadcastEnvelope("sessionSnapshot", currentSession.Id, state.CreateSnapshot());
+        SendEnvelope(client, "sessionSnapshot", currentSession.Id, state.CreateSnapshot());
 
         if (state.Events.Count > 0)
         {
-          BroadcastEnvelope(
+          SendEnvelope(
+            client,
             "events",
             currentSession.Id,
             state.CreateEventsPayload([.. state.Events])
@@ -195,14 +194,7 @@ public sealed class CombatEventBroadcaster : ICombatEventBroadcaster
           EndedAtEventSeq = GetOrCreateState(session).LastEventSeq,
           Reason = "inactivity",
           DurationMs = durationMs,
-          Diagnostics = new SessionDiagnostics
-          {
-            HookWarnings = [],
-            AttributionFailures = 0,
-            DroppedEvents = 0,
-            DroppedFrames = 0,
-            SerializationErrors = 0,
-          },
+          Diagnostics = CreateEmptyDiagnostics(),
         }
       );
     }
@@ -215,7 +207,10 @@ public sealed class CombatEventBroadcaster : ICombatEventBroadcaster
   private void BroadcastQueuedEvents()
   {
     if (_server.ClientCount == 0)
+    {
+      ClearEventQueue();
       return;
+    }
 
     JObject[] events;
     lock (_queueLock)
@@ -234,11 +229,38 @@ public sealed class CombatEventBroadcaster : ICombatEventBroadcaster
     try
     {
       var state = GetOrCreateState(session);
+      BroadcastRegistryDelta(session.Id, state);
       BroadcastEnvelope("events", session.Id, state.CreateEventsPayload(events));
     }
     catch (Exception ex)
     {
       _log?.Invoke($"Error broadcasting events: {ex.Message}");
+    }
+  }
+
+  private void BroadcastRegistryDelta(string sessionId, ProtocolSessionState state)
+  {
+    if (state.RegistryRevision == 0)
+      return;
+
+    BroadcastEnvelope(
+      "registryDelta",
+      sessionId,
+      new RegistryDeltaPayload
+      {
+        Revision = state.RegistryRevision,
+        Actors = state.Registries.Actors,
+        Abilities = state.Registries.Abilities,
+        Effects = state.Registries.Effects,
+      }
+    );
+  }
+
+  private void ClearEventQueue()
+  {
+    lock (_queueLock)
+    {
+      _eventQueue.Clear();
     }
   }
 
@@ -254,6 +276,16 @@ public sealed class CombatEventBroadcaster : ICombatEventBroadcaster
 
   private void BroadcastEnvelope(string kind, string? sessionId, object payload)
   {
+    _server.Broadcast(SerializeEnvelope(kind, sessionId, payload));
+  }
+
+  private void SendEnvelope(IWebSocketClient client, string kind, string? sessionId, object payload)
+  {
+    client.Send(SerializeEnvelope(kind, sessionId, payload));
+  }
+
+  private string SerializeEnvelope(string kind, string? sessionId, object payload)
+  {
     var envelope = new LiveEnvelope
     {
       Kind = kind,
@@ -263,6 +295,16 @@ public sealed class CombatEventBroadcaster : ICombatEventBroadcaster
       Payload = payload,
     };
 
-    _server.Broadcast(MessageSerializer.Serialize(envelope));
+    return MessageSerializer.Serialize(envelope);
   }
+
+  private static SessionDiagnostics CreateEmptyDiagnostics() =>
+    new()
+    {
+      HookWarnings = [],
+      AttributionFailures = 0,
+      DroppedEvents = 0,
+      DroppedFrames = 0,
+      SerializationErrors = 0,
+    };
 }

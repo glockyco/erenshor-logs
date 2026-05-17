@@ -180,10 +180,10 @@ public sealed class Plugin : BaseUnityPlugin
     sessionManager.SessionEnded += _ => _relevanceChecker?.ClearCache();
 
     // Send handshake when clients connect
-    _server.ClientConnected += () =>
+    _server.ClientConnected += client =>
     {
       Logger.LogDebug("Client connected, sending handshake");
-      _broadcaster.SendHandshakeToNewClient();
+      _broadcaster.SendHandshakeToNewClient(client);
     };
   }
 

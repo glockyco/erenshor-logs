@@ -1,6 +1,16 @@
 namespace ErenshorLogs.Server;
 
 /// <summary>
+/// Connected WebSocket client that can receive targeted messages.
+/// </summary>
+public interface IWebSocketClient
+{
+  Guid Id { get; }
+  string ClientIpAddress { get; }
+  void Send(string message);
+}
+
+/// <summary>
 /// WebSocket server for broadcasting combat events to connected clients.
 /// </summary>
 public interface IWebSocketServer : IDisposable
@@ -28,5 +38,5 @@ public interface IWebSocketServer : IDisposable
   /// <summary>
   /// Fired when a new client connects to the server.
   /// </summary>
-  event Action? ClientConnected;
+  event Action<IWebSocketClient>? ClientConnected;
 }

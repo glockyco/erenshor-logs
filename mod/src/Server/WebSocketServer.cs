@@ -13,7 +13,7 @@ public class WebSocketServer : IWebSocketServer
 {
   private readonly ModConfig _config;
   private readonly ManualLogSource _logger;
-  private readonly ConcurrentDictionary<Guid, IWebSocketConnection> _clients = new();
+  private readonly ConcurrentDictionary<Guid, FleckWebSocketClient> _clients = new();
 
   private Fleck.WebSocketServer? _server;
   private bool _disposed;
@@ -22,7 +22,7 @@ public class WebSocketServer : IWebSocketServer
   public int ClientCount => _clients.Count;
 
   /// <inheritdoc />
-  public event Action? ClientConnected;
+  public event Action<IWebSocketClient>? ClientConnected;
 
   /// <summary>
   /// Creates a new WebSocketServer.
@@ -157,13 +157,14 @@ public class WebSocketServer : IWebSocketServer
 
   private void OnClientConnected(IWebSocketConnection socket)
   {
-    _clients[socket.ConnectionInfo.Id] = socket;
+    var client = new FleckWebSocketClient(socket);
+    _clients[socket.ConnectionInfo.Id] = client;
     _logger.LogInfo(
       $"Client connected: {socket.ConnectionInfo.ClientIpAddress} (total: {ClientCount})"
     );
 
-    // Fire event so Plugin can send handshake
-    ClientConnected?.Invoke();
+    // Fire event so Plugin can send targeted handshake/catch-up frames.
+    ClientConnected?.Invoke(client);
   }
 
   private void OnClientDisconnected(IWebSocketConnection socket)
@@ -185,6 +186,17 @@ public class WebSocketServer : IWebSocketServer
     // Inbound message handling not implemented in MVP.
     // For now, just log that we received something.
     _logger.LogDebug($"Received message from {socket.ConnectionInfo.ClientIpAddress}: {message}");
+  }
+
+  private sealed class FleckWebSocketClient(IWebSocketConnection socket) : IWebSocketClient
+  {
+    public Guid Id => socket.ConnectionInfo.Id;
+    public string ClientIpAddress => socket.ConnectionInfo.ClientIpAddress;
+    public bool IsAvailable => socket.IsAvailable;
+
+    public void Send(string message) => socket.Send(message);
+
+    public void Close() => socket.Close();
   }
 
   private void ConfigureFleckLogging()

@@ -10,17 +10,20 @@ namespace ErenshorLogs.Tests.Broadcast;
 public sealed class CombatEventBroadcasterTests
 {
   [Fact]
-  public void SendHandshakeToNewClient_BroadcastsV2HelloEnvelope()
+  public void SendHandshakeToNewClient_SendsCatchupOnlyToTargetClient()
   {
-    using var harness = BroadcasterHarness.Create(clientCount: 1);
+    using var harness = BroadcasterHarness.Create(clientCount: 2);
+    var session = new CombatSession("playtest-23258843", "2026.5.17.14");
+    var newClient = new FakeClient();
+    harness.SessionManager.Start(session);
+    harness.Emitter.Emit(CreateDamageEvent(session.StartTime + 100));
+    harness.Broadcaster.Tick(1.0f);
+    harness.Server.Messages.Clear();
 
-    harness.Broadcaster.SendHandshakeToNewClient();
+    harness.Broadcaster.SendHandshakeToNewClient(newClient);
 
-    var frame = ParseLastFrame(harness.Server);
-    Assert.Equal("erenshor.logs.live", frame.Value<string>("protocol"));
-    Assert.Equal("hello", frame.Value<string>("kind"));
-    Assert.Equal(1, frame.Value<long>("frameSeq"));
-    Assert.Equal("ErenshorLogsMod", frame["payload"]!["producer"]!.Value<string>("name"));
+    Assert.Empty(harness.Server.Messages);
+    Assert.Equal(["hello", "sessionSnapshot", "events"], newClient.Messages.Select(ReadKind));
   }
 
   [Fact]
@@ -38,7 +41,7 @@ public sealed class CombatEventBroadcasterTests
   }
 
   [Fact]
-  public void Tick_BroadcastsQueuedEventsAsV2Batch()
+  public void Tick_BroadcastsRegistryDeltaBeforeFirstEventBatch()
   {
     using var harness = BroadcasterHarness.Create(clientCount: 1);
     var session = new CombatSession("playtest-23258843", "2026.5.17.14");
@@ -48,12 +51,27 @@ public sealed class CombatEventBroadcasterTests
     harness.Emitter.Emit(CreateDamageEvent(session.StartTime + 100));
     harness.Broadcaster.Tick(1.0f);
 
-    var frame = ParseLastFrame(harness.Server);
-    Assert.Equal("events", frame.Value<string>("kind"));
-    Assert.Equal(session.Id, frame.Value<string>("sessionId"));
-    Assert.Equal(1, frame["payload"]!.Value<long>("eventSeqStart"));
-    Assert.Equal(1, frame["payload"]!.Value<long>("eventSeqEnd"));
-    Assert.Equal("damage", frame["payload"]!["events"]![0]!.Value<string>("kind"));
+    Assert.Equal(["registryDelta", "events"], harness.Server.Messages.Select(ReadKind));
+    var delta = JObject.Parse(harness.Server.Messages[0]);
+    Assert.Equal("Player", delta["payload"]!["actors"]!["player:0"]!.Value<string>("name"));
+  }
+
+  [Fact]
+  public void Tick_DropsQueuedEventsWhenNoClientsAreConnected()
+  {
+    using var harness = BroadcasterHarness.Create(clientCount: 0);
+    var unwatched = new CombatSession("playtest-23258843", "2026.5.17.14");
+    harness.SessionManager.Start(unwatched);
+    harness.Emitter.Emit(CreateDamageEvent(unwatched.StartTime + 100));
+    harness.Broadcaster.Tick(1.0f);
+
+    harness.Server.ClientCount = 1;
+    var watched = new CombatSession("playtest-23258843", "2026.5.17.14");
+    harness.SessionManager.Start(watched);
+    harness.Server.Messages.Clear();
+    harness.Broadcaster.Tick(1.0f);
+
+    Assert.Empty(harness.Server.Messages);
   }
 
   private static CombatEvent CreateDamageEvent(long timestamp) =>
@@ -83,6 +101,8 @@ public sealed class CombatEventBroadcasterTests
       Amount = 350,
       DamageType = DamageType.Physical,
     };
+
+  private static string? ReadKind(string message) => JObject.Parse(message).Value<string>("kind");
 
   private static JObject ParseLastFrame(FakeServer server)
   {
@@ -123,7 +143,7 @@ public sealed class CombatEventBroadcasterTests
   {
     public List<string> Messages { get; } = [];
     public int ClientCount { get; set; } = clientCount;
-    public event Action? ClientConnected;
+    public event Action<IWebSocketClient>? ClientConnected;
 
     public void Start() { }
 
@@ -133,7 +153,16 @@ public sealed class CombatEventBroadcasterTests
 
     public void Dispose() { }
 
-    public void RaiseClientConnected() => ClientConnected?.Invoke();
+    public void RaiseClientConnected(IWebSocketClient client) => ClientConnected?.Invoke(client);
+  }
+
+  private sealed class FakeClient : IWebSocketClient
+  {
+    public Guid Id { get; } = Guid.NewGuid();
+    public string ClientIpAddress => "127.0.0.1";
+    public List<string> Messages { get; } = [];
+
+    public void Send(string message) => Messages.Add(message);
   }
 
   private sealed class FakeSessionManager : ISessionManager
@@ -148,22 +177,16 @@ public sealed class CombatEventBroadcasterTests
 
     public void StartManualSession() { }
 
-    public void EndManualSession() { }
+    public void EndManualSession()
+    {
+      if (CurrentSession != null)
+        SessionEnded?.Invoke(CurrentSession);
+    }
 
     public void Start(CombatSession session)
     {
       CurrentSession = session;
       SessionStarted?.Invoke(session);
-    }
-
-    public void End()
-    {
-      if (CurrentSession == null)
-        return;
-
-      var session = CurrentSession;
-      CurrentSession = null;
-      SessionEnded?.Invoke(session);
     }
   }
 }

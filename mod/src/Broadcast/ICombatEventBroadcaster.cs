@@ -14,5 +14,5 @@ public interface ICombatEventBroadcaster : IDisposable
   /// <summary>
   /// Sends handshake message to a newly connected client.
   /// </summary>
-  void SendHandshakeToNewClient();
+  void SendHandshakeToNewClient(Server.IWebSocketClient client);
 }
