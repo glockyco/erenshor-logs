@@ -107,6 +107,7 @@ public sealed class Plugin : BaseUnityPlugin
 
     // Create and store relevance checker
     _relevanceChecker = new CombatRelevanceCheckerAdapter();
+    RaidRelevanceInvalidation.ClearCache = () => _relevanceChecker?.ClearCache();
 
     // Create and wire up EffectTracker for DoT/HoT attribution
     var effectTracker = new EffectTracker();
@@ -256,6 +257,7 @@ public sealed class Plugin : BaseUnityPlugin
     _broadcaster?.Dispose();
     _server?.Dispose();
     _harmony?.UnpatchSelf();
+    RaidRelevanceInvalidation.ClearCache = null;
     _services?.Dispose();
   }
 }

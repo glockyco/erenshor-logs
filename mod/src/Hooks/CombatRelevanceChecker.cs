@@ -19,6 +19,8 @@ public sealed class CombatRelevanceChecker<TCharacter, TNpc>
   private readonly Func<IReadOnlyList<TNpc>> _getGroupMatesInCombat;
   private readonly Func<IReadOnlyList<TCharacter>?> _getGroupTargets;
   private readonly Func<TCharacter[]> _getGroupMembers;
+  private readonly Func<IReadOnlyList<TCharacter>> _getRaidTargets;
+  private readonly Func<IReadOnlyList<TCharacter>> _getLooseAdds;
   private readonly Func<TNpc, IReadOnlyList<TCharacter>> _getAggroTablePlayers;
 
   private readonly HashSet<int> _relevantCharacterIds = [];
@@ -37,6 +39,8 @@ public sealed class CombatRelevanceChecker<TCharacter, TNpc>
     Func<IReadOnlyList<TNpc>> getGroupMatesInCombat,
     Func<IReadOnlyList<TCharacter>?> getGroupTargets,
     Func<TCharacter[]> getGroupMembers,
+    Func<IReadOnlyList<TCharacter>> getRaidTargets,
+    Func<IReadOnlyList<TCharacter>> getLooseAdds,
     Func<TNpc, IReadOnlyList<TCharacter>> getAggroTablePlayers
   )
   {
@@ -50,6 +54,8 @@ public sealed class CombatRelevanceChecker<TCharacter, TNpc>
     _getGroupMatesInCombat = getGroupMatesInCombat;
     _getGroupTargets = getGroupTargets;
     _getGroupMembers = getGroupMembers;
+    _getRaidTargets = getRaidTargets;
+    _getLooseAdds = getLooseAdds;
     _getAggroTablePlayers = getAggroTablePlayers;
   }
 
@@ -99,6 +105,8 @@ public sealed class CombatRelevanceChecker<TCharacter, TNpc>
       || IsNpcAttackingPlayer(character)
       || IsGroupMateInCombat(character)
       || IsGroupTarget(character)
+      || IsRaidTarget(character)
+      || IsLooseAdd(character)
       || IsNpcWithGroupOnAggroTable(character)
       || IsPetOfEngagedNpc(character);
 
@@ -190,6 +198,16 @@ public sealed class CombatRelevanceChecker<TCharacter, TNpc>
     return groupTargets.Contains(character);
   }
 
+  private bool IsRaidTarget(TCharacter character)
+  {
+    return _getRaidTargets().Contains(character);
+  }
+
+  private bool IsLooseAdd(TCharacter character)
+  {
+    return _getLooseAdds().Contains(character);
+  }
+
   /// <summary>
   /// Checks if the character is an NPC with the player or group members on its AggroTable.
   /// </summary>
@@ -237,6 +255,11 @@ public sealed class CombatRelevanceChecker<TCharacter, TNpc>
 
     var groupTargets = _getGroupTargets();
     if (groupTargets != null && groupTargets.Contains(master))
+      return true;
+    if (_getRaidTargets().Contains(master))
+      return true;
+
+    if (_getLooseAdds().Contains(master))
       return true;
 
     return false;

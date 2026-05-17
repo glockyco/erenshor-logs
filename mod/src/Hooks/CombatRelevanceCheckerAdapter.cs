@@ -7,10 +7,6 @@ public sealed class CombatRelevanceCheckerAdapter : ICombatRelevanceChecker
 {
   private readonly CombatRelevanceChecker<Character, NPC> _inner;
 
-  private static readonly System.Reflection.FieldInfo? MyRaidSlotField = typeof(NPC).GetField(
-    "MyRaidSlot"
-  );
-
   /// <summary>
   /// Creates a new CombatRelevanceCheckerAdapter.
   /// </summary>
@@ -49,6 +45,10 @@ public sealed class CombatRelevanceCheckerAdapter : ICombatRelevanceChecker
         }
         return members.ToArray();
       },
+      // GetRaidTargets
+      GetRaidTargets,
+      // GetLooseAdds
+      GetLooseAdds,
       // GetAggroTablePlayers
       npc =>
       {
@@ -68,7 +68,40 @@ public sealed class CombatRelevanceCheckerAdapter : ICombatRelevanceChecker
 
   private static bool IsInPlayerGroupOrRaid(NPC npc)
   {
-    return npc.InGroup || MyRaidSlotField?.GetValue(npc) != null;
+    return npc.InGroup || npc.MyRaidSlot != null;
+  }
+
+  public static IReadOnlyList<Character> GetRaidTargets()
+  {
+    var raid = GameData.RaidManager;
+    if (raid == null)
+      return Array.Empty<Character>();
+
+    var targets = new List<Character>(4);
+    if (raid.Group1Target != null)
+      targets.Add(raid.Group1Target);
+    if (raid.Group2Target != null)
+      targets.Add(raid.Group2Target);
+    if (raid.Group3Target != null)
+      targets.Add(raid.Group3Target);
+    if (raid.UrgentTarget != null)
+      targets.Add(raid.UrgentTarget);
+    return targets;
+  }
+
+  public static IReadOnlyList<Character> GetLooseAdds()
+  {
+    var raid = GameData.RaidManager;
+    if (raid?.LooseAdds == null)
+      return Array.Empty<Character>();
+
+    var adds = new List<Character>();
+    foreach (var add in raid.LooseAdds)
+    {
+      if (add != null)
+        adds.Add(add);
+    }
+    return adds;
   }
 
   /// <inheritdoc />
