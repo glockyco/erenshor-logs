@@ -90,6 +90,12 @@ public class PatchCoverageTests
       "ErenshorLogs.Hooks.NpcFightEventHealContextPatch"
     );
 
+    var prefix = RequireModType("ErenshorLogs.Hooks.NpcFightEventHealContextPatch")
+      .GetMethod("Prefix", BindingFlags.Public | BindingFlags.Static);
+    Assert.NotNull(prefix);
+    Assert.DoesNotContain(prefix!.GetParameters(), parameter => parameter.Name == "___MyChar");
+    Assert.Contains(prefix.GetParameters(), parameter => parameter.Name == "___MyNPC");
+
     var siraethe = AppDomain
       .CurrentDomain.GetAssemblies()
       .Select(assembly => assembly.GetType("SiraetheEvent"))

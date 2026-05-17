@@ -7,6 +7,9 @@ namespace ErenshorLogs.Hooks;
 [HarmonyPatch(typeof(NPCFightEvent), "FixedUpdate")]
 public static class NpcFightEventHealContextPatch
 {
+  private static readonly AccessTools.FieldRef<NPC, Character> NpcCharacterRef =
+    AccessTools.FieldRefAccess<NPC, Character>("Myself");
+
   private static readonly AbilityRef Ability = new()
   {
     Name = "Boss Regeneration",
@@ -15,10 +18,10 @@ public static class NpcFightEventHealContextPatch
   };
 
   [HarmonyPrefix]
-  public static void Prefix(Character ___MyChar, out IDisposable? __state)
+  public static void Prefix(NPC ___MyNPC, out IDisposable? __state)
   {
     __state = HealingContext.Push(
-      ___MyChar,
+      ___MyNPC == null ? null : NpcCharacterRef(___MyNPC),
       Ability,
       EventType.HealSpell,
       AttributionMethod.Context
