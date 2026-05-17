@@ -26,6 +26,18 @@ describe("protocol v2 fixtures", () => {
     expect(file.sessions[0].events).toHaveLength(6);
   });
 
+  it("fixtures include health-affecting raid event families", () => {
+    const file = CombatLogFileSchema.parse(singleSessionExport);
+    const allEvents = file.sessions.flatMap((session) => session.events);
+
+    expect(allEvents.some((event) => event.kind === "damage")).toBe(true);
+    expect(allEvents.some((event) => event.kind === "heal")).toBe(true);
+    expect(allEvents.some((event) => event.kind === "resource")).toBe(true);
+    expect(allEvents.some((event) => event.kind === "effect")).toBe(true);
+    expect(allEvents.some((event) => event.kind === "death")).toBe(true);
+    expect(allEvents.some((event) => event.kind === "mechanic")).toBe(true);
+  });
+
   it("validates multi-session export", () => {
     const file = CombatLogFileSchema.parse(multiSessionExport);
 

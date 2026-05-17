@@ -19,12 +19,12 @@
           "gameVersion": "playtest-23258843"
         },
         "playerActorId": "a1",
-        "registryRevision": 5,
+        "registryRevision": 6,
         "lastEventSeq": 6,
         "eventCount": 6,
         "completeness": "complete",
         "registries": {
-          "revision": 5,
+          "revision": 6,
           "actors": {
             "a1": {
               "id": "a1",
@@ -33,7 +33,9 @@
               "class": "Duelist",
               "level": 20,
               "faction": "friendly",
-              "isPlayerControlled": true
+              "isPlayerControlled": true,
+              "raidGroup": 1,
+              "raidRole": "dps"
             },
             "a2": {
               "id": "a2",
@@ -41,11 +43,43 @@
               "kind": "simPlayer",
               "class": "Assassin",
               "level": 20,
-              "faction": "friendly"
+              "faction": "friendly",
+              "raidGroup": 1,
+              "raidRole": "dps"
             },
             "a3": {
               "id": "a3",
-              "name": "Raid Boss",
+              "name": "Mizuki",
+              "kind": "npc",
+              "level": 25,
+              "faction": "hostile"
+            },
+            "a4": {
+              "id": "a4",
+              "name": "Grace",
+              "kind": "npc",
+              "level": 25,
+              "faction": "hostile"
+            },
+            "a5": {
+              "id": "a5",
+              "name": "Mana Drain",
+              "kind": "environment",
+              "faction": "hostile"
+            },
+            "a6": {
+              "id": "a6",
+              "name": "Raid Cleric",
+              "kind": "simPlayer",
+              "class": "Cleric",
+              "level": 20,
+              "faction": "friendly",
+              "raidGroup": 1,
+              "raidRole": "healer"
+            },
+            "a7": {
+              "id": "a7",
+              "name": "Sprinkles",
               "kind": "npc",
               "level": 25,
               "faction": "hostile"
@@ -63,22 +97,34 @@
               "id": "ab2",
               "name": "Poisoned Wound",
               "kind": "dot",
-              "stableKey": "spell:202",
+              "stableKey": "spell:bleed-ref",
               "damageType": "poison",
               "parentAbilityId": "ab1"
             },
             "ab3": {
               "id": "ab3",
-              "name": "Heal",
-              "kind": "spell",
-              "stableKey": "spell:303"
+              "name": "Grace Echoes",
+              "kind": "areaEffect",
+              "stableKey": "mechanic:grace-echoes"
             },
             "ab4": {
               "id": "ab4",
-              "name": "Meteor",
-              "kind": "spell",
-              "stableKey": "spell:404",
-              "damageType": "magic"
+              "name": "Mana Drain",
+              "kind": "areaEffect",
+              "stableKey": "mechanic:mana-drain"
+            },
+            "ab5": {
+              "id": "ab5",
+              "name": "Death Touch",
+              "kind": "areaEffect",
+              "stableKey": "mechanic:death-touch",
+              "damageType": "void"
+            },
+            "ab6": {
+              "id": "ab6",
+              "name": "Sprinkles Wards",
+              "kind": "areaEffect",
+              "stableKey": "mechanic:sprinkles-wards"
             }
           },
           "effects": {
@@ -86,7 +132,7 @@
               "id": "ef1",
               "name": "Poisoned Wound",
               "kind": "debuff",
-              "stableKey": "spell:202",
+              "stableKey": "spell:bleed-ref",
               "sourceAbilityId": "ab2",
               "defaultDurationMs": 12000,
               "maxStacks": 1
@@ -107,7 +153,7 @@
       "events": [
         {
           "eventSeq": 1,
-          "offsetMs": 120,
+          "offsetMs": 250,
           "kind": "damage",
           "action": "hit",
           "sourceActorId": "a2",
@@ -121,80 +167,79 @@
             "mitigatedAmount": 50,
             "damageType": "physical",
             "outcome": {
-              "result": "landed",
-              "critical": true
+              "result": "landed"
             }
           }
         },
         {
           "eventSeq": 2,
-          "offsetMs": 1000,
+          "offsetMs": 500,
           "kind": "heal",
-          "action": "direct",
-          "sourceActorId": "a1",
-          "creditActorId": "a1",
-          "targetActorId": "a2",
+          "action": "scripted",
+          "sourceActorId": "a4",
+          "targetActorId": "a4",
           "abilityId": "ab3",
           "attribution": "verified",
           "data": {
-            "amount": 125,
-            "rawAmount": 160,
-            "overhealAmount": 35
+            "amount": 200000,
+            "rawAmount": 200000
           }
         },
         {
           "eventSeq": 3,
-          "offsetMs": 1250,
+          "offsetMs": 750,
           "kind": "resource",
-          "action": "spend",
-          "sourceActorId": "a1",
+          "action": "drain",
+          "sourceActorId": "a5",
           "targetActorId": "a1",
-          "abilityId": "ab3",
+          "abilityId": "ab4",
+          "attribution": "verified",
           "data": {
             "resource": "mana",
-            "delta": -35,
-            "current": 465,
-            "max": 500
+            "delta": -300,
+            "current": 1200,
+            "max": 1500
           }
         },
         {
           "eventSeq": 4,
-          "offsetMs": 1400,
+          "offsetMs": 900,
           "kind": "effect",
           "action": "apply",
-          "sourceActorId": "a2",
-          "creditActorId": "a2",
-          "targetActorId": "a3",
+          "sourceActorId": "a3",
+          "targetActorId": "a1",
           "abilityId": "ab2",
           "effectId": "ef1",
+          "attribution": "verified",
           "data": {
-            "stacks": 1,
             "durationMs": 12000
           }
         },
         {
           "eventSeq": 5,
-          "offsetMs": 5200,
-          "kind": "interrupt",
-          "action": "interrupt",
-          "sourceActorId": "a2",
-          "targetActorId": "a3",
-          "abilityId": "ab1",
+          "offsetMs": 1200,
+          "kind": "death",
+          "action": "die",
+          "sourceActorId": "a3",
+          "targetActorId": "a6",
+          "abilityId": "ab5",
+          "attribution": "verified",
           "data": {
-            "interruptedAbilityId": "ab4"
+            "killingBlowEventSeq": 1
           }
         },
         {
           "eventSeq": 6,
           "offsetMs": 18000,
-          "kind": "death",
-          "action": "die",
-          "sourceActorId": "a2",
-          "creditActorId": "a2",
-          "targetActorId": "a3",
-          "causeEventSeq": 1,
+          "kind": "mechanic",
+          "action": "invulnerability",
+          "sourceActorId": "a7",
+          "targetActorId": "a7",
+          "abilityId": "ab6",
+          "attribution": "verified",
           "data": {
-            "killingBlowEventSeq": 1
+            "name": "Sprinkles wards",
+            "value": true
           }
         }
       ],
@@ -218,9 +263,9 @@
         "computedFromEventSeq": 6,
         "summary": {
           "totalDamage": 350,
-          "totalHealing": 125,
+          "totalHealing": 200000,
           "totalDamageTaken": 0,
-          "totalHealingReceived": 125,
+          "totalHealingReceived": 0,
           "durationMs": 19000
         }
       }

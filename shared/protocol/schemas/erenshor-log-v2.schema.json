@@ -235,6 +235,8 @@
         "ownerActorId": { "type": "string" },
         "faction": { "enum": ["friendly", "hostile", "neutral", "unknown"] },
         "isPlayerControlled": { "type": "boolean" },
+        "raidGroup": { "type": "integer", "minimum": 1, "maximum": 3 },
+        "raidRole": { "enum": ["tank", "healer", "dps", "puller", "unknown"] },
         "firstSeenEventSeq": { "type": "integer", "minimum": 1 }
       }
     },
@@ -272,7 +274,8 @@
         { "$ref": "#/$defs/resourceEvent" },
         { "$ref": "#/$defs/effectEvent" },
         { "$ref": "#/$defs/deathEvent" },
-        { "$ref": "#/$defs/interruptEvent" }
+        { "$ref": "#/$defs/interruptEvent" },
+        { "$ref": "#/$defs/mechanicEvent" }
       ]
     },
     "eventBase": {
@@ -303,13 +306,13 @@
     "healEvent": {
       "allOf": [
         { "$ref": "#/$defs/eventBase" },
-        { "properties": { "kind": { "const": "heal" }, "action": { "enum": ["direct", "tick", "lifesteal", "regen"] }, "data": { "$ref": "#/$defs/healData" } } }
+        { "properties": { "kind": { "const": "heal" }, "action": { "enum": ["direct", "tick", "lifesteal", "regen", "scripted"] }, "data": { "$ref": "#/$defs/healData" } } }
       ]
     },
     "resourceEvent": {
       "allOf": [
         { "$ref": "#/$defs/eventBase" },
-        { "properties": { "kind": { "const": "resource" }, "action": { "enum": ["spend", "restore", "regen"] }, "data": { "$ref": "#/$defs/resourceData" } } }
+        { "properties": { "kind": { "const": "resource" }, "action": { "enum": ["spend", "restore", "regen", "drain"] }, "data": { "$ref": "#/$defs/resourceData" } } }
       ]
     },
     "effectEvent": {
@@ -328,6 +331,18 @@
       "allOf": [
         { "$ref": "#/$defs/eventBase" },
         { "properties": { "kind": { "const": "interrupt" }, "action": { "const": "interrupt" }, "data": { "$ref": "#/$defs/interruptData" } } }
+      ]
+    },
+    "mechanicEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/eventBase" },
+        {
+          "properties": {
+            "kind": { "const": "mechanic" },
+            "action": { "enum": ["phase", "invulnerability", "spawn", "despawn", "statChange", "targetAssignment"] },
+            "data": { "$ref": "#/$defs/mechanicData" }
+          }
+        }
       ]
     },
     "damageData": {
@@ -384,6 +399,18 @@
       "type": "object",
       "additionalProperties": false,
       "properties": { "interruptedAbilityId": { "type": "string" } }
+    },
+    "mechanicData": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "value": { "type": ["string", "number", "boolean"] },
+        "previousValue": { "type": ["string", "number", "boolean"] },
+        "affectedStat": { "enum": ["hp", "mana", "damage", "resist", "armorPen"] },
+        "amount": { "type": "integer" }
+      }
     },
     "combatLogFile": {
       "type": "object",

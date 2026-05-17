@@ -134,6 +134,8 @@ public sealed record ActorRecord
   public string? OwnerActorId { get; init; }
   public string? Faction { get; init; }
   public bool? IsPlayerControlled { get; init; }
+  public int? RaidGroup { get; init; }
+  public string? RaidRole { get; init; }
   public long? FirstSeenEventSeq { get; init; }
 }
 
@@ -224,6 +226,11 @@ public sealed record InterruptEventRecord : CombatEventBase
   public required InterruptData Data { get; init; }
 }
 
+public sealed record MechanicEventRecord : CombatEventBase
+{
+  public required MechanicData Data { get; init; }
+}
+
 public sealed record DamageData
 {
   public required long Amount { get; init; }
@@ -266,6 +273,15 @@ public sealed record DeathData
 public sealed record InterruptData
 {
   public string? InterruptedAbilityId { get; init; }
+}
+
+public sealed record MechanicData
+{
+  public required string Name { get; init; }
+  public object? Value { get; init; }
+  public object? PreviousValue { get; init; }
+  public string? AffectedStat { get; init; }
+  public int? Amount { get; init; }
 }
 
 public sealed record AttributionDebug

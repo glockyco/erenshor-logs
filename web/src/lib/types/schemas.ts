@@ -155,6 +155,8 @@ export const ActorRecordSchema = z.object({
   ownerActorId: z.string().optional(),
   faction: z.enum(["friendly", "hostile", "neutral", "unknown"]).optional(),
   isPlayerControlled: z.boolean().optional(),
+  raidGroup: z.number().int().min(1).max(3).optional(),
+  raidRole: z.enum(["tank", "healer", "dps", "puller", "unknown"]).optional(),
   firstSeenEventSeq: z.number().int().positive().optional(),
 });
 export type ActorRecord = z.infer<typeof ActorRecordSchema>;
@@ -333,14 +335,14 @@ export type DamageEvent = z.infer<typeof DamageEventSchema>;
 
 export const HealEventSchema = CombatEventBaseSchema.extend({
   kind: z.literal("heal"),
-  action: z.enum(["direct", "tick", "lifesteal", "regen"]),
+  action: z.enum(["direct", "tick", "lifesteal", "regen", "scripted"]),
   data: HealDataSchema,
 });
 export type HealEvent = z.infer<typeof HealEventSchema>;
 
 export const ResourceEventSchema = CombatEventBaseSchema.extend({
   kind: z.literal("resource"),
-  action: z.enum(["spend", "restore", "regen"]),
+  action: z.enum(["spend", "restore", "regen", "drain"]),
   data: ResourceDataSchema,
 });
 export type ResourceEvent = z.infer<typeof ResourceEventSchema>;
@@ -366,6 +368,31 @@ export const InterruptEventSchema = CombatEventBaseSchema.extend({
 });
 export type InterruptEvent = z.infer<typeof InterruptEventSchema>;
 
+export const MechanicDataSchema = z
+  .object({
+    name: z.string(),
+    value: z.union([z.string(), z.number(), z.boolean()]).optional(),
+    previousValue: z.union([z.string(), z.number(), z.boolean()]).optional(),
+    affectedStat: z.enum(["hp", "mana", "damage", "resist", "armorPen"]).optional(),
+    amount: z.number().int().optional(),
+  })
+  .strict();
+export type MechanicData = z.infer<typeof MechanicDataSchema>;
+
+export const MechanicEventSchema = CombatEventBaseSchema.extend({
+  kind: z.literal("mechanic"),
+  action: z.enum([
+    "phase",
+    "invulnerability",
+    "spawn",
+    "despawn",
+    "statChange",
+    "targetAssignment",
+  ]),
+  data: MechanicDataSchema,
+});
+export type MechanicEvent = z.infer<typeof MechanicEventSchema>;
+
 export const CombatEventRecordSchema = z.discriminatedUnion("kind", [
   DamageEventSchema,
   HealEventSchema,
@@ -373,6 +400,7 @@ export const CombatEventRecordSchema = z.discriminatedUnion("kind", [
   EffectEventSchema,
   DeathEventSchema,
   InterruptEventSchema,
+  MechanicEventSchema,
 ]);
 export type CombatEventRecord = z.infer<typeof CombatEventRecordSchema>;
 

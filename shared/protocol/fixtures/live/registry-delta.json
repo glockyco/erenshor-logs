@@ -7,28 +7,107 @@
   "sessionId": "session-1",
   "sentAtMs": 1800000000200,
   "payload": {
-    "revision": 5,
+    "revision": 6,
+    "actors": {
+      "a1": {
+        "id": "a1",
+        "name": "Player",
+        "kind": "player",
+        "class": "Duelist",
+        "level": 20,
+        "faction": "friendly",
+        "isPlayerControlled": true,
+        "raidGroup": 1,
+        "raidRole": "dps"
+      },
+      "a2": {
+        "id": "a2",
+        "name": "Backstabber",
+        "kind": "simPlayer",
+        "class": "Assassin",
+        "level": 20,
+        "faction": "friendly",
+        "raidGroup": 1,
+        "raidRole": "dps"
+      },
+      "a3": {
+        "id": "a3",
+        "name": "Mizuki",
+        "kind": "npc",
+        "level": 25,
+        "faction": "hostile"
+      },
+      "a4": {
+        "id": "a4",
+        "name": "Grace",
+        "kind": "npc",
+        "level": 25,
+        "faction": "hostile"
+      },
+      "a5": {
+        "id": "a5",
+        "name": "Mana Drain",
+        "kind": "environment",
+        "faction": "hostile"
+      },
+      "a6": {
+        "id": "a6",
+        "name": "Raid Cleric",
+        "kind": "simPlayer",
+        "class": "Cleric",
+        "level": 20,
+        "faction": "friendly",
+        "raidGroup": 1,
+        "raidRole": "healer"
+      },
+      "a7": {
+        "id": "a7",
+        "name": "Sprinkles",
+        "kind": "npc",
+        "level": 25,
+        "faction": "hostile"
+      }
+    },
     "abilities": {
+      "ab1": {
+        "id": "ab1",
+        "name": "Backstab",
+        "kind": "skill",
+        "stableKey": "skill:101",
+        "damageType": "physical"
+      },
       "ab2": {
         "id": "ab2",
         "name": "Poisoned Wound",
         "kind": "dot",
-        "stableKey": "spell:202",
+        "stableKey": "spell:bleed-ref",
         "damageType": "poison",
         "parentAbilityId": "ab1"
       },
       "ab3": {
         "id": "ab3",
-        "name": "Heal",
-        "kind": "spell",
-        "stableKey": "spell:303"
+        "name": "Grace Echoes",
+        "kind": "areaEffect",
+        "stableKey": "mechanic:grace-echoes"
       },
       "ab4": {
         "id": "ab4",
-        "name": "Meteor",
-        "kind": "spell",
-        "stableKey": "spell:404",
-        "damageType": "magic"
+        "name": "Mana Drain",
+        "kind": "areaEffect",
+        "stableKey": "mechanic:mana-drain"
+      },
+      "ab5": {
+        "id": "ab5",
+        "name": "Death Touch",
+        "kind": "areaEffect",
+        "stableKey": "mechanic:death-touch",
+        "damageType": "void"
+      },
+      "ab6": {
+        "id": "ab6",
+        "name": "Sprinkles Wards",
+        "kind": "areaEffect",
+        "stableKey": "mechanic:sprinkles-wards"
       }
     },
     "effects": {
@@ -36,7 +115,7 @@
         "id": "ef1",
         "name": "Poisoned Wound",
         "kind": "debuff",
-        "stableKey": "spell:202",
+        "stableKey": "spell:bleed-ref",
         "sourceAbilityId": "ab2",
         "defaultDurationMs": 12000,
         "maxStacks": 1

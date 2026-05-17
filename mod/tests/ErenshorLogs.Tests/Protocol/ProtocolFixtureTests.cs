@@ -139,6 +139,11 @@ public class ProtocolFixtureTests
         Assert.Equal("interrupt", interrupt.Kind);
         Assert.NotNull(interrupt.Data.InterruptedAbilityId);
         break;
+      case "mechanic":
+        var mechanic = evt.ToObject<MechanicEventRecord>()!;
+        Assert.Equal("mechanic", mechanic.Kind);
+        Assert.False(string.IsNullOrWhiteSpace(mechanic.Data.Name));
+        break;
       default:
         throw new InvalidOperationException($"Unhandled event kind: {evt.Value<string>("kind")}");
     }

@@ -8,13 +8,13 @@
   "sentAtMs": 1800000000300,
   "payload": {
     "sessionId": "session-1",
-    "registryRevision": 5,
+    "registryRevision": 6,
     "eventSeqStart": 1,
     "eventSeqEnd": 6,
     "events": [
       {
         "eventSeq": 1,
-        "offsetMs": 120,
+        "offsetMs": 250,
         "kind": "damage",
         "action": "hit",
         "sourceActorId": "a2",
@@ -27,63 +27,81 @@
           "rawAmount": 400,
           "mitigatedAmount": 50,
           "damageType": "physical",
-          "outcome": { "result": "landed", "critical": true }
+          "outcome": {
+            "result": "landed"
+          }
         }
       },
       {
         "eventSeq": 2,
-        "offsetMs": 1000,
+        "offsetMs": 500,
         "kind": "heal",
-        "action": "direct",
-        "sourceActorId": "a1",
-        "creditActorId": "a1",
-        "targetActorId": "a2",
+        "action": "scripted",
+        "sourceActorId": "a4",
+        "targetActorId": "a4",
         "abilityId": "ab3",
         "attribution": "verified",
-        "data": { "amount": 125, "rawAmount": 160, "overhealAmount": 35 }
+        "data": {
+          "amount": 200000,
+          "rawAmount": 200000
+        }
       },
       {
         "eventSeq": 3,
-        "offsetMs": 1250,
+        "offsetMs": 750,
         "kind": "resource",
-        "action": "spend",
-        "sourceActorId": "a1",
+        "action": "drain",
+        "sourceActorId": "a5",
         "targetActorId": "a1",
-        "abilityId": "ab3",
-        "data": { "resource": "mana", "delta": -35, "current": 465, "max": 500 }
+        "abilityId": "ab4",
+        "attribution": "verified",
+        "data": {
+          "resource": "mana",
+          "delta": -300,
+          "current": 1200,
+          "max": 1500
+        }
       },
       {
         "eventSeq": 4,
-        "offsetMs": 1400,
+        "offsetMs": 900,
         "kind": "effect",
         "action": "apply",
-        "sourceActorId": "a2",
-        "creditActorId": "a2",
-        "targetActorId": "a3",
+        "sourceActorId": "a3",
+        "targetActorId": "a1",
         "abilityId": "ab2",
         "effectId": "ef1",
-        "data": { "stacks": 1, "durationMs": 12000 }
+        "attribution": "verified",
+        "data": {
+          "durationMs": 12000
+        }
       },
       {
         "eventSeq": 5,
-        "offsetMs": 5200,
-        "kind": "interrupt",
-        "action": "interrupt",
-        "sourceActorId": "a2",
-        "targetActorId": "a3",
-        "abilityId": "ab1",
-        "data": { "interruptedAbilityId": "ab4" }
+        "offsetMs": 1200,
+        "kind": "death",
+        "action": "die",
+        "sourceActorId": "a3",
+        "targetActorId": "a6",
+        "abilityId": "ab5",
+        "attribution": "verified",
+        "data": {
+          "killingBlowEventSeq": 1
+        }
       },
       {
         "eventSeq": 6,
         "offsetMs": 18000,
-        "kind": "death",
-        "action": "die",
-        "sourceActorId": "a2",
-        "creditActorId": "a2",
-        "targetActorId": "a3",
-        "causeEventSeq": 1,
-        "data": { "killingBlowEventSeq": 1 }
+        "kind": "mechanic",
+        "action": "invulnerability",
+        "sourceActorId": "a7",
+        "targetActorId": "a7",
+        "abilityId": "ab6",
+        "attribution": "verified",
+        "data": {
+          "name": "Sprinkles wards",
+          "value": true
+        }
       }
     ]
   }
