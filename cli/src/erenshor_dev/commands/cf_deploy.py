@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+from pathlib import Path
 
 import click
 
@@ -12,20 +13,79 @@ from erenshor_dev.config import get_project_root
 MOD_DLL = "ErenshorLogs.dll"
 
 
+def build_preview_alias(commit: str) -> str:
+    """Build the preview alias for a git commit."""
+    return f"preview-{commit[:7]}"
+
+
+def build_wrangler_deploy_command(
+    *,
+    preview: bool,
+    preview_alias: str | None,
+    message: str | None,
+) -> list[str]:
+    """Build the Wrangler command for production or preview deploys."""
+    if not preview:
+        return ["pnpm", "cf-deploy"]
+
+    if not preview_alias:
+        raise ValueError("preview_alias is required for preview deploys")
+
+    command = [
+        "pnpm",
+        "exec",
+        "wrangler",
+        "versions",
+        "upload",
+        "--preview-alias",
+        preview_alias,
+    ]
+
+    if message:
+        command.extend(["--message", message])
+
+    return command
+
+
+def get_git_commit(project_root: Path) -> str:
+    """Return the current short git commit hash."""
+    result = subprocess.run(
+        ["git", "rev-parse", "--short", "HEAD"],
+        cwd=project_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip()
+
+
 @click.command(name="cf-deploy")
 @click.option("--no-build-mod", is_flag=True, help="Skip building the mod")
 @click.option("--no-build-web", is_flag=True, help="Skip building the web app")
 @click.option(
     "--debug", is_flag=True, help="Use Debug build of mod (default is Release)"
 )
-def cf_deploy(no_build_mod: bool, no_build_web: bool, debug: bool) -> None:
+@click.option("--preview", is_flag=True, help="Upload a Worker preview version")
+@click.option(
+    "--preview-alias",
+    type=str,
+    default=None,
+    help="Preview alias to use with --preview. Defaults to preview-<commit>.",
+)
+def cf_deploy(
+    no_build_mod: bool,
+    no_build_web: bool,
+    debug: bool,
+    preview: bool,
+    preview_alias: str | None,
+) -> None:
     """Build and deploy the mod and web app to Cloudflare Pages.
 
     This command:
     1. Builds the mod in Release configuration (unless --debug or --no-build-mod)
     2. Copies the mod DLL to web/static/mods/
     3. Builds the web app (unless --no-build-web)
-    4. Deploys to Cloudflare Pages using wrangler
+    4. Deploys to Cloudflare Workers using wrangler
 
     The deployed site will serve:
     - Web app at: https://erenshor-logs.wowmuch1.workers.dev/
@@ -96,9 +156,27 @@ def cf_deploy(no_build_mod: bool, no_build_web: bool, debug: bool) -> None:
         click.echo()
 
     # Step 5: Deploy to Cloudflare
-    click.echo("Deploying to Cloudflare Pages...")
+    deploy_target = "Cloudflare preview" if preview else "Cloudflare"
+    click.echo(f"Deploying to {deploy_target}...")
+    if preview and preview_alias is None:
+        commit = get_git_commit(project_root)
+        preview_alias = build_preview_alias(commit)
+
+    message = (
+        f"Preview {preview_alias.removeprefix('preview-')}" if preview_alias else None
+    )
+    try:
+        command = build_wrangler_deploy_command(
+            preview=preview,
+            preview_alias=preview_alias,
+            message=message,
+        )
+    except ValueError as error:
+        click.secho(f"Error: {error}", fg="red")
+        raise SystemExit(1) from error
+
     result = subprocess.run(
-        ["pnpm", "cf-deploy"],
+        command,
         cwd=web_path,
         capture_output=False,
     )
@@ -113,7 +191,13 @@ def cf_deploy(no_build_mod: bool, no_build_web: bool, debug: bool) -> None:
     click.secho("Deployment successful!", fg="green")
     click.echo()
     click.echo("URLs:")
-    click.echo("  Web app: https://erenshor-logs.wowmuch1.workers.dev/")
-    click.echo(
-        "  Mod DLL: https://erenshor-logs.wowmuch1.workers.dev/mods/ErenshorLogs.dll"
-    )
+    if preview and preview_alias:
+        click.echo(
+            f"  Preview: https://{preview_alias}-erenshor-logs.wowmuch1.workers.dev/"
+        )
+    else:
+        click.echo("  Web app: https://erenshor-logs.wowmuch1.workers.dev/")
+        click.echo(
+            "  Mod DLL: "
+            "https://erenshor-logs.wowmuch1.workers.dev/mods/ErenshorLogs.dll"
+        )
