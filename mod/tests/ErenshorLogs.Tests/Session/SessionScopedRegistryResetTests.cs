@@ -33,6 +33,8 @@ public sealed class SessionScopedRegistryResetTests
     public void EndManualSession() =>
       SessionEnded?.Invoke(new CombatSession("test", "test"), SessionEndReasons.Manual);
 
+    public void EndCurrentSessionForShutdown() { }
+
     public void Start(CombatSession session)
     {
       CurrentSession = session;

@@ -252,6 +252,7 @@ public sealed class Plugin : BaseUnityPlugin
 
   private void OnDestroy()
   {
+    _sessionManager?.EndCurrentSessionForShutdown();
     _broadcaster?.Dispose();
     _server?.Dispose();
     _harmony?.UnpatchSelf();

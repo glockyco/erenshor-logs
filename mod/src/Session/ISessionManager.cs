@@ -42,6 +42,12 @@ public interface ISessionManager
   void EndManualSession();
 
   /// <summary>
+  /// Ends the current session because the plugin or game is shutting down.
+  /// Does nothing when no session is active.
+  /// </summary>
+  void EndCurrentSessionForShutdown();
+
+  /// <summary>
   /// Raised when a new combat session starts (automatic or manual).
   /// </summary>
   event Action<CombatSession>? SessionStarted;

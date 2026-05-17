@@ -66,6 +66,8 @@ public sealed class CombatEventDispatcherTests
     {
       SessionEnded?.Invoke(new CombatSession("test", "test"), SessionEndReasons.Manual);
     }
+
+    public void EndCurrentSessionForShutdown() { }
   }
 
   private sealed class NoopDisposable : IDisposable

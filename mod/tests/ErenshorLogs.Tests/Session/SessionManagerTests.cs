@@ -309,6 +309,29 @@ public class SessionManagerTests
   }
 
   [Fact]
+  public void EndCurrentSessionForShutdown_EndsWithShutdownReason()
+  {
+    var emitter = new FakeEventEmitter();
+    var versionProvider = new FakeGameVersionProvider();
+    var timeProvider = new FakeTimeProvider();
+    var manager = CreateManager(emitter, versionProvider, timeProvider);
+    CombatSession? endedSession = null;
+    manager.SessionEnded += (session, _) => endedSession = session;
+
+    manager.StartManualSession();
+    var activeSession = manager.CurrentSession;
+    emitter.EmittedEvents.Clear();
+
+    manager.EndCurrentSessionForShutdown();
+
+    Assert.Null(manager.CurrentSession);
+    Assert.Same(activeSession, endedSession);
+    Assert.Equal(SessionEndReasons.Shutdown, endedSession!.EndReason);
+    Assert.Single(emitter.EmittedEvents);
+    Assert.Equal(EventType.CombatEnd, emitter.EmittedEvents[0].EventType);
+  }
+
+  [Fact]
   public void EndManualSession_WithNoSession_DoesNothing()
   {
     var emitter = new FakeEventEmitter();

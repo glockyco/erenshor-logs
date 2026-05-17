@@ -155,6 +155,16 @@ public sealed class SessionManager : ISessionManager
     EndSession(null, SessionEndReasons.Manual); // End at current time
   }
 
+  /// <inheritdoc />
+  public void EndCurrentSessionForShutdown()
+  {
+    if (_currentSession == null)
+      return;
+
+    _log?.Invoke(LogLevel.Info, $"Ending session {_currentSession.Id} during shutdown");
+    EndSession(null, SessionEndReasons.Shutdown);
+  }
+
   private void StartSession(bool isManual)
   {
     var gameVersion = _gameVersionProvider.GetGameVersion();

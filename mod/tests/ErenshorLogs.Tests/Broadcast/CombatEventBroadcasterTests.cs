@@ -56,6 +56,21 @@ public sealed class CombatEventBroadcasterTests
   }
 
   [Fact]
+  public void Shutdown_BroadcastsShutdownSessionEndReason()
+  {
+    using var harness = BroadcasterHarness.Create(clientCount: 1);
+    var session = new CombatSession("playtest-23258843", "2026.5.17.14");
+    harness.SessionManager.Start(session);
+    harness.Server.Messages.Clear();
+
+    harness.SessionManager.EndCurrentSessionForShutdown();
+
+    var frame = ParseLastFrame(harness.Server);
+    Assert.Equal("sessionEnded", frame.Value<string>("kind"));
+    Assert.Equal(SessionEndReasons.Shutdown, frame["payload"]!.Value<string>("reason"));
+  }
+
+  [Fact]
   public void Tick_BroadcastsRegistryDeltaBeforeFirstEventBatch()
   {
     using var harness = BroadcasterHarness.Create(clientCount: 1);
@@ -198,6 +213,15 @@ public sealed class CombatEventBroadcasterTests
         return;
 
       SessionEnded?.Invoke(CurrentSession, SessionEndReasons.Manual);
+      CurrentSession = null;
+    }
+
+    public void EndCurrentSessionForShutdown()
+    {
+      if (CurrentSession == null)
+        return;
+
+      SessionEnded?.Invoke(CurrentSession, SessionEndReasons.Shutdown);
       CurrentSession = null;
     }
 
