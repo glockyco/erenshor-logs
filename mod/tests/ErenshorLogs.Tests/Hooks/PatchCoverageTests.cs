@@ -49,6 +49,17 @@ public class PatchCoverageTests
       "ErenshorLogs.Hooks.LighthouseHealPatch"
     );
 
+    AssertPatchTargetExists(
+      "AEManaDrainEvent",
+      "Update",
+      "ErenshorLogs.Hooks.AEManaDrainEventPatch"
+    );
+    AssertPatchTargetExists(
+      "FernallaFightEvent",
+      "PhaseHandler",
+      "ErenshorLogs.Hooks.FernallaManaRestorePatch"
+    );
+
     var patchType = RequireModType("ErenshorLogs.Hooks.MizukiEventPatch");
     var mizukiTarget = patchType.GetMethod("TargetMethod")?.Invoke(null, null) as MethodBase;
     Assert.NotNull(mizukiTarget);
