@@ -152,51 +152,49 @@ Computes:
 
 ## Event Data Model
 
+Protocol v2 separates stable metadata from hot combat facts:
+
 ```typescript
-interface CombatEvent {
-  id: string;                    // UUID
-  timestamp: number;             // Unix ms
-  eventType: EventType;
-
-  source: ActorRef;
-  target: ActorRef;
-
-  ability: {
-    name: string;
-    type: "skill" | "spell" | "auto" | "proc" | "dot" | "hot";
-    stableKey?: string;
-  } | null;
-
-  amount?: number;
-  rawAmount?: number;
-  mitigated?: number;
-  damageType?: DamageType;
-
-  flags: {
-    critical?: boolean;
-    overkill?: boolean;
-    fromPlayer?: boolean;
-    isPet?: boolean;
-    isProc?: boolean;
-    attributionFailed?: boolean;
-  };
-
-  effect?: {
-    name: string;
-    duration?: number;
-    stacks?: number;
-  };
+interface CombatLogSession {
+  snapshot: SessionSnapshotPayload;
+  events: CombatEventRecord[];
+  ended?: SessionEndedPayload;
+  derived?: DerivedData;
 }
 
-interface ActorRef {
-  id: string;
-  name: string;
-  type: "player" | "simPlayer" | "npc" | "pet";
-  class?: CharacterClass;  // Arcanist, Paladin, Duelist, Druid, Stormcaller
-  level?: number;          // 1-35
-  masterId?: string;
+interface SessionSnapshotPayload {
+  sessionId: string;
+  state: "active" | "ended";
+  mode: "automatic" | "manual" | "imported";
+  startedAtUtcMs: number;
+  producer: ProducerInfo;
+  registryRevision: number;
+  lastEventSeq: number;
+  eventCount: number;
+  completeness: "complete" | "partial";
+  registries: Registries;
 }
+
+interface Registries {
+  revision: number;
+  actors: Record<string, ActorRecord>;
+  abilities: Record<string, AbilityRecord>;
+  effects: Record<string, EffectRecord>;
+}
+
+type CombatEventRecord =
+  | DamageEvent
+  | HealEvent
+  | ResourceEvent
+  | EffectEvent
+  | DeathEvent
+  | InterruptEvent;
 ```
+
+Combat events reference actors, abilities, and effects by registry ID. This
+keeps event batches small and prevents stale duplicated metadata. Lifecycle is
+not represented by synthetic combat events; live clients receive
+`sessionSnapshot` and `sessionEnded` frames instead.
 
 ## Two-Tier Accuracy
 
@@ -217,4 +215,5 @@ Requires context correlation, may occasionally miss:
 - DoT/HoT source tracking
 - Buff uptime correlation
 
-Events with failed attribution are flagged with `attributionFailed: true` for debugging.
+Events with failed attribution use `attribution: "unknown"` and may include
+`debug` details for diagnostics.

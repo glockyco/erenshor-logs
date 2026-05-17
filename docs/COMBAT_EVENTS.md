@@ -30,7 +30,7 @@ All damage events should include: source actor, target actor, damage type, amoun
 
 **Method**: `Character.DamageMe(int _incdmg, bool _fromPlayer, GameData.DamageType _dmgType, Character _attacker, bool _animEffect, bool _criticalHit)`  
 **File**: `reference/game-source/Character.cs:1049`  
-**EventType**: `damage_physical` or `damage_melee` (depending on context)
+**EventType**: `damage/hit physical` or `damage/hit physical` (depending on context)
 
 **Called by**:
 - Melee auto-attacks (PlayerCombat, NPC combat loops)
@@ -49,7 +49,7 @@ All damage events should include: source actor, target actor, damage type, amoun
 
 **Hook strategy**: Postfix on `DamageMe` to capture final damage and return codes.
 
-**Lifesteal handling**: Character.cs:1181-1183 calls `_attacker.MyStats.HealMe()` when lifesteal procs. Emit separate `heal_lifesteal` event here.
+**Lifesteal handling**: Character.cs:1181-1183 calls `_attacker.MyStats.HealMe()` when lifesteal procs. Emit separate `heal/lifesteal` event here.
 
 ---
 
@@ -57,7 +57,7 @@ All damage events should include: source actor, target actor, damage type, amoun
 
 **Method**: `Character.MagicDamageMe(int _dmg, bool _fromPlayer, GameData.DamageType _dmgType, Character _attacker, float resistMod, int _baseDmg)`  
 **File**: `reference/game-source/Character.cs:1215`  
-**EventType**: `damage_magic` or `damage_spell` (depending on context)
+**EventType**: `damage/hit magic` or `damage/hit magic` (depending on context)
 
 **Called by**:
 - Direct damage spells (via SpellVessel.ResolveSpell())
@@ -74,7 +74,7 @@ All damage events should include: source actor, target actor, damage type, amoun
 
 **Method**: `Character.BleedDamageMe(int _incdmg, bool _fromPlayer, Character _attacker)`  
 **File**: `reference/game-source/Character.cs:952`  
-**EventType**: `damage_dot`
+**EventType**: `damage/tick`
 
 **Called by**:
 - Bleed effects specifically
@@ -88,7 +88,7 @@ All damage events should include: source actor, target actor, damage type, amoun
 
 **Method**: `Stats.TickEffects()` - private tick handler  
 **File**: `reference/game-source/Stats.cs:1233`  
-**EventType**: `damage_dot`
+**EventType**: `damage/tick`
 
 **Process**:
 1. Iterates through all active StatusEffects every 3 seconds
@@ -103,14 +103,14 @@ All damage events should include: source actor, target actor, damage type, amoun
 
 **Hook strategy**: Hook `Stats.TickEffects()` (Prefix) to capture effect before damage, then correlate with DamageMe hook.
 
-**Special case - ReapAndRenew**: Some DoT effects have `Spell.ReapAndRenew` flag (line 1303-1321). When these effects deal damage to an NPC, they also heal the attacker's current target for 50% of the damage dealt. This creates a simultaneous `damage_dot` and `heal_spell` event pair.
+**Special case - ReapAndRenew**: Some DoT effects have `Spell.ReapAndRenew` flag (line 1303-1321). When these effects deal damage to an NPC, they also heal the attacker's current target for 50% of the damage dealt. This creates a simultaneous `damage/tick` and `heal/direct` event pair.
 
 ---
 
 ### Environmental Damage
 
 **Method**: `Character.DamageMe()` called with environmental damage type  
-**EventType**: `damage_environmental`
+**EventType**: `damage/hit environmental`
 
 **Hook for environmental**: `EnvironmentalDamageMePatch.cs` (already implemented)
 
@@ -120,7 +120,7 @@ All damage events should include: source actor, target actor, damage type, amoun
 
 **Method**: `Character.DamageShieldTaken(int _dmg, Stats _giver)`  
 **File**: `reference/game-source/Character.cs:897`  
-**EventType**: `damage_reflect`
+**EventType**: `damage/reflect`
 
 **Process**:
 1. Called when attacker hits a target with active damage shield
@@ -136,8 +136,8 @@ All damage events should include: source actor, target actor, damage type, amoun
 **Method**: `WandBolt.DeliverDamage()`  
 **File**: `reference/game-source/WandBolt.cs:87`  
 **EventType**:
-- `damage_spell` (for wand magic damage)
-- `damage_physical` or `damage_melee` (for bow physical damage)
+- `damage/hit magic` (for wand magic damage)
+- `damage/hit physical` or `damage/hit physical` (for bow physical damage)
 
 **Process**:
 1. Wand bolts (magic): Call `MagicDamageMe()` at line 109
@@ -156,7 +156,7 @@ All damage events should include: source actor, target actor, damage type, amoun
 
 **Method**: `UseSkill.DoSkill(Skill _skill, Character _target)`  
 **File**: `reference/game-source/UseSkill.cs:48`  
-**EventType**: `damage_skill`
+**Protocol event**: `damage` with `action: "hit"` and skill ability attribution
 
 **Process**:
 1. Calculates skill damage (lines 200-240)
@@ -175,7 +175,7 @@ All healing events should include: source actor, target actor, heal amount, abil
 
 **Method**: `Stats.HealMe(int _amt)`  
 **File**: `reference/game-source/Stats.cs:1432`  
-**EventType**: `heal_spell` (if from spell) or derive from context
+**EventType**: `heal/direct` (if from spell) or derive from context
 
 **Process**:
 - Simple HP addition: `CurrentHP += _amt`
@@ -195,7 +195,7 @@ All healing events should include: source actor, target actor, heal amount, abil
 
 **Method**: `Stats.HealMe(Spell _spell, int _amt, bool _isCrit, bool _isMana, Character _source)`  
 **File**: `reference/game-source/Stats.cs:1968`  
-**EventType**: `heal_spell`
+**EventType**: `heal/direct`
 
 **Process**:
 1. Receives full spell context including source character
@@ -203,7 +203,7 @@ All healing events should include: source actor, target actor, heal amount, abil
 3. Can also heal mana if `_isMana` is true (lines 2014-2020)
 4. Returns actual amount healed (accounting for overheal)
 
-**Hook strategy**: Postfix on this overload to emit `heal_spell` events with full attribution.
+**Hook strategy**: Postfix on this overload to emit `heal/direct` events with full attribution.
 
 ---
 
@@ -211,7 +211,7 @@ All healing events should include: source actor, target actor, heal amount, abil
 
 **Method**: `Stats.TickEffects()` - HoT portion  
 **File**: `reference/game-source/Stats.cs:1347+`  
-**EventType**: `heal_hot`
+**EventType**: `heal/tick`
 
 **Process**:
 1. For effects with `TargetHealing > 0` and `MyDamageType == Physical` (line 1347)
@@ -233,14 +233,14 @@ All healing events should include: source actor, target actor, heal amount, abil
 **Files**:
 - Character.cs:1181-1183 (physical damage lifesteal)
 - Character.cs:1305 (via HealMe call in PlayerCombat/NPC combat)
-**EventType**: `heal_lifesteal`
+**EventType**: `heal/lifesteal`
 
 **Process**:
 1. After damage is dealt: `if (_attacker != null && _attacker.MyStats.PercentLifesteal > 0f)`
 2. Calculates: `Mathf.RoundToInt((float)damage * (_attacker.MyStats.PercentLifesteal / 100f))`
 3. Calls `_attacker.MyStats.HealMe(healAmount)`
 
-**Hook strategy**: Emit `heal_lifesteal` event in damage hooks when lifesteal conditions are met.
+**Hook strategy**: Emit `heal/lifesteal` event in damage hooks when lifesteal conditions are met.
 
 ---
 
@@ -248,7 +248,7 @@ All healing events should include: source actor, target actor, heal amount, abil
 
 **Location**: `SpellVessel.ResolveSpell()` - spell resolution  
 **File**: `reference/game-source/SpellVessel.cs:707, 775, 1296, 1338`  
-**EventType**: `heal_lifesteal` (or separate `heal_lifetap`?)
+**Protocol event**: `heal` with `action: "lifesteal"`
 
 **Process**:
 1. After spell damage: `if (spell.Lifetap)`
@@ -263,7 +263,7 @@ All healing events should include: source actor, target actor, heal amount, abil
 
 **Method**: `Stats.RegenEffects(float _mod)` - HP portion  
 **File**: `reference/game-source/Stats.cs:1443-1449`  
-**EventType**: `heal_regen`
+**EventType**: `heal/regen`
 
 **Process**:
 - Restores HP based on level and Endurance
@@ -423,7 +423,7 @@ Status effects modify character stats, apply DoTs/HoTs, and can trigger procs.
 
 **Method**: `Stats.AddStatusEffect(Spell spell, bool _fromPlayer, int _dmgBonus, Character _specificCaster)`  
 **File**: `reference/game-source/Stats.cs:2450` (`AddStatusEffectNoChecks` variant)  
-**EventType**: `buff_apply` or `debuff_apply`
+**Protocol event**: `effect` with `action: "apply"` and buff/debuff effect kind
 
 **Process**:
 1. Finds empty slot in `StatusEffects[30]` array (line 2453-2457)
@@ -449,7 +449,7 @@ Status effects modify character stats, apply DoTs/HoTs, and can trigger procs.
 
 **Method**: `Stats.RemoveStatusEffect(int index)`  
 **File**: `reference/game-source/Stats.cs:1172`  
-**EventType**: `buff_fade` or `debuff_fade`
+**Protocol event**: `effect` with `action: "fade"` and buff/debuff effect kind
 
 **Process**:
 1. Reads effect before clearing: `StatusEffects[index]`
@@ -473,7 +473,7 @@ Status effects modify character stats, apply DoTs/HoTs, and can trigger procs.
 - `Stats.AddStatusEffect()` - checks for existing effect and refreshes
 - `Stats.RefreshWornSE(Spell spell)` - dedicated refresh method for worn effects
 
-**EventType**: `buff_refresh` or `debuff_refresh`
+**Protocol event**: `effect` with `action: "refresh"` and buff/debuff effect kind
 
 **Process**:
 1. When buff is reapplied while already active, duration is reset
@@ -486,9 +486,9 @@ Status effects modify character stats, apply DoTs/HoTs, and can trigger procs.
 - For stacking buffs, refresh may increment stacks
 
 **Hook strategy**: In `AddStatusEffect()`, check if effect already exists in `StatusEffects[]` array before emitting event:
-- If slot empty → emit `buff_apply`
-- If slot occupied by same spell → emit `buff_refresh`
-- If slot occupied by different spell → emit `buff_fade` then `buff_apply`
+- If slot empty → emit `effect/apply buff`
+- If slot occupied by same spell → emit `effect/refresh buff`
+- If slot occupied by different spell → emit `effect/fade buff` then `effect/apply buff`
 
 **Required for 1:1 replay**: Distinguishing refresh from apply matters because:
 - Combat logs show different messages ("refreshed" vs "applied")
@@ -528,20 +528,22 @@ Character death triggers when HP reaches zero.
 
 ## Combat State
 
-Combat state boundaries define session start/end.
+Combat state boundaries define session start/end. Protocol v2 does not emit
+synthetic combat events for lifecycle transitions.
 
 ### Combat Detection
 
-**Method**: `GameManager.CheckForTrueCombat()`  
-**File**: `reference/game-source/GameManager.cs` (exact line not in excerpt)  
-**EventType**: `combat_start`, `combat_end`
-
-**Implementation**: Already handled via `CheckForTrueCombatPatch` (mod/src/Hooks/CheckForTrueCombatPatch.cs)
+**Source**: `SessionManager` lazy session lifecycle
+**Protocol**: `sessionSnapshot` starts/replaces session state; `sessionEnded`
+ends a session.
+**Implementation**: Damage hooks notify `SessionManager` before emitting combat
+events, so the first event is captured under the newly-created session. The
+older combat-state hook approach is not part of the current mod.
 
 **Process**:
-- Monitors `GameData.InCombat` flag
-- Emits events on state transitions
-
+- Sessions start lazily from configured combat event families.
+- Environmental damage is logged but does not start sessions.
+- Automatic sessions end after inactivity; manual sessions end via hotkey.
 ---
 
 ## Resource Events
@@ -552,7 +554,7 @@ Track mana consumption and regeneration for efficiency analysis.
 
 **Method**: `Stats.ReduceMana(int _amt)`  
 **File**: `reference/game-source/Stats.cs:1494`  
-**EventType**: `mana_use`
+**EventType**: `resource/spend`
 
 **Process**:
 1. `CurrentMana -= _amt`
@@ -574,7 +576,7 @@ Track mana consumption and regeneration for efficiency analysis.
 
 **Method**: `Stats.RegenEffects(float _mod)` - mana portion  
 **File**: `reference/game-source/Stats.cs:1451-1458`  
-**EventType**: `mana_regen`
+**EventType**: `resource/regen`
 
 **Process**:
 - Restores mana based on Wisdom scaling
@@ -586,7 +588,7 @@ Track mana consumption and regeneration for efficiency analysis.
 
 **Method**: `Stats.TickEffects()` - mana restore portion  
 **File**: `reference/game-source/Stats.cs:1377-1394, 1396-1406`  
-**EventType**: `mana_restore`
+**EventType**: `resource/restore`
 
 **Process**:
 1. Effects with `Mana > 0` (lines 1377-1394)
@@ -605,7 +607,7 @@ Track when spells are interrupted, preventing their completion.
 
 **Method**: `CastSpell.InterruptCast()`  
 **File**: `reference/game-source/CastSpell.cs:338`  
-**EventType**: `spell_interrupt`
+**EventType**: `interrupt/interrupt`
 
 **Process**:
 1. Checks if currently casting via `CurrentVessel != null`
@@ -633,7 +635,7 @@ Dodge and block checks occur BEFORE damage methods, so normal damage hooks won't
 
 **Method**: `PlayerCombat.CheckTargetInnateAvoidance(Character _target)`  
 **File**: `reference/game-source/PlayerCombat.cs:850+` (exact line not in excerpt)  
-**EventType**: `damage_avoided` with flags
+**Protocol event**: future `damage` outcome/avoidance representation
 
 **Returns**: String describing what happened:
 - Empty string: No avoidance
@@ -690,14 +692,14 @@ Pets and charmed NPCs deal damage that should credit their owner.
 
 | Category | Events | Implementation Status |
 |----------|--------|---------------------|
-| **Damage** | physical, magic, melee, skill, spell, dot, proc, pet, reflect, environmental | Partial (#6 done, needs proc/pet/skill attribution) |
-| **Healing** | spell, hot, lifesteal, regen | Not implemented (#49) |
-| **Status Effects** | buff_apply, buff_refresh, buff_fade, debuff_apply, debuff_refresh, debuff_fade | Not implemented (#14) |
-| **Combat State** | combat_start, combat_end | Implemented (#7) |
-| **Death** | death | Not implemented |
-| **Resources** | mana_use, mana_restore, mana_regen | Not implemented (NEW) |
-| **Interrupts** | spell_interrupt | Not implemented (NEW) |
-| **Avoidance** | damage_avoided (with dodge/block flags) | Not implemented (#47) |
+| **Damage** | `damage` with `hit`, `tick`, `reflect` actions | Partial: physical, magic, DoT, environmental implemented |
+| **Healing** | `heal` with `direct`, `tick`, `lifesteal`, `regen` actions | Not implemented |
+| **Status Effects** | `effect` with `apply`, `refresh`, `fade` actions | Tracking hooks partial; event emission not implemented |
+| **Combat State** | `sessionSnapshot`, `sessionEnded` | Implemented |
+| **Death** | `death` / `die` | Not implemented |
+| **Resources** | `resource` with `spend`, `restore`, `regen` actions | Not implemented |
+| **Interrupts** | `interrupt` / `interrupt` | Not implemented |
+| **Avoidance** | Damage outcome or future avoidance event | Not implemented |
 
 **Key Mechanics**:
 - **Resonance**: Tracked via `flags.resonating` - spells that re-cast themselves

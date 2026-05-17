@@ -1,269 +1,241 @@
 # Combat Log Format Specification
 
-Version: 1.0.0
+Version: 2.0.0
 
 ## Overview
 
-Combat logs are stored as JSON files (`.json`). This document specifies the complete format.
+Erenshor Logs uses one canonical JSON model for live WebSocket frames and file
+exports:
 
-## Export Formats
+1. session metadata;
+2. session-scoped registries for actors, abilities, and effects;
+3. append-only typed combat events that reference registry IDs;
+4. lifecycle/end metadata;
+5. optional derived summaries.
 
-### Web App Export (Current Implementation)
+Live transport uses compact JSON frames. File export uses the same session model
+inside an `erenshor.logs.export` document. The canonical compressed extension is
+`.erenshorlog.json.gz`; plain `.erenshorlog.json` is useful for development and
+support.
 
-The web app exports sessions in a simplified format for debugging and data sharing:
+## Live Envelope
 
-**Single Session:**
+Every live WebSocket message is an envelope:
+
 ```json
 {
-  "version": "1.0.0",
-  "exportedAt": 1704067200000,
-  "session": {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
-    "startTime": 1704067200000,
-    "endTime": 1704067260000,
-    "events": [ ... ]
-  }
+  "protocol": "erenshor.logs.live",
+  "protocolVersion": "2.0.0",
+  "schemaVersion": "2.0.0",
+  "kind": "events",
+  "frameSeq": 4,
+  "sessionId": "session-1",
+  "sentAtMs": 1800000001500,
+  "payload": { }
 }
 ```
 
-**Multiple Sessions:**
+Supported `kind` values are:
+
+| Kind | Payload |
+| --- | --- |
+| `hello` | Producer identity, capabilities, active session ID |
+| `sessionSnapshot` | Full session state and full registries |
+| `registryDelta` | Registry additions/enrichment for one revision |
+| `events` | Contiguous combat event batch |
+| `sessionEnded` | End timestamp, reason, duration, diagnostics |
+| `error` | Protocol or producer error details |
+| `heartbeat` | Empty keepalive payload |
+| `serverStats` | Producer-side counters |
+
+Clients validate the semver major version, not the exact literal. Current major
+is `2`.
+
+## Reconnect and Ordering Rules
+
+`sessionSnapshot` is a replacement boundary for its `sessionId`: discard any
+retained in-memory copy, then apply the snapshot. For active complete sessions,
+the producer replays `eventSeq` 1 through `lastEventSeq` after the snapshot
+before live tail frames.
+
+Within a connection, `events` frames must be strictly contiguous. Gaps or
+overlaps mark the session partial and surface a protocol error. Duplicate event
+ranges are not valid in the normal live stream.
+
+## File Export
+
 ```json
 {
-  "version": "1.0.0",
-  "exportedAt": 1704067200000,
+  "format": "erenshor.logs.export",
+  "schemaVersion": "2.0.0",
+  "exportedAtMs": 1800000022000,
+  "producer": {
+    "name": "ErenshorLogsWeb",
+    "webVersion": "2.0.0"
+  },
   "sessions": [
-    { "id": "...", "startTime": ..., "events": [...] },
-    { "id": "...", "startTime": ..., "events": [...] }
-  ]
-}
-```
-
-This format contains the raw session data without computed summaries. Statistics can be computed on import.
-
-### Full Format (Future: Mod Export)
-
-When the mod implements JSON export, it will use the full format with pre-computed statistics:
-
-```json
-{
-  "version": "1.0.0",
-  "session": { ... },
-  "summary": { ... },
-  "events": [ ... ]
-}
-```
-
-## Session Metadata
-
-```json
-{
-  "session": {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
-    "startTime": 1704067200000,
-    "endTime": 1704067260000,
-    "duration": 60000,
-    "gameVersion": "1.2.3",
-    "modVersion": "1.0.0"
-  }
-}
-```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | UUID v4 |
-| `startTime` | number | Unix timestamp (ms) of first event |
-| `endTime` | number | Unix timestamp (ms) of last event |
-| `duration` | number | Session duration in milliseconds |
-| `gameVersion` | string | Erenshor version |
-| `modVersion` | string | Combat Logger mod version |
-
-**Note**: Player identity is not stored in session metadata. The player is identified through combat events via `ActorRef` where `type: "player"`.
-
-## Summary Statistics
-
-Pre-computed for quick display without parsing all events:
-
-```json
-{
-  "summary": {
-    "totalDamageDealt": 150000,
-    "totalDamageReceived": 25000,
-    "totalHealing": 30000,
-    "dps": 2500.0,
-    "hps": 500.0,
-    "deaths": 0,
-    "kills": 5,
-    "critRate": 0.15,
-    "highestHit": 5000,
-    "damageByType": {
-      "Physical": 100000,
-      "Magic": 30000,
-      "Elemental": 20000
-    },
-    "topAbilities": [
-      { "name": "Backstab", "damage": 45000, "hits": 30 },
-      { "name": "Auto Attack", "damage": 40000, "hits": 150 }
-    ]
-  }
-}
-```
-
-## Events
-
-Array of combat events in chronological order:
-
-```json
-{
-  "events": [
     {
-      "id": "event-uuid",
-      "timestamp": 1704067200000,
-      "eventType": "damage_skill",
-      "source": { ... },
-      "target": { ... },
-      "ability": { ... },
-      "amount": 1500,
-      "rawAmount": 2000,
-      "mitigated": 500,
-      "damageType": "Physical",
-      "flags": {
-        "critical": true,
-        "fromPlayer": true
-      }
+      "snapshot": { },
+      "events": [ ],
+      "ended": { },
+      "derived": { }
     }
   ]
 }
 ```
 
-### Event Types
+Importers reject unsupported schema major versions. Summaries are caches only:
+consumers recompute them unless the `derived.algorithmVersion` exactly matches
+the analyzer version.
 
-| Type | Description |
-|------|-------------|
-| `damage_physical` | Physical damage (pre-attribution) |
-| `damage_magic` | Magic damage (pre-attribution) |
-| `damage_melee` | Auto-attack damage |
-| `damage_skill` | Melee/ranged skill damage |
-| `damage_spell` | Direct damage spell |
-| `damage_dot` | Damage over time tick |
-| `damage_proc` | Weapon/ability proc damage |
-| `damage_pet` | Pet damage (attributed to owner) |
-| `damage_reflect` | Damage shield reflection |
-| `damage_environmental` | Environmental damage |
-| `heal_spell` | Direct healing spell |
-| `heal_hot` | Heal over time tick |
-| `heal_lifesteal` | Lifesteal healing |
-| `heal_regen` | Natural HP regeneration tick |
-| `mana_use` | Mana consumed by ability |
-| `mana_restore` | Mana restored by ability or effect |
-| `mana_regen` | Natural mana regeneration tick |
-| `spell_interrupt` | Spell cast was interrupted |
-| `buff_apply` | Buff applied |
-| `buff_refresh` | Buff duration refreshed |
-| `buff_fade` | Buff removed/expired |
-| `debuff_apply` | Debuff applied |
-| `debuff_refresh` | Debuff duration refreshed |
-| `debuff_fade` | Debuff removed/expired |
-| `death` | Entity died |
-| `combat_start` | Combat began |
-| `combat_end` | Combat ended |
-
-### Actor Reference
+## Session Snapshot
 
 ```json
 {
-  "id": "player:0",
-  "name": "Valdris",
-  "type": "player",
-  "class": "Duelist",
-  "level": 35,
-  "masterId": null
-}
-```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | Stable identifier (`type:instanceId`) |
-| `name` | string | Display name |
-| `type` | string | `player`, `simPlayer`, `npc`, `pet` |
-| `class` | string? | Character class: Arcanist, Paladin, Duelist, Druid, Stormcaller |
-| `level` | number? | Character level (1-35) |
-| `masterId` | string? | Owner's ID (for pets only) |
-
-### Ability Reference
-
-```json
-{
-  "name": "Fireball",
-  "type": "spell",
-  "stableKey": "spell:Fireball",
-  "procSource": "weapon"
-}
-```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `name` | string | Display name |
-| `type` | string | `skill`, `spell`, `auto`, `dot`, `hot` |
-| `stableKey` | string? | Game's stable key for linking |
-| `procSource` | string? | What triggered this ability: `weapon`, `wand`, `bow`, `buff`, `skill` |
-
-Null for auto-attacks without a named ability. `procSource` is only present when the ability was triggered by a proc mechanism.
-
-### Damage Types
-
-| Type | Description |
-|------|-------------|
-| `Unknown` | Unrecognized game damage type (indicates mapper needs updating) |
-| `Physical` | Melee/physical damage |
-| `Magic` | Arcane/magic damage |
-| `Elemental` | Fire/ice/lightning |
-| `Void` | Shadow/void damage |
-| `Poison` | Poison/nature damage |
-
-### Event Flags
-
-| Flag | Type | Description |
-|------|------|-------------|
-| `critical` | boolean | Was a critical hit |
-| `overkill` | boolean | Damage exceeded target's HP |
-| `fromPlayer` | boolean | Originated from player (not NPC) |
-| `pet` | boolean | Source was a pet |
-| `resonating` | boolean | Spell was triggered by resonance mechanic |
-| `attributionFailed` | boolean | Ability attribution failed (debug) |
-| `missed` | boolean | Attack missed (failed hit roll) |
-| `resisted` | boolean | Spell was fully resisted |
-| `absorbed` | boolean | Damage fully absorbed by shield |
-
-### Status Effect Events
-
-For `buff_apply`, `buff_refresh`, `buff_fade`, `debuff_apply`, `debuff_refresh`, `debuff_fade`:
-
-```json
-{
-  "effect": {
-    "name": "Battle Shout",
-    "duration": 300,
-    "stacks": 1
+  "sessionId": "session-1",
+  "state": "active",
+  "mode": "automatic",
+  "startedAtUtcMs": 1800000000000,
+  "producer": {
+    "name": "ErenshorLogsMod",
+    "modVersion": "2026.5.17.14",
+    "gameVersion": "playtest-23258843"
+  },
+  "playerActorId": "player:0",
+  "registryRevision": 3,
+  "lastEventSeq": 0,
+  "eventCount": 0,
+  "completeness": "complete",
+  "registries": {
+    "revision": 3,
+    "actors": { },
+    "abilities": { },
+    "effects": { }
   }
 }
 ```
 
-## File Size Estimates
+Ended sessions add `endedAtUtcMs`, `endReason`, and `durationMs`. Partial
+sessions include `loss` counters.
 
-| Session Type | Duration | File Size |
-|--------------|----------|-----------|
-| Training Dummy | 1 min | ~70 KB |
-| Solo Farming | 10 min | ~1 MB |
-| Group Content | 10 min | ~3 MB |
-| Extended Session | 1 hour | ~20 MB |
+## Registries
 
-**Note**: Files are exported as uncompressed JSON. Users can manually compress files if needed for sharing or archival.
+Registry records are session-scoped. IDs are stable only within a session.
+Records are immutable after first use except for safe retroactive enrichment.
 
-## Versioning
+### ActorRecord
 
-The `version` field uses semantic versioning:
-- Major: Breaking changes to format
-- Minor: New fields added (backward compatible)
-- Patch: Documentation/clarification only
+```json
+{
+  "id": "npc:1",
+  "name": "Raid Boss",
+  "kind": "npc",
+  "level": 25,
+  "faction": "hostile",
+  "firstSeenEventSeq": 1
+}
+```
 
-Parsers should check version compatibility before processing.
+`kind` is one of `player`, `simPlayer`, `npc`, `pet`, `environment`, or
+`unknown`. Player-controlled records may include `class` and
+`isPlayerControlled`. Pets use `ownerActorId`.
+
+### AbilityRecord
+
+```json
+{
+  "id": "skill:101",
+  "name": "Backstab",
+  "kind": "skill",
+  "stableKey": "skill:101",
+  "damageType": "physical"
+}
+```
+
+`kind` is one of `skill`, `spell`, `auto`, `dot`, `hot`, `proc`,
+`environmental`, or `unknown`.
+
+### EffectRecord
+
+```json
+{
+  "id": "effect:Poisoned Wound",
+  "name": "Poisoned Wound",
+  "kind": "debuff",
+  "sourceAbilityId": "skill:101",
+  "defaultDurationMs": 12000,
+  "maxStacks": 1
+}
+```
+
+## Combat Events
+
+Combat events are typed records in `eventSeq` order. `offsetMs` is relative to
+`startedAtUtcMs`.
+
+```json
+{
+  "eventSeq": 1,
+  "offsetMs": 250,
+  "kind": "damage",
+  "action": "hit",
+  "sourceActorId": "player:0",
+  "creditActorId": "player:0",
+  "targetActorId": "npc:1",
+  "abilityId": "skill:101",
+  "attribution": "context",
+  "data": {
+    "amount": 350,
+    "rawAmount": 400,
+    "mitigatedAmount": 50,
+    "damageType": "physical",
+    "outcome": {
+      "result": "landed",
+      "critical": true
+    }
+  }
+}
+```
+
+Base fields:
+
+| Field | Description |
+| --- | --- |
+| `eventSeq` | Monotonic per-session sequence, starting at 1 |
+| `offsetMs` | Milliseconds after session start |
+| `kind` | Event family discriminator |
+| `action` | Family-specific action discriminator |
+| `sourceActorId` | Observed source actor, if known |
+| `creditActorId` | Actor credited for analytics, if different/known |
+| `targetActorId` | Target actor, if known |
+| `abilityId` | Registry ability ID, if known |
+| `effectId` | Registry effect ID, if known |
+| `causeEventSeq` | Prior event that caused this event |
+| `attribution` | `verified`, `context`, `effectTracker`, `inferred`, `unknown` |
+| `data` | Typed family payload |
+| `debug` | Optional attribution diagnostics |
+
+Event families:
+
+| Kind | Actions |
+| --- | --- |
+| `damage` | `hit`, `tick`, `reflect` |
+| `heal` | `direct`, `tick`, `lifesteal`, `regen` |
+| `resource` | `spend`, `restore`, `regen` |
+| `effect` | `apply`, `refresh`, `fade` |
+| `death` | `die` |
+| `interrupt` | `interrupt` |
+
+`combatStart` and `combatEnd` are not combat event records in v2. Session
+lifecycle is represented by `sessionSnapshot` and `sessionEnded` frames.
+
+## Damage Types
+
+Damage types are lowercase protocol strings: `unknown`, `physical`, `magic`,
+`elemental`, `void`, and `poison`.
+
+## Source of Truth
+
+The JSON Schema and golden fixtures under `shared/protocol/` are authoritative.
+The TypeScript/Zod and C#/Newtonsoft tests validate the implementation against
+those fixtures.
