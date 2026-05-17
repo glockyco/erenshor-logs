@@ -2,6 +2,15 @@ using ErenshorLogs.Events;
 
 namespace ErenshorLogs.Context;
 
+public sealed record TrackedEffect(
+  Character Target,
+  int Slot,
+  Spell Spell,
+  Character? Source,
+  Character? Credit,
+  AbilityContext Context
+);
+
 /// <summary>
 /// Tracks active StatusEffects to attribute DoT/HoT ticks to their source spells.
 /// Maps effect instances (character + slot index) to source ability context.
@@ -13,7 +22,7 @@ public sealed class EffectTracker
   /// Character.GetHashCode() provides unique per-instance identification.
   /// Slot index is 0-29 (StatusEffects array size is 30).
   /// </summary>
-  private readonly Dictionary<(int, int), AbilityContext> _activeEffects = new();
+  private readonly Dictionary<(int, int), TrackedEffect> _activeEffects = new();
 
   /// <summary>
   /// Register an effect when applied.
@@ -21,7 +30,15 @@ public sealed class EffectTracker
   /// <param name="target">Character receiving the effect.</param>
   /// <param name="slotIndex">Index in StatusEffects array (0-29).</param>
   /// <param name="sourceSpell">Spell that applied the effect.</param>
-  public void RegisterEffect(Character target, int slotIndex, Spell sourceSpell)
+  /// <param name="source">Character that applied the effect.</param>
+  /// <param name="credit">Character that receives credit for the effect.</param>
+  public void RegisterEffect(
+    Character target,
+    int slotIndex,
+    Spell sourceSpell,
+    Character? source = null,
+    Character? credit = null
+  )
   {
     if (target == null || sourceSpell == null)
       return;
@@ -39,7 +56,14 @@ public sealed class EffectTracker
       StableKey = $"spell:{sourceSpell.Id}",
     };
 
-    _activeEffects[key] = context;
+    _activeEffects[key] = new TrackedEffect(
+      target,
+      slotIndex,
+      sourceSpell,
+      source,
+      credit,
+      context
+    );
   }
 
   /// <summary>
@@ -54,7 +78,16 @@ public sealed class EffectTracker
       return null;
 
     var key = (target.GetHashCode(), slotIndex);
-    return _activeEffects.TryGetValue(key, out var context) ? context : null;
+    return _activeEffects.TryGetValue(key, out var tracked) ? tracked.Context : null;
+  }
+
+  public TrackedEffect? GetTrackedEffect(Character target, int slotIndex)
+  {
+    if (target == null)
+      return null;
+
+    var key = (target.GetHashCode(), slotIndex);
+    return _activeEffects.TryGetValue(key, out var tracked) ? tracked : null;
   }
 
   /// <summary>

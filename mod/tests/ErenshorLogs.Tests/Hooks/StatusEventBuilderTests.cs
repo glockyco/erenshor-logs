@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Reflection;
+using ErenshorLogs.Context;
 using ErenshorLogs.Events;
 using ErenshorLogs.Hooks;
 using Xunit;
@@ -56,8 +58,33 @@ public sealed class StatusEventBuilderTests
     Assert.NotNull(evt);
     Assert.Equal(EventType.DebuffApply, evt.EventType);
     Assert.Equal("BleedRef", evt.Effect?.Name);
+    Assert.Equal("npc:mizuki", evt.Source?.Id);
+    Assert.Equal("player:0", evt.Target?.Id);
     Assert.Equal("apply", evt.EffectAction);
     Assert.Equal(1, evt.EffectStacks);
     Assert.Equal(12000, evt.EffectDurationMs);
+  }
+
+  [Fact]
+  public void EffectTracker_ExposesTrackedOwnershipLookup()
+  {
+    LoadGameAssemblies();
+    var register = typeof(EffectTracker).GetMethod(nameof(EffectTracker.RegisterEffect));
+    var lookup = typeof(EffectTracker).GetMethod(nameof(EffectTracker.GetTrackedEffect));
+
+    Assert.NotNull(register);
+    Assert.NotNull(lookup);
+    Assert.Contains(register!.GetParameters(), parameter => parameter.Name == "source");
+    Assert.Contains(register.GetParameters(), parameter => parameter.Name == "credit");
+  }
+
+  private static void LoadGameAssemblies()
+  {
+    var libPath = Path.GetFullPath(
+      Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "lib")
+    );
+    var path = Path.Combine(libPath, "Assembly-CSharp.dll");
+    if (File.Exists(path))
+      Assembly.LoadFrom(path);
   }
 }

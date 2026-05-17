@@ -60,6 +60,8 @@ public class PatchCoverageTests
       "ErenshorLogs.Hooks.FernallaManaRestorePatch"
     );
 
+    AssertPatchTargetExists("RaidManager", "UpdateGroupAuras", "ErenshorLogs.Hooks.RaidAuraPatch");
+
     var patchType = RequireModType("ErenshorLogs.Hooks.MizukiEventPatch");
     var mizukiTarget = patchType.GetMethod("TargetMethod")?.Invoke(null, null) as MethodBase;
     Assert.NotNull(mizukiTarget);
