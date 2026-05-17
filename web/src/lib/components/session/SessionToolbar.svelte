@@ -1,12 +1,7 @@
 <script lang="ts">
   import { Download, Upload, Trash2 } from "@lucide/svelte";
   import FileDropzone from "./FileDropzone.svelte";
-  import {
-    sessions,
-    clearAllSessions,
-    addSession,
-    setActiveSession,
-  } from "$lib/state/sessions.svelte";
+  import { sessions, clearAllSessions, setActiveSession } from "$lib/state/sessions.svelte";
   import { exportSessions } from "$lib/services";
 
   const sessionsList = $derived(Array.from(sessions.values()));
@@ -30,8 +25,6 @@
         skippedCount++;
         continue;
       }
-      addSession({ id: session.id, startTime: session.startTime });
-      // Update with full session data (addSession only creates minimal, we need to update)
       sessions.set(session.id, session);
       addedCount++;
     }

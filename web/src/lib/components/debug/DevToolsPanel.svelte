@@ -6,10 +6,16 @@
 
   function simulateOutdatedMod() {
     setConnected({
-      type: "handshake",
-      protocolVersion: "1.0.0",
-      modVersion: "2026.1.1.1000", // Old version
-      session: undefined,
+      protocol: "erenshor.logs.live",
+      protocolVersion: "2.0.0",
+      schemaVersion: "2.0.0",
+      kind: "hello",
+      frameSeq: 1,
+      sentAtMs: Date.now(),
+      payload: {
+        producer: { name: "ErenshorLogsMod", modVersion: "2026.1.1.1000" },
+        capabilities: ["registryDelta", "sessionSnapshot"],
+      },
     });
   }
 

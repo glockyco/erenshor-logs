@@ -4,13 +4,13 @@
   import { getActorIcon } from "$lib/utils/actor-icons";
   import { Numeric } from "$lib/components/ui/typography";
   import AbilityBreakdownTable from "./AbilityBreakdownTable.svelte";
-  import type { AbilityStats } from "$lib/types";
+  import type { AbilityStats, ActorKind } from "$lib/types";
 
   type Perspective = "damageDealt" | "damageTaken" | "healingDone" | "healingReceived";
 
   interface ActorBreakdown {
     actorName: string;
-    actorType: "player" | "simPlayer" | "npc" | "pet";
+    actorType: ActorKind;
     actorClass?: string;
     total: number;
     dps: number;
@@ -55,7 +55,19 @@
       border: "border-violet-500/30",
       dot: "bg-violet-400",
     },
-  };
+    environment: {
+      bg: "bg-stone-500/20",
+      text: "text-stone-400",
+      border: "border-stone-500/30",
+      dot: "bg-stone-400",
+    },
+    unknown: {
+      bg: "bg-stone-500/20",
+      text: "text-stone-400",
+      border: "border-stone-500/30",
+      dot: "bg-stone-400",
+    },
+  } satisfies Record<ActorKind, { bg: string; text: string; border: string; dot: string }>;
 
   const colors = $derived(badgeColors[actor.actorType]);
   const IconComponent = $derived(getActorIcon(actor.actorType, actor.actorClass));

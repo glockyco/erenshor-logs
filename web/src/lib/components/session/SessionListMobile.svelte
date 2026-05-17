@@ -9,7 +9,9 @@
   let { onSessionSelect }: Props = $props();
 
   const sessionsList = $derived(Array.from(sessions.values()));
-  const sortedSessions = $derived([...sessionsList].sort((a, b) => b.startTime - a.startTime));
+  const sortedSessions = $derived(
+    [...sessionsList].sort((a, b) => b.startedAtUtcMs - a.startedAtUtcMs)
+  );
 
   const handleSessionClick = () => {
     // Auto-close drawer when session is selected on mobile

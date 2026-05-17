@@ -22,12 +22,12 @@
 
   // Calculate stats
   const duration = $derived(
-    session.endTime
-      ? new Date(session.endTime).getTime() - new Date(session.startTime).getTime()
-      : Date.now() - new Date(session.startTime).getTime()
+    session.endedAtUtcMs !== undefined
+      ? session.endedAtUtcMs - session.startedAtUtcMs
+      : Date.now() - session.startedAtUtcMs
   );
 
-  const stats = $derived(calculateSessionStats(session.events, duration));
+  const stats = $derived(calculateSessionStats(session, duration));
   const totalDamage = $derived(stats.totalDamage);
   const dps = $derived(stats.dps);
 
@@ -51,7 +51,7 @@
   aria-pressed={isActive}
 >
   <!-- Timestamp -->
-  <p class="text-xs text-stone-400">{formatTime(session.startTime)}</p>
+  <p class="text-xs text-stone-400">{formatTime(session.startedAtUtcMs)}</p>
 
   <!-- Enemy Name (Hero) -->
   <p class="mt-2 text-2xl font-bold text-stone-300">

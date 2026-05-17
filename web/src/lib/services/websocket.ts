@@ -1,21 +1,13 @@
 // WebSocket client with auto-reconnection
 
-import type {
-  WebSocketMessage,
-  HandshakeMessage,
-  SessionStartMessage,
-  SessionEndMessage,
-  CombatEventsMessage,
-} from "$lib/types";
+import type { LiveEnvelope } from "$lib/types";
 import { parseMessage, isParseError } from "./message-parser";
 import { DEFAULT_WEBSOCKET_URL, RECONNECT_INTERVAL_MS } from "$lib/utils/constants";
 
 export interface WebSocketCallbacks {
   onConnecting: () => void;
-  onConnected: (handshake: HandshakeMessage) => void;
-  onSessionStart: (message: SessionStartMessage) => void;
-  onSessionEnd: (message: SessionEndMessage) => void;
-  onCombatEvents: (message: CombatEventsMessage) => void;
+  onConnected: (hello: LiveEnvelope) => void;
+  onFrame: (message: LiveEnvelope) => void;
   onDisconnected: () => void;
   onError: (
     code: "connection_failed" | "parse_error" | "unexpected_disconnect",
@@ -34,10 +26,6 @@ export interface WebSocketConfig {
   reconnectInterval?: number;
 }
 
-/**
- * Create a WebSocket client that auto-connects and reconnects on disconnect.
- * Returns a client object with a disconnect method to stop reconnection.
- */
 export function createWebSocketClient(
   callbacks: WebSocketCallbacks,
   config: WebSocketConfig = {}
@@ -71,7 +59,7 @@ export function createWebSocketClient(
     }
 
     socket.onopen = () => {
-      // Wait for handshake message to confirm connection
+      // Wait for hello frame to confirm connection.
     };
 
     socket.onmessage = (event: MessageEvent) => {
@@ -86,8 +74,7 @@ export function createWebSocketClient(
     };
 
     socket.onerror = () => {
-      // Error details not available in browser WebSocket API
-      // The onclose handler will be called after this
+      // Error details are unavailable in the browser WebSocket API.
     };
 
     socket.onclose = (event: CloseEvent) => {
@@ -106,21 +93,11 @@ export function createWebSocketClient(
     };
   }
 
-  function handleMessage(message: WebSocketMessage): void {
-    switch (message.type) {
-      case "handshake":
-        callbacks.onConnected(message);
-        break;
-      case "sessionStart":
-        callbacks.onSessionStart(message);
-        break;
-      case "sessionEnd":
-        callbacks.onSessionEnd(message);
-        break;
-      case "combatEvents":
-        callbacks.onCombatEvents(message);
-        break;
+  function handleMessage(message: LiveEnvelope): void {
+    if (message.kind === "hello") {
+      callbacks.onConnected(message);
     }
+    callbacks.onFrame(message);
   }
 
   function scheduleReconnect(): void {
@@ -145,38 +122,27 @@ export function createWebSocketClient(
   }
 
   function reconnect(): void {
-    // Clear any pending reconnect timers
     if (reconnectTimeout) {
       clearTimeout(reconnectTimeout);
       reconnectTimeout = null;
     }
 
-    // Close existing socket cleanly if it exists
     if (socket) {
-      // Temporarily disable reconnection to prevent onclose from scheduling another
       shouldReconnect = false;
 
-      // Remove event handlers to prevent duplicate events during cleanup
       socket.onopen = null;
       socket.onmessage = null;
       socket.onerror = null;
       socket.onclose = null;
 
-      // Close the socket (works in any state: CONNECTING, OPEN, CLOSING)
       socket.close();
       socket = null;
     }
 
-    // Restore shouldReconnect based on config
     shouldReconnect = autoReconnect;
-
-    // Attempt new connection with force=true
-    // This bypasses the shouldReconnect check, allowing manual reconnect
-    // even when autoReconnect is disabled
     connect(true);
   }
 
-  // Auto-connect on creation
   connect();
 
   return { disconnect, reconnect };

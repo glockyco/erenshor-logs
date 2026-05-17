@@ -1,69 +1,60 @@
-import type { ActorRef } from "$lib/types";
+import type { ActorRecord } from "$lib/types";
 
-/**
- * Creates a generic ActorRef with a unique ID.
- * Use specific factory functions (createPlayer, createNpc, etc.) for common actor types.
- */
-export function createActorRef(overrides: Partial<ActorRef> = {}): ActorRef {
+export function createActorRecord(overrides: Partial<ActorRecord> = {}): ActorRecord {
   return {
     id: crypto.randomUUID(),
     name: "Actor",
-    type: "player",
+    kind: "player",
+    faction: "friendly",
     ...overrides,
   };
 }
 
-/**
- * Creates a player ActorRef with typical player attributes.
- */
-export function createPlayer(overrides: Partial<ActorRef> = {}): ActorRef {
-  return {
-    id: crypto.randomUUID(),
+export function createPlayer(overrides: Partial<ActorRecord> = {}): ActorRecord {
+  return createActorRecord({
+    id: "player-1",
     name: "Player",
-    type: "player",
+    kind: "player",
     class: "Duelist",
     level: 35,
+    faction: "friendly",
+    isPlayerControlled: true,
     ...overrides,
-  };
+  });
 }
 
-/**
- * Creates a simulated player ActorRef (AI-controlled party member).
- */
-export function createSimPlayer(overrides: Partial<ActorRef> = {}): ActorRef {
-  return {
-    id: crypto.randomUUID(),
+export function createSimPlayer(overrides: Partial<ActorRecord> = {}): ActorRecord {
+  return createActorRecord({
+    id: "sim-1",
     name: "Aeryn",
-    type: "simPlayer",
+    kind: "simPlayer",
     class: "Arcanist",
     level: 35,
+    faction: "friendly",
+    isPlayerControlled: true,
     ...overrides,
-  };
+  });
 }
 
-/**
- * Creates an NPC ActorRef (enemy or friendly NPC).
- */
-export function createNpc(overrides: Partial<ActorRef> = {}): ActorRef {
-  return {
-    id: crypto.randomUUID(),
+export function createNpc(overrides: Partial<ActorRecord> = {}): ActorRecord {
+  return createActorRecord({
+    id: "npc-1",
     name: "A Brittle Skeleton",
-    type: "npc",
+    kind: "npc",
     level: 30,
+    faction: "hostile",
     ...overrides,
-  };
+  });
 }
 
-/**
- * Creates a pet ActorRef with a reference to its master.
- */
-export function createPet(overrides: Partial<ActorRef> = {}): ActorRef {
-  return {
-    id: crypto.randomUUID(),
+export function createPet(overrides: Partial<ActorRecord> = {}): ActorRecord {
+  return createActorRecord({
+    id: "pet-1",
     name: "Summoned Dire Wolf",
-    type: "pet",
+    kind: "pet",
     level: 30,
-    masterId: "player-1",
+    ownerActorId: "player-1",
+    faction: "friendly",
     ...overrides,
-  };
+  });
 }

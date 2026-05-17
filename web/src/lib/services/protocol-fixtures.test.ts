@@ -53,7 +53,9 @@ describe("protocol v2 fixtures", () => {
   });
 
   it("rejects partial snapshots without loss counters", () => {
-    const partialSnapshot = clone(sessionSnapshot);
+    const partialSnapshot = clone(sessionSnapshot) as {
+      payload: { completeness: string; loss?: unknown };
+    };
     partialSnapshot.payload.completeness = "partial";
     delete partialSnapshot.payload.loss;
 

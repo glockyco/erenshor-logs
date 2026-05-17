@@ -5,11 +5,10 @@ import type {
   ConnectionStatus,
   ConnectionError,
   ConnectionErrorCode,
-  HandshakeMessage,
+  LiveEnvelope,
 } from "$lib/types";
 import type { WebSocketClient } from "$lib/services";
 
-// State
 const state = $state({
   connectionStatus: "disconnected" as ConnectionStatus,
   connectionError: null as ConnectionError | null,
@@ -42,38 +41,27 @@ export const modVersion = {
   },
 };
 
-// Functions
-
-/**
- * Set connection status to connecting.
- */
 export function setConnecting(): void {
   state.connectionStatus = "connecting";
   state.connectionError = null;
 }
 
-/**
- * Set connection status to connected with handshake data.
- */
-export function setConnected(handshake: HandshakeMessage): void {
+export function setConnected(hello: LiveEnvelope): void {
   state.connectionStatus = "connected";
   state.connectionError = null;
-  state.protocolVersion = handshake.protocolVersion;
-  state.modVersion = handshake.modVersion;
+  state.protocolVersion = hello.protocolVersion;
+  state.modVersion =
+    hello.kind === "hello"
+      ? ((hello.payload as { producer?: { modVersion?: string } }).producer?.modVersion ?? null)
+      : null;
 }
 
-/**
- * Set connection status to disconnected.
- */
 export function setDisconnected(): void {
   state.connectionStatus = "disconnected";
   state.protocolVersion = null;
   state.modVersion = null;
 }
 
-/**
- * Set a connection error.
- */
 export function setError(code: ConnectionErrorCode, message: string): void {
   state.connectionError = {
     code,
@@ -82,34 +70,20 @@ export function setError(code: ConnectionErrorCode, message: string): void {
   };
 }
 
-/**
- * Clear the current connection error.
- */
 export function clearError(): void {
   state.connectionError = null;
 }
 
-/**
- * Set the WebSocket client reference.
- * Called by the root layout when creating/recreating the client.
- */
 export function setClient(client: WebSocketClient | null): void {
   state.client = client;
 }
 
-/**
- * Manually trigger a reconnection attempt.
- * This disconnects the current connection (if any) and attempts to reconnect.
- */
 export function reconnectWebSocket(): void {
   if (state.client) {
     state.client.reconnect();
   }
 }
 
-/**
- * Reset connection state to initial values. For testing only.
- */
 export function resetConnectionState(): void {
   state.connectionStatus = "disconnected";
   state.connectionError = null;

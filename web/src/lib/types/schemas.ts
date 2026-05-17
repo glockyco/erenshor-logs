@@ -158,6 +158,7 @@ export const ActorRecordSchema = z.object({
   firstSeenEventSeq: z.number().int().positive().optional(),
 });
 export type ActorRecord = z.infer<typeof ActorRecordSchema>;
+export type ActorKind = ActorRecord["kind"];
 
 export const AbilityRecordSchema = z.object({
   id: z.string(),
@@ -608,11 +609,33 @@ export const SessionInfoSchema = z.object({
 });
 export type SessionInfo = z.infer<typeof SessionInfoSchema>;
 
+export const ProtocolErrorSchema = z.object({
+  code: z.string(),
+  message: z.string(),
+  sessionId: z.string().optional(),
+  eventSeq: z.number().int().positive().optional(),
+});
+export type ProtocolError = z.infer<typeof ProtocolErrorSchema>;
+
 export const SessionSchema = z.object({
   id: z.string(),
-  startTime: z.number(),
-  endTime: z.number().optional(),
-  events: z.array(CombatEventSchema),
+  mode: z.enum(["automatic", "manual", "imported"]),
+  state: z.enum(["active", "ended"]),
+  startedAtUtcMs: z.number().int().nonnegative(),
+  endedAtUtcMs: z.number().int().nonnegative().optional(),
+  endReason: SessionEndReasonSchema.optional(),
+  durationMs: z.number().int().nonnegative().optional(),
+  producer: ProducerInfoSchema,
+  playerActorId: z.string().optional(),
+  registryRevision: z.number().int().nonnegative(),
+  lastEventSeq: z.number().int().nonnegative(),
+  eventCount: z.number().int().nonnegative(),
+  completeness: z.enum(["complete", "partial"]),
+  loss: LossCountersSchema.optional(),
+  registries: RegistriesSchema,
+  diagnostics: SessionDiagnosticsSchema.optional(),
+  events: z.array(CombatEventRecordSchema),
+  protocolErrors: z.array(ProtocolErrorSchema).default([]),
 });
 export type Session = z.infer<typeof SessionSchema>;
 
@@ -622,7 +645,7 @@ export type Session = z.infer<typeof SessionSchema>;
 
 export const AbilityStatsSchema = z.object({
   abilityName: z.string(),
-  abilityType: AbilityTypeSchema,
+  abilityType: z.enum(["skill", "spell", "auto", "dot", "hot", "proc", "environmental", "unknown"]),
   damage: z.number(),
   healing: z.number(),
   hits: z.number(),
@@ -638,7 +661,7 @@ export type AbilityStats = z.infer<typeof AbilityStatsSchema>;
 export const ActorStatsSchema = z.object({
   actorId: z.string(),
   actorName: z.string(),
-  actorType: ActorTypeSchema,
+  actorType: z.enum(["player", "simPlayer", "npc", "pet", "environment", "unknown"]),
   actorClass: z.string().optional(), // Class name (e.g., "Arcanist", "Duelist") for players
   // Outgoing metrics (damage/healing dealt by this actor)
   totalDamage: z.number(),
@@ -732,8 +755,10 @@ export type WebSocketMessage = z.infer<typeof WebSocketMessageSchema>;
 
 export const ParseErrorCodeSchema = z.enum([
   "invalid_json",
-  "missing_type",
-  "unknown_type",
+  "missing_protocol",
+  "unknown_protocol",
+  "unsupported_version",
+  "unknown_kind",
   "invalid_structure",
 ]);
 export type ParseErrorCode = z.infer<typeof ParseErrorCodeSchema>;

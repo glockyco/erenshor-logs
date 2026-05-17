@@ -22,12 +22,12 @@
   const hasSessions = $derived(hydrated.value && sessions.size > 0);
   const session = $derived(activeSession.value);
   const stats = $derived(activeSessionStats.value);
-  const isLive = $derived(session ? !session.endTime : false);
+  const isLive = $derived(session?.state === "active");
   const duration = $derived(
     session
-      ? session.endTime
-        ? session.endTime - session.startTime
-        : Date.now() - session.startTime
+      ? session.endedAtUtcMs !== undefined
+        ? session.endedAtUtcMs - session.startedAtUtcMs
+        : Date.now() - session.startedAtUtcMs
       : 0
   );
 

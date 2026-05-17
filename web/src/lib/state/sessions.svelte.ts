@@ -3,19 +3,28 @@
 
 import { z } from "zod";
 import { SvelteMap } from "svelte/reactivity";
-import type { Session, SessionInfo, CombatEvent } from "$lib/types";
+import type {
+  CombatEventRecord,
+  LiveEnvelope,
+  ProtocolError,
+  RegistryDeltaPayload,
+  Session,
+  SessionEndedPayload,
+  SessionSnapshotPayload,
+} from "$lib/types";
 import { StoredSessionsSchema } from "$lib/types/schemas";
 import { calculateSessionStats } from "$lib/services";
 import { STORAGE_KEYS } from "$lib/utils/constants";
 import { loadFromStorage, saveToStorage, removeFromStorage } from "$lib/utils/storage";
 import { now } from "./clock.svelte";
 
-// State
 export const sessions = new SvelteMap<string, Session>();
 
 const state = $state({
   activeSessionId: null as string | null,
 });
+
+const errors = $state<{ values: ProtocolError[] }>({ values: [] });
 
 export const activeSessionId = {
   get value() {
@@ -23,7 +32,12 @@ export const activeSessionId = {
   },
 };
 
-// Derived state
+export const protocolErrors = {
+  get value() {
+    return errors.values;
+  },
+};
+
 const _activeSession = $derived.by(() => {
   if (!state.activeSessionId) return null;
   return sessions.get(state.activeSessionId) ?? null;
@@ -38,17 +52,12 @@ export const activeSession = {
 const _activeSessionStats = $derived.by(() => {
   if (!_activeSession) return null;
 
-  // Calculate duration with explicit conditionals to ensure proper dependency tracking
-  let durationMs: number;
-  if (_activeSession.endTime !== undefined) {
-    // Session ended - use fixed end time
-    durationMs = _activeSession.endTime - _activeSession.startTime;
-  } else {
-    // Session live - use current time
-    durationMs = now.value - _activeSession.startTime;
-  }
+  const durationMs =
+    _activeSession.endedAtUtcMs !== undefined
+      ? _activeSession.endedAtUtcMs - _activeSession.startedAtUtcMs
+      : now.value - _activeSession.startedAtUtcMs;
 
-  return calculateSessionStats(_activeSession.events, durationMs);
+  return calculateSessionStats(_activeSession, durationMs);
 });
 
 export const activeSessionStats = {
@@ -59,37 +68,24 @@ export const activeSessionStats = {
 
 const ACTIVE_SESSION_KEY = `${STORAGE_KEYS.SESSIONS}-active`;
 
-// SSR-safe initialization from localStorage
-// Runs at module evaluation time, before any component renders
 const storedSessions = loadFromStorage(STORAGE_KEYS.SESSIONS, StoredSessionsSchema);
 if (storedSessions) {
-  // Load all sessions regardless of event count
   storedSessions.forEach(([id, session]) => {
     sessions.set(id, session);
   });
 
-  // Validate activeSessionId exists
   const storedActiveId = loadFromStorage(ACTIVE_SESSION_KEY, z.string());
   if (storedActiveId && sessions.has(storedActiveId)) {
     state.activeSessionId = storedActiveId;
   }
 }
 
-/**
- * Initialize persistence effects. Must be called from a component context.
- * Sets up reactive persistence to save changes to localStorage.
- * Does NOT load data - that happens at module-level above.
- *
- * @returns cleanup function for effect disposal
- */
 export function initSessionsPersistence(): () => void {
   const cleanup = $effect.root(() => {
-    // Persist sessions to localStorage on changes
     $effect(() => {
       saveToStorage(STORAGE_KEYS.SESSIONS, Array.from(sessions.entries()));
     });
 
-    // Persist active session ID separately
     $effect(() => {
       if (state.activeSessionId) {
         saveToStorage(ACTIVE_SESSION_KEY, state.activeSessionId);
@@ -99,119 +95,210 @@ export function initSessionsPersistence(): () => void {
     });
   });
 
-  // Return cleanup function
   return cleanup;
 }
 
-// Functions
+export function applyLiveEnvelope(envelope: LiveEnvelope): void {
+  switch (envelope.kind) {
+    case "hello":
+      return;
+    case "sessionSnapshot":
+      applySessionSnapshot(envelope.payload as SessionSnapshotPayload);
+      return;
+    case "registryDelta":
+      applyRegistryDelta(envelope.sessionId!, envelope.payload as RegistryDeltaPayload);
+      return;
+    case "events": {
+      const payload = envelope.payload as {
+        eventSeqStart: number;
+        events: CombatEventRecord[];
+      };
+      appendProtocolEvents(envelope.sessionId!, payload.events, payload.eventSeqStart);
+      return;
+    }
 
-/**
- * Add a new session from SessionInfo (handshake or sessionStart message).
- * Handles duplicate session IDs by replacing empty sessions or warning about non-empty duplicates.
- */
-export function addSession(info: SessionInfo): void {
-  const existing = sessions.get(info.id);
+    case "sessionEnded":
+      applySessionEnded(envelope.payload as SessionEndedPayload);
+      return;
+    case "error": {
+      const payload = envelope.payload as {
+        code: string;
+        message: string;
+        sessionId?: string;
+        eventSeq?: number;
+      };
+      recordProtocolError({
+        code: payload.code,
+        message: payload.message,
+        sessionId: payload.sessionId,
+        eventSeq: payload.eventSeq,
+      });
+      return;
+    }
+    case "heartbeat":
+    case "serverStats":
+      return;
+  }
+}
 
-  if (existing) {
-    // If existing session is empty, allow replacement to handle reconnection edge cases
-    if (existing.events.length === 0) {
-      console.log(`Replacing empty session ${info.id} with fresh session (duplicate ID)`);
-      // Fall through to create new session
-    } else {
-      // Existing session has events - don't overwrite data
-      console.warn(`Session ${info.id} already exists, ignoring duplicate sessionStart`);
+export function applySessionSnapshot(snapshot: SessionSnapshotPayload): void {
+  const session: Session = {
+    id: snapshot.sessionId,
+    mode: snapshot.mode,
+    state: snapshot.state,
+    startedAtUtcMs: snapshot.startedAtUtcMs,
+    endedAtUtcMs: snapshot.endedAtUtcMs,
+    endReason: snapshot.endReason,
+    durationMs: snapshot.durationMs,
+    producer: snapshot.producer,
+    playerActorId: snapshot.playerActorId,
+    registryRevision: snapshot.registryRevision,
+    lastEventSeq: snapshot.lastEventSeq,
+    eventCount: snapshot.eventCount,
+    completeness: snapshot.completeness,
+    loss: snapshot.loss,
+    registries: snapshot.registries,
+    diagnostics: snapshot.diagnostics,
+    events: [],
+    protocolErrors: [],
+  };
+  sessions.set(snapshot.sessionId, session);
+  state.activeSessionId = snapshot.sessionId;
+}
+
+export function applyRegistryDelta(sessionId: string, delta: RegistryDeltaPayload): void {
+  const session = sessions.get(sessionId);
+  if (!session) {
+    recordProtocolError({
+      code: "unknown_session",
+      message: `Received registry delta for unknown session ${sessionId}`,
+      sessionId,
+    });
+    return;
+  }
+
+  sessions.set(sessionId, {
+    ...session,
+    registryRevision: delta.revision,
+    registries: {
+      revision: delta.revision,
+      actors: { ...session.registries.actors, ...(delta.actors ?? {}) },
+      abilities: { ...session.registries.abilities, ...(delta.abilities ?? {}) },
+      effects: { ...session.registries.effects, ...(delta.effects ?? {}) },
+    },
+  });
+}
+
+export function appendProtocolEvents(
+  sessionId: string,
+  events: CombatEventRecord[],
+  eventSeqStart: number
+): void {
+  const session = sessions.get(sessionId);
+  if (!session) {
+    recordProtocolError({
+      code: "unknown_session",
+      message: `Received events for unknown session ${sessionId}`,
+      sessionId,
+    });
+    return;
+  }
+
+  if (events.length === 0) return;
+
+  const expectedStart = session.lastEventSeq + 1;
+  const actualStart = eventSeqStart;
+  if (actualStart !== expectedStart) {
+    const error = {
+      code: "event_sequence_gap",
+      message: `Expected eventSeq ${expectedStart}, received ${actualStart}`,
+      sessionId,
+      eventSeq: actualStart,
+    };
+    recordProtocolError(error);
+    sessions.set(sessionId, {
+      ...session,
+      completeness: "partial",
+      protocolErrors: [...session.protocolErrors, error],
+    });
+    return;
+  }
+
+  for (let index = 0; index < events.length; index += 1) {
+    const expectedSeq = expectedStart + index;
+    if (events[index].eventSeq !== expectedSeq) {
+      const error = {
+        code: "event_sequence_gap",
+        message: `Expected eventSeq ${expectedSeq}, received ${events[index].eventSeq}`,
+        sessionId,
+        eventSeq: events[index].eventSeq,
+      };
+      recordProtocolError(error);
+      sessions.set(sessionId, {
+        ...session,
+        completeness: "partial",
+        protocolErrors: [...session.protocolErrors, error],
+      });
       return;
     }
   }
 
-  const session: Session = {
-    id: info.id,
-    startTime: info.startTime,
-    events: [],
-  };
-
-  sessions.set(info.id, session);
-
-  // Always set new session as active for hands-off second-screen usage
-  state.activeSessionId = info.id;
-}
-
-/**
- * Append combat events to a session.
- * Logs warning if session doesn't exist (orphaned events).
- */
-export function appendEvents(sessionId: string, events: CombatEvent[]): void {
-  const session = sessions.get(sessionId);
-
-  if (!session) {
-    console.warn(
-      `Received events for unknown session ${sessionId}, dropping ${events.length} events`
-    );
-    return;
-  }
-
-  // Create new object to trigger SvelteMap reactivity and persistence
+  const lastEventSeq = events[events.length - 1].eventSeq;
   sessions.set(sessionId, {
     ...session,
     events: [...session.events, ...events],
+    lastEventSeq,
+    eventCount: session.eventCount + events.length,
   });
 }
 
-/**
- * Mark a session as ended.
- * All sessions are preserved regardless of event count.
- */
-export function endSession(sessionId: string, endTime: number): void {
-  const session = sessions.get(sessionId);
-
+export function applySessionEnded(ended: SessionEndedPayload): void {
+  const session = sessions.get(ended.sessionId);
   if (!session) {
-    console.warn(`Attempted to end unknown session ${sessionId}`);
+    recordProtocolError({
+      code: "unknown_session",
+      message: `Received session end for unknown session ${ended.sessionId}`,
+      sessionId: ended.sessionId,
+    });
     return;
   }
 
-  // Mark session as ended (preserve all sessions regardless of event count)
-  sessions.set(sessionId, {
+  sessions.set(ended.sessionId, {
     ...session,
-    endTime,
+    state: "ended",
+    endedAtUtcMs: ended.endedAtUtcMs,
+    endReason: ended.reason,
+    durationMs: ended.durationMs,
+    diagnostics: ended.diagnostics ?? session.diagnostics,
   });
 }
 
-/**
- * Delete a session from storage.
- */
+function recordProtocolError(error: ProtocolError): void {
+  errors.values = [...errors.values, error];
+}
+
 export function deleteSession(sessionId: string): void {
   sessions.delete(sessionId);
 
-  // Clear active if deleted
   if (state.activeSessionId === sessionId) {
     state.activeSessionId = null;
   }
 }
 
-/**
- * Clear all sessions from storage.
- */
 export function clearAllSessions(): void {
   sessions.clear();
+  errors.values = [];
   state.activeSessionId = null;
 }
 
-/**
- * Set the active session for viewing.
- */
 export function setActiveSession(sessionId: string | null): void {
-  if (sessionId && !sessions.has(sessionId)) {
-    console.warn(`Cannot set active session to unknown ID ${sessionId}`);
-    return;
-  }
+  if (sessionId && !sessions.has(sessionId)) return;
 
   state.activeSessionId = sessionId;
 }
 
-/**
- * Reset sessions state to initial values. For testing only.
- */
 export function resetSessionsState(): void {
   sessions.clear();
+  errors.values = [];
   state.activeSessionId = null;
 }

@@ -1,43 +1,26 @@
-// Utilities for actor faction identification and classification
-// Used to distinguish between friendly (player/sims/pets) and hostile (NPC) actors
+import type { ActorRecord, ActorStats } from "$lib/types";
 
-import type { ActorRef, ActorType } from "$lib/types";
-
-/**
- * Faction type for combat analytics filtering
- */
+export type ActorKind = ActorRecord["kind"];
 export type Faction = "friendly" | "hostile";
 
-/**
- * Check if an actor type belongs to the player faction.
- * Player faction includes: player, simulated players, and pets.
- */
-export function isPlayerFaction(actorType: ActorType): boolean {
-  return ["player", "simPlayer", "pet"].includes(actorType);
+export function isPlayerFaction(actorKind: ActorKind): boolean {
+  return actorKind === "player" || actorKind === "simPlayer" || actorKind === "pet";
 }
 
-/**
- * Check if an actor type belongs to the enemy faction.
- * Enemy faction includes: NPCs and their pets.
- */
-export function isEnemyFaction(actorType: ActorType): boolean {
-  return actorType === "npc";
+export function isEnemyFaction(actorKind: ActorKind): boolean {
+  return actorKind === "npc";
 }
 
-/**
- * Get the faction classification for an actor.
- * Returns null if the actor reference is missing.
- */
-export function getActorFaction(actor?: ActorRef): Faction | null {
+export function getActorFaction(actor?: Pick<ActorRecord, "kind" | "faction">): Faction | null {
   if (!actor) return null;
-  return isPlayerFaction(actor.type) ? "friendly" : "hostile";
+  if (actor.faction === "friendly" || actor.faction === "hostile") return actor.faction;
+  if (actor.faction === "neutral" || actor.faction === "unknown") return null;
+  if (isPlayerFaction(actor.kind)) return "friendly";
+  if (isEnemyFaction(actor.kind)) return "hostile";
+  return null;
 }
 
-/**
- * Filter actors by faction.
- * Preserves the full type of the input array.
- */
-export function filterByFaction<T extends { actorType: ActorType }>(
+export function filterByFaction<T extends Pick<ActorStats, "actorType">>(
   actors: T[],
   faction: "all" | Faction
 ): T[] {

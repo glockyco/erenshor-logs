@@ -3,7 +3,7 @@
   import { cn } from "$lib/utils";
   import WelcomeCard from "./WelcomeCard.svelte";
   import FileDropzone from "../session/FileDropzone.svelte";
-  import { sessions, addSession, setActiveSession } from "$lib/state/sessions.svelte";
+  import { sessions, setActiveSession } from "$lib/state/sessions.svelte";
   import type { Session } from "$lib/types";
 
   let importStatus = $state<{ type: "success" | "error"; message: string } | null>(null);
@@ -17,7 +17,6 @@
         skippedCount++;
         continue;
       }
-      addSession({ id: session.id, startTime: session.startTime });
       sessions.set(session.id, session);
       addedCount++;
     }

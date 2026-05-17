@@ -21,11 +21,13 @@
 
   // Calculate stats for tooltip
   const duration = $derived(
-    session.endTime ? session.endTime - session.startTime : Date.now() - session.startTime
+    session.endedAtUtcMs !== undefined
+      ? session.endedAtUtcMs - session.startedAtUtcMs
+      : Date.now() - session.startedAtUtcMs
   );
-  const stats = $derived(calculateSessionStats(session.events, duration));
+  const stats = $derived(calculateSessionStats(session, duration));
   const enemyInfo = $derived(getSessionEnemies(session));
-  const isLive = $derived(!session.endTime);
+  const isLive = $derived(session.state === "active");
 
   // Generate initials from enemy name (max 3 chars)
   function getInitials(name: string): string {

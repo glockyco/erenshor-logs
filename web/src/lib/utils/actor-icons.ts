@@ -12,7 +12,7 @@ import {
   Cat,
 } from "@lucide/svelte";
 import type { Component } from "svelte";
-import type { ActorType } from "$lib/types";
+import type { ActorKind } from "$lib/types";
 
 type IconComponent = Component;
 
@@ -30,7 +30,7 @@ type IconComponent = Component;
  * const icon = getActorIcon("pet"); // Returns Cat icon
  * ```
  */
-export function getActorIcon(actorType: ActorType, actorClass?: string): IconComponent {
+export function getActorIcon(actorType: ActorKind, actorClass?: string): IconComponent {
   // Player classes (both player and simPlayer use class-based icons)
   if (actorType === "player" || actorType === "simPlayer") {
     switch (actorClass) {

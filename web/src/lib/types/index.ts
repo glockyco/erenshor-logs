@@ -16,6 +16,7 @@ export type {
   UIPreferences,
   AttributionDebugInfo,
   ContextSnapshot,
+  ActorKind,
 } from "./schemas";
 
 export {

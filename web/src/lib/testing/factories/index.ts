@@ -1,10 +1,8 @@
-// Actor factories
-export { createActorRef, createPlayer, createSimPlayer, createNpc, createPet } from "./actors";
+export { createActorRecord, createPlayer, createSimPlayer, createNpc, createPet } from "./actors";
 
-// Event factories
 export {
-  createAbilityRef,
-  createEffectRef,
+  createAbilityRecord,
+  createEffectRecord,
   createCombatEvent,
   createDamageEvent,
   createHealEvent,
@@ -13,9 +11,8 @@ export {
   createTimedEvents,
 } from "./events";
 
-// Session factories
 export {
-  createSessionInfo,
+  createRegistries,
   createSession,
   createActiveSession,
   createCompletedSession,
@@ -24,5 +21,4 @@ export {
   createSessionWithDuration,
 } from "./sessions";
 
-// Stats factories
 export { createActorStats, createSessionStats, createAbilityStats } from "./stats";

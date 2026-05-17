@@ -10,7 +10,9 @@
   let { collapsed = false }: Props = $props();
 
   const sessionsList = $derived(Array.from(sessions.values()));
-  const sortedSessions = $derived([...sessionsList].sort((a, b) => b.startTime - a.startTime));
+  const sortedSessions = $derived(
+    [...sessionsList].sort((a, b) => b.startedAtUtcMs - a.startedAtUtcMs)
+  );
 </script>
 
 {#if sessionsList.length === 0}

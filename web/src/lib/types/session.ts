@@ -1,14 +1,17 @@
-// Session types - re-exported from Zod schemas
-// See schemas.ts for the canonical definitions
-
-export type { Session, SessionStats, ActorStats, AbilityStats } from "./schemas";
-
-export {
-  SessionSchema,
-  SessionStatsSchema,
-  ActorStatsSchema,
-  AbilityStatsSchema,
-  StoredSessionsSchema,
+export type {
+  ActorStats,
+  AbilityStats,
+  ProtocolError,
+  Session,
+  SessionStats,
+  StoredSessions,
 } from "./schemas";
 
-export type { StoredSessions } from "./schemas";
+export {
+  ActorStatsSchema,
+  AbilityStatsSchema,
+  ProtocolErrorSchema,
+  SessionSchema,
+  SessionStatsSchema,
+  StoredSessionsSchema,
+} from "./schemas";

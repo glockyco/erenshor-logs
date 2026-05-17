@@ -1,77 +1,77 @@
-import type { Session, SessionInfo } from "$lib/types";
+import type { Registries, Session } from "$lib/types";
+import { createAbilityRecord } from "./events";
+import { createNpc, createPlayer, createSimPlayer } from "./actors";
 
-/**
- * Creates a SessionInfo with unique ID and deterministic start time.
- */
-export function createSessionInfo(overrides: Partial<SessionInfo> = {}): SessionInfo {
+export function createRegistries(overrides: Partial<Registries> = {}): Registries {
+  const player = createPlayer();
+  const simPlayer = createSimPlayer();
+  const npc = createNpc();
+
   return {
-    id: crypto.randomUUID(),
-    startTime: 0,
+    revision: 1,
+    actors: {
+      [player.id]: player,
+      [simPlayer.id]: simPlayer,
+      [npc.id]: npc,
+    },
+    abilities: {
+      "ability-1": createAbilityRecord({ id: "ability-1", name: "Backstab" }),
+      "heal-1": createAbilityRecord({ id: "heal-1", name: "Major Healing", kind: "spell" }),
+    },
+    effects: {},
     ...overrides,
   };
 }
 
-/**
- * Creates a complete Session with unique ID and empty events array.
- * Use createActiveSession or createCompletedSession for specific session states.
- */
 export function createSession(overrides: Partial<Session> = {}): Session {
   return {
     id: crypto.randomUUID(),
-    startTime: 0,
+    mode: "automatic",
+    state: "active",
+    startedAtUtcMs: 0,
+    producer: { name: "ErenshorLogsMod", modVersion: "2.0.0" },
+    registryRevision: 1,
+    lastEventSeq: 0,
+    eventCount: 0,
+    completeness: "complete",
+    registries: createRegistries(),
     events: [],
+    protocolErrors: [],
     ...overrides,
   };
 }
 
-/**
- * Creates an active (ongoing) session without an endTime.
- */
 export function createActiveSession(overrides: Partial<Session> = {}): Session {
   return createSession({
-    startTime: 0,
+    state: "active",
+    endedAtUtcMs: undefined,
+    durationMs: undefined,
     ...overrides,
-    endTime: undefined, // Explicitly no end time
   });
 }
 
-/**
- * Creates a completed session with a specific duration.
- *
- * @param durationMs Duration of the session in milliseconds
- * @param overrides Additional properties to override
- * @returns Session with startTime of 0 and endTime of durationMs
- */
 export function createSessionWithDuration(
   durationMs: number,
   overrides: Partial<Session> = {}
 ): Session {
   return createSession({
-    startTime: 0,
-    endTime: durationMs,
+    state: "ended",
+    startedAtUtcMs: 0,
+    endedAtUtcMs: durationMs,
+    durationMs,
+    endReason: "manual",
     ...overrides,
   });
 }
 
-/**
- * Creates a completed session with default 5-minute duration.
- */
 export function createCompletedSession(overrides: Partial<Session> = {}): Session {
-  return createSessionWithDuration(300000, overrides); // 5 minutes
+  return createSessionWithDuration(300000, overrides);
 }
 
-/**
- * Creates a short completed session with 30-second duration.
- * Useful for testing duration formatting.
- */
 export function createShortSession(overrides: Partial<Session> = {}): Session {
-  return createSessionWithDuration(30000, overrides); // 30 seconds
+  return createSessionWithDuration(30000, overrides);
 }
 
-/**
- * Creates a long completed session with 1-hour duration.
- * Useful for testing duration formatting.
- */
 export function createLongSession(overrides: Partial<Session> = {}): Session {
-  return createSessionWithDuration(3600000, overrides); // 1 hour
+  return createSessionWithDuration(3600000, overrides);
 }

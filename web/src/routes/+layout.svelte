@@ -7,9 +7,7 @@
     setDisconnected,
     setError,
     setClient,
-    addSession,
-    endSession,
-    appendEvents,
+    applyLiveEnvelope,
     completeHydration,
     initSessionsPersistence,
     initUiPersistence,
@@ -61,18 +59,12 @@
     // Without this, state mutations in callbacks trigger infinite reruns
     const callbacks: WebSocketCallbacks = {
       onConnecting: () => untrack(() => setConnecting()),
-      onConnected: (handshake) =>
+      onConnected: (hello) =>
         untrack(() => {
-          setConnected(handshake);
-          if (handshake.session) {
-            addSession(handshake.session);
-          }
-          // Mark settings as applied when successfully connected
+          setConnected(hello);
           markSettingsApplied();
         }),
-      onSessionStart: (message) => untrack(() => addSession(message.session)),
-      onSessionEnd: (message) => untrack(() => endSession(message.sessionId, message.endTime)),
-      onCombatEvents: (message) => untrack(() => appendEvents(message.sessionId, message.events)),
+      onFrame: (message) => untrack(() => applyLiveEnvelope(message)),
       onDisconnected: () => untrack(() => setDisconnected()),
       onError: (code, msg) => untrack(() => setError(code, msg)),
     };

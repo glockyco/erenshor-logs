@@ -18,7 +18,7 @@
   let { session }: Props = $props();
 
   // Analyze unknown events
-  const analysis = $derived(analyzeUnknownEvents(session.events));
+  const analysis = $derived(analyzeUnknownEvents(session));
   const hasUnknown = $derived(analysis.summary.unknown > 0);
 
   // Track expanded signatures

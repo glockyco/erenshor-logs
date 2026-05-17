@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
+import hello from "../../../../shared/protocol/fixtures/live/hello.json";
 import {
   connectionStatus,
   connectionError,
@@ -11,6 +12,9 @@ import {
   clearError,
   resetConnectionState,
 } from "./connection.svelte";
+import type { LiveEnvelope } from "$lib/types";
+
+const helloFrame = hello as LiveEnvelope;
 
 describe("connection state", () => {
   beforeEach(() => {
@@ -53,43 +57,22 @@ describe("connection state", () => {
 
   describe("setConnected", () => {
     it("sets status to connected", () => {
-      const handshake = {
-        type: "handshake" as const,
-        protocolVersion: "1.0.0",
-        modVersion: "0.5.0",
-        session: undefined,
-      };
-
-      setConnected(handshake);
+      setConnected(helloFrame);
 
       expect(connectionStatus.value).toBe("connected");
     });
 
     it("stores protocol and mod versions", () => {
-      const handshake = {
-        type: "handshake" as const,
-        protocolVersion: "1.2.3",
-        modVersion: "0.8.1",
-        session: undefined,
-      };
+      setConnected(helloFrame);
 
-      setConnected(handshake);
-
-      expect(protocolVersion.value).toBe("1.2.3");
-      expect(modVersion.value).toBe("0.8.1");
+      expect(protocolVersion.value).toBe("2.0.0");
+      expect(modVersion.value).toBe("2026.5.17.14");
     });
 
     it("clears any existing error", () => {
       setError("connection_failed", "Test error");
 
-      const handshake = {
-        type: "handshake" as const,
-        protocolVersion: "1.0.0",
-        modVersion: "0.5.0",
-        session: undefined,
-      };
-
-      setConnected(handshake);
+      setConnected(helloFrame);
 
       expect(connectionError.value).toBeNull();
     });
@@ -105,13 +88,7 @@ describe("connection state", () => {
     });
 
     it("clears protocol and mod versions", () => {
-      const handshake = {
-        type: "handshake" as const,
-        protocolVersion: "1.0.0",
-        modVersion: "0.5.0",
-        session: undefined,
-      };
-      setConnected(handshake);
+      setConnected(helloFrame);
 
       setDisconnected();
 
@@ -177,13 +154,7 @@ describe("connection state", () => {
 
   describe("resetConnectionState", () => {
     it("resets all state to initial values", () => {
-      const handshake = {
-        type: "handshake" as const,
-        protocolVersion: "1.0.0",
-        modVersion: "0.5.0",
-        session: undefined,
-      };
-      setConnected(handshake);
+      setConnected(helloFrame);
       setError("connection_failed", "Test");
 
       resetConnectionState();

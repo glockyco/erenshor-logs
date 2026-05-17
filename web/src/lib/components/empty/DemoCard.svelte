@@ -1,7 +1,7 @@
 <script lang="ts">
   import { FlaskConical } from "@lucide/svelte";
   import WelcomeCard from "./WelcomeCard.svelte";
-  import { sessions, addSession, setActiveSession } from "$lib/state/sessions.svelte";
+  import { sessions, setActiveSession } from "$lib/state/sessions.svelte";
   import { importSessions } from "$lib/services";
 
   let isLoading = $state(false);
@@ -31,7 +31,6 @@
       // Import all demo sessions
       for (const session of result.sessions) {
         if (!sessions.has(session.id)) {
-          addSession({ id: session.id, startTime: session.startTime });
           sessions.set(session.id, session);
         }
       }

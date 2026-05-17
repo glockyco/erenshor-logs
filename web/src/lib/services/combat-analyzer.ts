@@ -1,13 +1,23 @@
-// Pure functions for aggregating combat event statistics
-
-import type { CombatEvent, SessionStats, ActorStats, AbilityStats } from "$lib/types";
+import type {
+  AbilityStats,
+  ActorRecord,
+  ActorStats,
+  DamageEvent,
+  HealEvent,
+  Registries,
+  Session,
+  SessionStats,
+} from "$lib/types";
 import {
+  getEventSource,
+  getEventTarget,
   isDamageDealtByPlayer,
+  isDamageEvent,
   isDamageTakenByPlayer,
+  isHealEvent,
   isHealingDoneByPlayer,
   isHealingReceivedByPlayer,
 } from "$lib/utils/event-filters";
-import { isDamageEventType, isHealEventType } from "$lib/utils/event-constants";
 
 const MS_PER_SECOND = 1000;
 
@@ -19,174 +29,109 @@ export function calculatePercentage(part: number, whole: number): number {
   return whole > 0 ? (part / whole) * 100 : 0;
 }
 
-/**
- * Calculate overall session statistics from combat events.
- * Tracks both outgoing (dealt) and incoming (taken) metrics for player faction.
- */
-export function calculateSessionStats(events: CombatEvent[], durationMs: number): SessionStats {
-  // Outgoing metrics (damage/healing dealt by player faction)
-  const damageDealtEvents = events.filter(isDamageDealtByPlayer);
-  const healingDoneEvents = events.filter(isHealingDoneByPlayer);
+export function calculateSessionStats(
+  session: Session,
+  durationMs = getDurationMs(session)
+): SessionStats {
+  const { events, registries } = session;
+  const damageDealtEvents = events.filter((event): event is DamageEvent =>
+    isDamageDealtByPlayer(event, registries)
+  );
+  const healingDoneEvents = events.filter((event): event is HealEvent =>
+    isHealingDoneByPlayer(event, registries)
+  );
+  const damageTakenEvents = events.filter((event): event is DamageEvent =>
+    isDamageTakenByPlayer(event, registries)
+  );
+  const healingReceivedEvents = events.filter((event): event is HealEvent =>
+    isHealingReceivedByPlayer(event, registries)
+  );
 
-  const totalDamage = damageDealtEvents.reduce((sum, e) => sum + (e.amount ?? 0), 0);
-  const totalHealing = healingDoneEvents.reduce((sum, e) => sum + (e.amount ?? 0), 0);
-
-  // Incoming metrics (damage/healing taken by player faction)
-  const damageTakenEvents = events.filter(isDamageTakenByPlayer);
-  const healingReceivedEvents = events.filter(isHealingReceivedByPlayer);
-
-  const totalDamageTaken = damageTakenEvents.reduce((sum, e) => sum + (e.amount ?? 0), 0);
-  const totalHealingReceived = healingReceivedEvents.reduce((sum, e) => sum + (e.amount ?? 0), 0);
-
-  // Defense metrics
-  const totalRawDamage = damageTakenEvents.reduce(
-    (sum, e) => sum + (e.rawAmount ?? e.amount ?? 0),
+  const totalDamage = sumDamage(damageDealtEvents);
+  const totalHealing = sumHealing(healingDoneEvents);
+  const totalDamageTaken = sumDamage(damageTakenEvents);
+  const totalHealingReceived = sumHealing(healingReceivedEvents);
+  const totalMitigated = damageTakenEvents.reduce(
+    (sum, event) => sum + (event.data.mitigatedAmount ?? 0),
     0
   );
-  const totalMitigated = damageTakenEvents.reduce((sum, e) => sum + (e.mitigated ?? 0), 0);
-
-  // Calculate rates
-  const dps = calculateRate(totalDamage, durationMs);
-  const hps = calculateRate(totalHealing, durationMs);
-  const dtps = calculateRate(totalDamageTaken, durationMs);
-  const hrps = calculateRate(totalHealingReceived, durationMs);
-
-  // Calculate mitigation rate
-  const mitigationRate = calculatePercentage(totalMitigated, totalRawDamage);
-
-  // Aggregate by actor (bidirectional)
-  const actorBreakdown = aggregateByActor(events, durationMs);
+  const totalRawDamage = damageTakenEvents.reduce(
+    (sum, event) =>
+      sum + (event.data.rawAmount ?? event.data.amount + (event.data.mitigatedAmount ?? 0)),
+    0
+  );
 
   return {
     totalDamage,
     totalHealing,
-    dps,
-    hps,
+    dps: calculateRate(totalDamage, durationMs),
+    hps: calculateRate(totalHealing, durationMs),
     totalDamageTaken,
     totalHealingReceived,
-    dtps,
-    hrps,
+    dtps: calculateRate(totalDamageTaken, durationMs),
+    hrps: calculateRate(totalHealingReceived, durationMs),
     totalMitigated,
-    mitigationRate,
+    mitigationRate: calculatePercentage(totalMitigated, totalRawDamage),
     durationMs,
-    actorBreakdown,
+    actorBreakdown: aggregateByActor(session, durationMs),
   };
 }
 
-/**
- * Aggregate combat events by actor with bidirectional tracking.
- * Tracks both outgoing (dealt) and incoming (taken) metrics for all actors.
- */
-export function aggregateByActor(events: CombatEvent[], durationMs: number): ActorStats[] {
+export function aggregateByActor(
+  session: Session,
+  durationMs = getDurationMs(session)
+): ActorStats[] {
   const actorMap = new Map<string, ActorStats>();
-
-  // Helper to ensure actor exists in map
-  const ensureActor = (
-    actorId: string,
-    actorName: string,
-    actorType: string,
-    actorClass?: string
-  ) => {
-    if (!actorMap.has(actorId)) {
-      actorMap.set(actorId, {
-        actorId,
-        actorName,
-        actorType: actorType as ActorStats["actorType"],
-        actorClass,
-        // Outgoing
-        totalDamage: 0,
-        totalHealing: 0,
-        dps: 0,
-        hps: 0,
-        percentOfTotalDamage: 0,
-        percentOfTotalHealing: 0,
-        // Incoming
-        damageTaken: 0,
-        healingReceived: 0,
-        dtps: 0,
-        hrps: 0,
-        percentOfTotalDamageTaken: 0,
-        percentOfTotalHealingReceived: 0,
-        // Defense
-        totalMitigated: 0,
-        mitigationRate: 0,
-        totalMissedAgainst: 0,
-        avoidanceRate: 0,
-        // Breakdowns
-        abilityBreakdown: [],
-        abilitiesReceivedFrom: [],
-      });
-    }
-  };
-
-  // First pass: collect all unique actors (from both source and target)
-  for (const event of events) {
-    if (event.source) {
-      ensureActor(event.source.id, event.source.name, event.source.type, event.source.class);
-    }
-    if (event.target) {
-      ensureActor(event.target.id, event.target.name, event.target.type, event.target.class);
-    }
-  }
-
-  // Second pass: aggregate dealt and taken metrics
-  // Track hit counters per actor for avoidance calculation
   const actorHitCounts = new Map<string, { hits: number; misses: number }>();
 
-  for (const event of events) {
-    // Track damage/healing DEALT by source
-    if (event.source && actorMap.has(event.source.id)) {
-      const actor = actorMap.get(event.source.id)!;
-      if (isDamageEventType(event.eventType)) {
-        actor.totalDamage += event.amount ?? 0;
-      } else if (isHealEventType(event.eventType)) {
-        actor.totalHealing += event.amount ?? 0;
-      }
+  for (const event of session.events) {
+    ensureEventActor(actorMap, getEventSource(event, session.registries));
+    ensureEventActor(actorMap, getEventTarget(event, session.registries));
+  }
+
+  for (const event of session.events) {
+    const source = getEventSource(event, session.registries);
+    const target = getEventTarget(event, session.registries);
+
+    if (source) {
+      const actor = actorMap.get(source.id);
+      if (actor && isDamageEvent(event)) actor.totalDamage += event.data.amount;
+      if (actor && isHealEvent(event)) actor.totalHealing += event.data.amount;
     }
 
-    // Track damage/healing TAKEN by target
-    if (event.target && actorMap.has(event.target.id)) {
-      const actor = actorMap.get(event.target.id)!;
-      if (isDamageEventType(event.eventType)) {
-        const mitigated = event.mitigated ?? 0;
-        const isMiss = event.flags?.missed ?? false;
+    if (target) {
+      const actor = actorMap.get(target.id);
+      if (!actor) continue;
 
-        // Initialize hit counter for this actor if needed
-        if (!actorHitCounts.has(actor.actorId)) {
-          actorHitCounts.set(actor.actorId, { hits: 0, misses: 0 });
-        }
-        const hitCount = actorHitCounts.get(actor.actorId)!;
+      if (isDamageEvent(event)) {
+        const hitCount = actorHitCounts.get(actor.actorId) ?? { hits: 0, misses: 0 };
+        actorHitCounts.set(actor.actorId, hitCount);
 
-        if (isMiss) {
-          hitCount.misses++;
-          actor.totalMissedAgainst++;
+        if (event.data.outcome.result === "missed") {
+          hitCount.misses += 1;
+          actor.totalMissedAgainst += 1;
         } else {
-          hitCount.hits++;
-          actor.damageTaken += event.amount ?? 0;
-          actor.totalMitigated += mitigated;
+          hitCount.hits += 1;
+          actor.damageTaken += event.data.amount;
+          actor.totalMitigated += event.data.mitigatedAmount ?? 0;
         }
-      } else if (isHealEventType(event.eventType)) {
-        actor.healingReceived += event.amount ?? 0;
       }
+
+      if (isHealEvent(event)) actor.healingReceived += event.data.amount;
     }
   }
 
-  // Calculate totals for percentage calculations
   const actors = Array.from(actorMap.values());
-  const totalDamageDealt = actors.reduce((sum, a) => sum + a.totalDamage, 0);
-  const totalHealingDone = actors.reduce((sum, a) => sum + a.totalHealing, 0);
-  const totalDamageTaken = actors.reduce((sum, a) => sum + a.damageTaken, 0);
-  const totalHealingReceived = actors.reduce((sum, a) => sum + a.healingReceived, 0);
+  const totalDamageDealt = actors.reduce((sum, actor) => sum + actor.totalDamage, 0);
+  const totalHealingDone = actors.reduce((sum, actor) => sum + actor.totalHealing, 0);
+  const totalDamageTaken = actors.reduce((sum, actor) => sum + actor.damageTaken, 0);
+  const totalHealingReceived = actors.reduce((sum, actor) => sum + actor.healingReceived, 0);
 
-  // Calculate per-actor rates and percentages
   for (const actor of actors) {
-    // Outgoing rates
     actor.dps = calculateRate(actor.totalDamage, durationMs);
     actor.hps = calculateRate(actor.totalHealing, durationMs);
     actor.percentOfTotalDamage = calculatePercentage(actor.totalDamage, totalDamageDealt);
     actor.percentOfTotalHealing = calculatePercentage(actor.totalHealing, totalHealingDone);
-
-    // Incoming rates
     actor.dtps = calculateRate(actor.damageTaken, durationMs);
     actor.hrps = calculateRate(actor.healingReceived, durationMs);
     actor.percentOfTotalDamageTaken = calculatePercentage(actor.damageTaken, totalDamageTaken);
@@ -195,85 +140,50 @@ export function aggregateByActor(events: CombatEvent[], durationMs: number): Act
       totalHealingReceived
     );
 
-    // Defense rates
     const actorRawDamage = actor.damageTaken + actor.totalMitigated;
     actor.mitigationRate = calculatePercentage(actor.totalMitigated, actorRawDamage);
 
-    // Avoidance rate: misses / (hits + misses)
     const hitCount = actorHitCounts.get(actor.actorId);
     const totalAttackAttempts = hitCount ? hitCount.hits + hitCount.misses : 0;
     actor.avoidanceRate = calculatePercentage(actor.totalMissedAgainst, totalAttackAttempts);
 
-    // Ability breakdowns
-    actor.abilityBreakdown = aggregateByAbility(events, actor.actorId, "dealt");
-    actor.abilitiesReceivedFrom = aggregateByAbility(events, actor.actorId, "taken");
+    actor.abilityBreakdown = aggregateByAbility(session, actor.actorId, "dealt");
+    actor.abilitiesReceivedFrom = aggregateByAbility(session, actor.actorId, "taken");
   }
 
   return actors;
 }
 
-/**
- * Aggregate combat events by ability for a specific actor.
- * @param perspective - "dealt" for abilities used by actor, "taken" for abilities that hit actor
- */
 export function aggregateByAbility(
-  events: CombatEvent[],
+  session: Session,
   actorId: string,
   perspective: "dealt" | "taken" = "dealt"
 ): AbilityStats[] {
   const abilityMap = new Map<string, AbilityStats>();
 
-  for (const event of events) {
-    // Filter by perspective
-    const matchesActor =
-      perspective === "dealt" ? event.source?.id === actorId : event.target?.id === actorId;
+  for (const event of session.events) {
+    const eventActorId = perspective === "dealt" ? event.sourceActorId : event.targetActorId;
+    if (eventActorId !== actorId) continue;
+    if (!isDamageEvent(event) && !isHealEvent(event)) continue;
 
-    if (!matchesActor) continue;
+    const ability = ensureAbility(abilityMap, session.registries, event.abilityId);
+    const missed = isDamageEvent(event) && event.data.outcome.result === "missed";
+    const critical = isDamageEvent(event)
+      ? event.data.outcome.critical === true
+      : event.data.critical === true;
 
-    const abilityName = event.ability.name;
-    if (!abilityMap.has(abilityName)) {
-      abilityMap.set(abilityName, {
-        abilityName,
-        abilityType: event.ability.type,
-        damage: 0,
-        healing: 0,
-        hits: 0,
-        crits: 0,
-        misses: 0,
-        avgDamage: 0,
-        avgHealing: 0,
-        critRate: 0,
-        missRate: 0,
-      });
+    if (missed) {
+      ability.misses += 1;
+      continue;
     }
 
-    const ability = abilityMap.get(abilityName)!;
+    if (critical) ability.crits += 1;
+    else ability.hits += 1;
 
-    const isMiss = event.flags?.missed ?? false;
-    const isCrit = event.flags?.critical ?? false;
-
-    if (isMiss) {
-      ability.misses++;
-    } else if (isCrit) {
-      ability.crits++;
-
-      if (isDamageEventType(event.eventType)) {
-        ability.damage += event.amount ?? 0;
-      } else if (isHealEventType(event.eventType)) {
-        ability.healing += event.amount ?? 0;
-      }
-    } else {
-      ability.hits++;
-
-      if (isDamageEventType(event.eventType)) {
-        ability.damage += event.amount ?? 0;
-      } else if (isHealEventType(event.eventType)) {
-        ability.healing += event.amount ?? 0;
-      }
-    }
+    if (isDamageEvent(event)) ability.damage += event.data.amount;
+    if (isHealEvent(event)) ability.healing += event.data.amount;
   }
 
-  // Calculate averages and rates
   const abilities = Array.from(abilityMap.values());
   for (const ability of abilities) {
     const totalSuccessfulHits = ability.hits + ability.crits;
@@ -287,4 +197,75 @@ export function aggregateByAbility(
   }
 
   return abilities;
+}
+
+function getDurationMs(session: Session): number {
+  if (typeof session.durationMs === "number") return session.durationMs;
+  if (typeof session.endedAtUtcMs === "number")
+    return session.endedAtUtcMs - session.startedAtUtcMs;
+  return 0;
+}
+
+function sumDamage(events: DamageEvent[]): number {
+  return events.reduce((sum, event) => sum + event.data.amount, 0);
+}
+
+function sumHealing(events: HealEvent[]): number {
+  return events.reduce((sum, event) => sum + event.data.amount, 0);
+}
+
+function ensureEventActor(actorMap: Map<string, ActorStats>, actor?: ActorRecord): void {
+  if (!actor || actorMap.has(actor.id)) return;
+
+  actorMap.set(actor.id, {
+    actorId: actor.id,
+    actorName: actor.name,
+    actorType: actor.kind,
+    actorClass: actor.class,
+    totalDamage: 0,
+    totalHealing: 0,
+    dps: 0,
+    hps: 0,
+    percentOfTotalDamage: 0,
+    percentOfTotalHealing: 0,
+    damageTaken: 0,
+    healingReceived: 0,
+    dtps: 0,
+    hrps: 0,
+    percentOfTotalDamageTaken: 0,
+    percentOfTotalHealingReceived: 0,
+    totalMitigated: 0,
+    mitigationRate: 0,
+    totalMissedAgainst: 0,
+    avoidanceRate: 0,
+    abilityBreakdown: [],
+    abilitiesReceivedFrom: [],
+  });
+}
+
+function ensureAbility(
+  abilityMap: Map<string, AbilityStats>,
+  registries: Registries,
+  abilityId?: string
+): AbilityStats {
+  const key = abilityId ?? "unknown";
+  const existing = abilityMap.get(key);
+  if (existing) return existing;
+
+  const record = abilityId ? registries.abilities[abilityId] : undefined;
+  const ability: AbilityStats = {
+    abilityName: record?.name ?? "Unknown",
+    abilityType: record?.kind ?? "unknown",
+    damage: 0,
+    healing: 0,
+    hits: 0,
+    crits: 0,
+    misses: 0,
+    avgDamage: 0,
+    avgHealing: 0,
+    critRate: 0,
+    missRate: 0,
+  };
+  abilityMap.set(key, ability);
+  return ability;
 }

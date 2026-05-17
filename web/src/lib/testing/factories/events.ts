@@ -1,111 +1,101 @@
-import type { AbilityRef, EffectRef, CombatEvent } from "$lib/types";
-import { createPlayer, createNpc } from "./actors";
+import type {
+  AbilityRecord,
+  CombatEventRecord,
+  DamageEvent,
+  EffectEvent,
+  EffectRecord,
+  HealEvent,
+} from "$lib/types";
 
-/**
- * Creates an AbilityRef with default values.
- */
-export function createAbilityRef(overrides: Partial<AbilityRef> = {}): AbilityRef {
+export function createAbilityRecord(overrides: Partial<AbilityRecord> = {}): AbilityRecord {
   return {
+    id: "ability-1",
     name: "Ability",
-    type: "skill",
+    kind: "skill",
     ...overrides,
   };
 }
 
-/**
- * Creates an EffectRef with default values.
- */
-export function createEffectRef(overrides: Partial<EffectRef> = {}): EffectRef {
+export function createEffectRecord(overrides: Partial<EffectRecord> = {}): EffectRecord {
   return {
+    id: "effect-1",
     name: "Effect",
-    duration: 10000,
-    stacks: 1,
+    kind: "buff",
+    defaultDurationMs: 10000,
+    maxStacks: 1,
     ...overrides,
   };
 }
 
-/**
- * Creates a generic CombatEvent with unique ID and deterministic timestamp.
- * For specific event types, use createDamageEvent or createHealEvent.
- */
-export function createCombatEvent(overrides: Partial<CombatEvent> = {}): CombatEvent {
+export function createDamageEvent(overrides: Partial<DamageEvent> = {}): DamageEvent {
   return {
-    id: crypto.randomUUID(),
-    timestamp: 0,
-    eventType: "damagePhysical",
-    ability: createAbilityRef({ name: "Unknown", type: "unknown" }),
+    eventSeq: 1,
+    offsetMs: 0,
+    kind: "damage",
+    action: "hit",
+    sourceActorId: "player-1",
+    targetActorId: "npc-1",
+    abilityId: "ability-1",
+    data: {
+      amount: 1000,
+      damageType: "physical",
+      outcome: { result: "landed" },
+    },
     ...overrides,
   };
 }
 
-/**
- * Creates a damage event with typical damage attributes.
- */
-export function createDamageEvent(overrides: Partial<CombatEvent> = {}): CombatEvent {
+export function createHealEvent(overrides: Partial<HealEvent> = {}): HealEvent {
   return {
-    id: crypto.randomUUID(),
-    timestamp: 0,
-    eventType: "damagePhysical",
-    source: createPlayer(),
-    target: createNpc(),
-    ability: createAbilityRef({ name: "Backstab", type: "skill" }),
-    amount: 1000,
-    damageType: "physical",
+    eventSeq: 1,
+    offsetMs: 0,
+    kind: "heal",
+    action: "direct",
+    sourceActorId: "player-1",
+    targetActorId: "sim-1",
+    abilityId: "heal-1",
+    data: {
+      amount: 500,
+    },
     ...overrides,
   };
 }
 
-/**
- * Creates a heal event with typical healing attributes.
- */
-export function createHealEvent(overrides: Partial<CombatEvent> = {}): CombatEvent {
-  return {
-    id: crypto.randomUUID(),
-    timestamp: 0,
-    eventType: "healSpell",
-    source: createPlayer(),
-    target: createPlayer(),
-    amount: 500,
-    ability: createAbilityRef({ name: "Major Healing", type: "spell" }),
-    ...overrides,
-  };
+export function createCombatEvent(overrides: Partial<CombatEventRecord> = {}): CombatEventRecord {
+  return createDamageEvent(overrides as Partial<DamageEvent>);
 }
 
-/**
- * Creates a critical damage event.
- */
-export function createCriticalDamageEvent(overrides: Partial<CombatEvent> = {}): CombatEvent {
+export function createCriticalDamageEvent(overrides: Partial<DamageEvent> = {}): DamageEvent {
   return createDamageEvent({
-    amount: 2000,
-    flags: { critical: true },
+    data: {
+      amount: 2000,
+      damageType: "physical",
+      outcome: { result: "landed", critical: true },
+    },
     ...overrides,
   });
 }
 
-/**
- * Creates a buff application event.
- */
-export function createBuffEvent(overrides: Partial<CombatEvent> = {}): CombatEvent {
+export function createBuffEvent(overrides: Partial<EffectEvent> = {}): EffectEvent {
   return {
-    id: crypto.randomUUID(),
-    timestamp: 0,
-    eventType: "buffApply",
-    source: createPlayer(),
-    target: createPlayer(),
-    ability: createAbilityRef({ name: "Blessed Quiver", type: "spell" }),
-    effect: createEffectRef({ name: "Blessed Quiver", duration: 30000 }),
+    eventSeq: 1,
+    offsetMs: 0,
+    kind: "effect",
+    action: "apply",
+    sourceActorId: "player-1",
+    targetActorId: "player-1",
+    abilityId: "ability-1",
+    effectId: "effect-1",
+    data: {
+      stacks: 1,
+      durationMs: 30000,
+    },
     ...overrides,
   };
 }
 
-/**
- * Creates multiple combat events with sequential timestamps.
- * Useful for testing time-based logic like DPS calculations.
- *
- * @param count Number of events to create
- * @param intervalMs Time interval between events in milliseconds
- * @returns Array of combat events with sequential timestamps
- */
-export function createTimedEvents(count: number, intervalMs: number): CombatEvent[] {
-  return Array.from({ length: count }, (_, i) => createCombatEvent({ timestamp: i * intervalMs }));
+export function createTimedEvents(count: number, intervalMs: number): CombatEventRecord[] {
+  return Array.from({ length: count }, (_, index) =>
+    createCombatEvent({ eventSeq: index + 1, offsetMs: index * intervalMs })
+  );
 }
