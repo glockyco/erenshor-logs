@@ -7,6 +7,7 @@ import sessionEnded from "../../../../shared/protocol/fixtures/live/session-ende
 import errorFrame from "../../../../shared/protocol/fixtures/live/error.json";
 import singleSessionExport from "../../../../shared/protocol/fixtures/export/single-session.json";
 import multiSessionExport from "../../../../shared/protocol/fixtures/export/multi-session.json";
+import demoExport from "../../../static/demo/sessions.json";
 import { CombatLogFileSchema, LiveEnvelopeSchema } from "$lib/types/schemas";
 
 const liveFixtures = [hello, sessionSnapshot, registryDelta, events, sessionEnded, errorFrame];
@@ -29,6 +30,13 @@ describe("protocol v2 fixtures", () => {
     const file = CombatLogFileSchema.parse(multiSessionExport);
 
     expect(file.sessions).toHaveLength(2);
+  });
+
+  it("validates demo export", () => {
+    const file = CombatLogFileSchema.parse(demoExport);
+
+    expect(file.sessions).toHaveLength(4);
+    expect(file.sessions.reduce((sum, session) => sum + session.events.length, 0)).toBe(1483);
   });
 
   it("rejects event batches with gaps", () => {
