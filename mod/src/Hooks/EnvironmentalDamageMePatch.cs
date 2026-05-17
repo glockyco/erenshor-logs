@@ -108,11 +108,8 @@ public static class EnvironmentalDamageMePatch
     if (evt != null)
     {
       LogDebug?.Invoke($"Environmental damage: {evt.Target?.Name ?? "Unknown"} took {__result}");
-      Emitter.Emit(evt);
-
-      // Notify session manager of combat event
-      // Note: Environmental damage will not start sessions (filtered by config)
-      SessionManager?.OnCombatEvent(evt.EventType, evt.Timestamp);
+      // Environmental damage will not start sessions (filtered by config).
+      CombatEventDispatcher.Dispatch(evt, Emitter, SessionManager);
     }
   }
 }

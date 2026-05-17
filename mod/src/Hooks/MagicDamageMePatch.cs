@@ -145,10 +145,7 @@ public static class MagicDamageMePatch
           + $"for {amount} ({damageType})"
           + (flags.Resisted == true ? " [RESISTED]" : "")
       );
-      Emitter.Emit(evt);
-
-      // Notify session manager of combat event
-      SessionManager?.OnCombatEvent(evt.EventType, evt.Timestamp);
+      CombatEventDispatcher.Dispatch(evt, Emitter, SessionManager);
     }
   }
 }

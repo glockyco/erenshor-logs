@@ -156,7 +156,7 @@ public sealed class Plugin : BaseUnityPlugin
     var config = services.GetRequiredService<ModConfig>();
     var eventEmitter = services.GetRequiredService<IEventEmitter>();
     var sessionManager = services.GetRequiredService<ISessionManager>();
-
+    var actorRegistry = services.GetRequiredService<IActorRegistry>();
     // Store references for Update() method
     _config = config;
     _sessionManager = sessionManager;
@@ -175,7 +175,8 @@ public sealed class Plugin : BaseUnityPlugin
       log: msg => Logger.LogDebug(msg)
     );
 
-    // Clear relevance cache when combat sessions end
+    // Clear session-scoped caches when combat sessions turn over.
+    SessionScopedRegistryReset.Wire(sessionManager, actorRegistry.Clear);
     sessionManager.SessionEnded += _ => _relevanceChecker?.ClearCache();
 
     // Send handshake when clients connect

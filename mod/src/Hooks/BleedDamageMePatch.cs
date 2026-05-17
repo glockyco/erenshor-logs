@@ -172,10 +172,7 @@ public static class BleedDamageMePatch
         $"DoT damage: {evt.Source?.Name ?? "Unknown"} -> {evt.Target?.Name ?? "Unknown"} "
           + $"for {__result}"
       );
-      Emitter.Emit(evt);
-
-      // Notify session manager of combat event
-      SessionManager?.OnCombatEvent(evt.EventType, evt.Timestamp);
+      CombatEventDispatcher.Dispatch(evt, Emitter, SessionManager);
     }
   }
 }

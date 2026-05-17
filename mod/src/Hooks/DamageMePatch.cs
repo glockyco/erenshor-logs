@@ -187,10 +187,7 @@ public static class DamageMePatch
           + (flags.Missed == true ? " [MISS]" : "")
           + (flags.Absorbed == true ? " [ABSORBED]" : "")
       );
-      Emitter.Emit(evt);
-
-      // Notify session manager of combat event
-      SessionManager?.OnCombatEvent(evt.EventType, evt.Timestamp);
+      CombatEventDispatcher.Dispatch(evt, Emitter, SessionManager);
     }
   }
 }
