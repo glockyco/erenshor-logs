@@ -25,6 +25,13 @@
     <PackageReference Include="BepInEx.Core" Version="5.*" />
     <PackageReference Include="HarmonyX" Version="2.*" />
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>../../lib/UnityEngine.CoreModule.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
 
   <ItemGroup>
     <ProjectReference Include="../../ErenshorLogs.csproj" />

@@ -1,4 +1,5 @@
 using System.Reflection;
+using ErenshorLogs.Config;
 using ErenshorLogs.Hooks;
 using Xunit;
 
@@ -41,6 +42,17 @@ public class PatchCoverageTests
       [typeof(int)],
       method.GetParameters().Select(parameter => parameter.ParameterType)
     );
+  }
+
+  [Fact]
+  public void BepInExManagerHidingHasStartupEntryPoint()
+  {
+    var method = typeof(BepInExManagerHiding).GetMethod(
+      nameof(BepInExManagerHiding.Enforce),
+      BindingFlags.Public | BindingFlags.Static
+    );
+
+    Assert.NotNull(method);
   }
 
   [Fact]

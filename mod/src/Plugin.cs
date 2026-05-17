@@ -32,6 +32,7 @@ public sealed class Plugin : BaseUnityPlugin
   private void Awake()
   {
     Log = Logger;
+    BepInExManagerHiding.Enforce(Logger);
 
     _services = ConfigureServices();
     _harmony = new Harmony(PluginInfo.GUID);
