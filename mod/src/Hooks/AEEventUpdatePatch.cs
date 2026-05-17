@@ -17,12 +17,13 @@ public static class AEEventUpdatePatch
   /// Uses DamageReason field for ability name, falling back to "Area Effect" if not set.
   /// </summary>
   /// <param name="__instance">The AEEvent instance processing damage.</param>
+  /// <param name="__state">Whether this prefix pushed context.</param>
   [HarmonyPrefix]
-  public static void Prefix(AEEvent __instance)
+  public static void Prefix(AEEvent __instance, out bool __state)
   {
+    __state = false;
     if (__instance == null)
       return;
-
     var context = new AbilityContext
     {
       Name = __instance.DamageReason ?? "Area Effect",
@@ -31,6 +32,7 @@ public static class AEEventUpdatePatch
     };
 
     CombatContext.PushAbility(context);
+    __state = true;
   }
 
   /// <summary>
@@ -38,8 +40,9 @@ public static class AEEventUpdatePatch
   /// Uses Finalizer instead of Postfix to ensure cleanup even if Update throws.
   /// </summary>
   [HarmonyFinalizer]
-  public static void Finalizer()
+  public static void Finalizer(bool __state)
   {
-    CombatContext.PopAbility();
+    if (__state)
+      CombatContext.PopAbility();
   }
 }

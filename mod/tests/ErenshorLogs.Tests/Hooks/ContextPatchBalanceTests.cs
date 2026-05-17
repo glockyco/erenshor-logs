@@ -52,6 +52,27 @@ public sealed class ContextPatchBalanceTests : IDisposable
     Assert.Equal("Outer", CombatContext.CurrentAbility()?.Name);
   }
 
+  [Theory]
+  [MemberData(nameof(AreaEffectFinalizers))]
+  public void AreaEffectFinalizer_DoesNotPopOuterContextWhenPrefixDidNotPush(Action<bool> finalizer)
+  {
+    PushOuterContext();
+
+    finalizer(false);
+
+    Assert.Equal("Outer", CombatContext.CurrentAbility()?.Name);
+  }
+
+  public static TheoryData<Action<bool>> AreaEffectFinalizers =>
+    new()
+    {
+      AEEventUpdatePatch.Finalizer,
+      AEEvent2UpdatePatch.Finalizer,
+      AstraBreathScriptUpdatePatch.Finalizer,
+      NPCFightEventBreathAttackPatch.Finalizer,
+      SableheartEventUpdatePatch.Finalizer,
+    };
+
   public void Dispose()
   {
     CombatContext.Clear();

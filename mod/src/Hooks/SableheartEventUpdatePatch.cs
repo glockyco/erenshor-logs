@@ -17,12 +17,13 @@ public static class SableheartEventUpdatePatch
   /// Uses hardcoded "Sableheart's Curse" name to match the in-game combat log.
   /// </summary>
   /// <param name="__instance">The SableheartEvent instance processing damage.</param>
+  /// <param name="__state">Whether this prefix pushed context.</param>
   [HarmonyPrefix]
-  public static void Prefix(SableheartEvent __instance)
+  public static void Prefix(SableheartEvent __instance, out bool __state)
   {
+    __state = false;
     if (__instance == null)
       return;
-
     var context = new AbilityContext
     {
       Name = "Sableheart's Curse",
@@ -31,6 +32,7 @@ public static class SableheartEventUpdatePatch
     };
 
     CombatContext.PushAbility(context);
+    __state = true;
   }
 
   /// <summary>
@@ -38,8 +40,9 @@ public static class SableheartEventUpdatePatch
   /// Uses Finalizer instead of Postfix to ensure cleanup even if Update throws.
   /// </summary>
   [HarmonyFinalizer]
-  public static void Finalizer()
+  public static void Finalizer(bool __state)
   {
-    CombatContext.PopAbility();
+    if (__state)
+      CombatContext.PopAbility();
   }
 }
