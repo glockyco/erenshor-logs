@@ -43,6 +43,26 @@ describe("protocol v2 session state", () => {
     expect(session.lastEventSeq).toBe(6);
   });
 
+  it("accepts replayed catch-up events after a non-empty snapshot", () => {
+    const snapshot = clone(snapshotFrame) as LiveEnvelope;
+    snapshot.payload = {
+      ...(snapshot.payload as Record<string, unknown>),
+      lastEventSeq: 6,
+      eventCount: 6,
+    };
+
+    applyLiveEnvelope(snapshot);
+    applyLiveEnvelope(eventsFrame as LiveEnvelope);
+
+    const session = sessions.get("session-1")!;
+    expect(session.events).toHaveLength(6);
+    expect(session.lastEventSeq).toBe(6);
+    expect(session.eventCount).toBe(6);
+    expect(protocolErrors.value).not.toContainEqual(
+      expect.objectContaining({ code: "event_sequence_gap", sessionId: "session-1" })
+    );
+  });
+
   it("marks sequence gaps as visible protocol errors", () => {
     applyLiveEnvelope(snapshotFrame as LiveEnvelope);
     const payload = (eventsFrame as LiveEnvelope).payload as Record<string, unknown>;
