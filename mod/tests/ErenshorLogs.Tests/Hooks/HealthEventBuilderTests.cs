@@ -303,6 +303,25 @@ public sealed class HealthEventBuilderTests
     Assert.Null(evt.OverhealAmount);
   }
 
+  [Fact]
+  public void HealMePatch_WhenNoHealOrAbilityContext_ReportsUnknownAttribution()
+  {
+    Assert.Equal(AttributionMethod.Unknown, HealMePatch.ResolveAttribution(null, null));
+  }
+
+  [Fact]
+  public void HealMePatch_WhenAbilityContextExists_ReportsContextAttribution()
+  {
+    var ability = new AbilityRef
+    {
+      Name = "Healing",
+      Type = AbilityType.Spell,
+      StableKey = null,
+    };
+
+    Assert.Equal(AttributionMethod.Context, HealMePatch.ResolveAttribution(null, ability));
+  }
+
   private static CombatEventBuilder<object> CreateBuilder(Dictionary<object, ActorRef> actors) =>
     new(actor => actor == null ? null : actors[actor], () => "evt-1", () => 1_800_000_000_000);
 }

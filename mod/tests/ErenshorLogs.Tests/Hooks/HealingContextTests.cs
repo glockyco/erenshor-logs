@@ -6,7 +6,11 @@ namespace ErenshorLogs.Tests.Hooks;
 
 public sealed class HealingContextTests : IDisposable
 {
-  public void Dispose() => HealingContext.Clear();
+  public void Dispose()
+  {
+    HealingContext.Clear();
+    TickEffectsSlotTracker.ClearPendingHealingContext();
+  }
 
   [Fact]
   public void Current_WhenNoContext_ReturnsNull()
@@ -62,5 +66,27 @@ public sealed class HealingContextTests : IDisposable
 
       Assert.Same(outer, HealingContext.Current()!.Ability);
     }
+  }
+
+  [Fact]
+  public void TickEffectsPendingContext_IsConsumedOnce()
+  {
+    var ability = new AbilityRef
+    {
+      Name = "Reap and Renew",
+      Type = AbilityType.Hot,
+      StableKey = "spell:reap-and-renew",
+    };
+    var frame = new HealingContextFrame(
+      Source: null,
+      ability,
+      EventType.HealSpell,
+      AttributionMethod.EffectTracker
+    );
+
+    TickEffectsSlotTracker.SetPendingHealingContext(frame);
+
+    Assert.Equal(frame, TickEffectsSlotTracker.ConsumePendingHealingContext());
+    Assert.Null(TickEffectsSlotTracker.ConsumePendingHealingContext());
   }
 }

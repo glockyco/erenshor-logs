@@ -38,6 +38,9 @@ public static class HealMePatch
     if (!__state.IsValid)
       return;
 
+    var healingContext =
+      HealingContext.Current() ?? TickEffectsSlotTracker.ConsumePendingHealingContext();
+
     var target = __instance.Myself;
     if (!target.IsValid())
       return;
@@ -47,10 +50,10 @@ public static class HealMePatch
     if (effective <= 0)
       return;
 
-    var healingContext = HealingContext.Current() ?? ResolveReapAndRenewContext(target);
+    var contextAbility = AbilityResolver.FromContext();
     var ability =
       healingContext?.Ability
-      ?? AbilityResolver.FromContext()
+      ?? contextAbility
       ?? new AbilityRef
       {
         Name = "Healing",
@@ -73,36 +76,19 @@ public static class HealMePatch
       overheal,
       mechanic: null,
       flags: null,
-      attribution: healingContext?.Attribution ?? AttributionMethod.Context
+      attribution: ResolveAttribution(healingContext, contextAbility)
     );
   }
 
-  private static HealingContextFrame? ResolveReapAndRenewContext(Character target)
+  internal static AttributionMethod ResolveAttribution(
+    HealingContextFrame? healingContext,
+    AbilityRef? contextAbility
+  )
   {
-    var slot = TickEffectsSlotTracker.GetCurrentReapAndRenewSlot(target);
-    if (!slot.HasValue)
-      return null;
+    if (healingContext != null)
+      return healingContext.Attribution;
 
-    var tracked = DamageMePatch.EffectTracker?.GetTrackedEffect(target, slot.Value);
-    var status = target.MyStats?.StatusEffects?[slot.Value];
-    var spell = tracked?.Spell ?? status?.Effect;
-    if (spell == null)
-      return null;
-
-    var source = tracked?.Credit ?? tracked?.Source ?? status?.CreditDPS ?? status?.Owner;
-    var ability = new AbilityRef
-    {
-      Name = spell.SpellName,
-      Type = AbilityType.Hot,
-      StableKey = $"spell:{spell.Id}",
-    };
-
-    return new HealingContextFrame(
-      source,
-      ability,
-      EventType.HealSpell,
-      tracked != null ? AttributionMethod.EffectTracker : AttributionMethod.Context
-    );
+    return contextAbility != null ? AttributionMethod.Context : AttributionMethod.Unknown;
   }
 
   private static EventType GetHealEventType(AbilityRef ability)

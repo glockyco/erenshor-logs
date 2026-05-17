@@ -153,6 +153,8 @@ public static class DamageMePatch
       );
       if (slot.HasValue)
         TickEffectsSlotTracker.RecordHealthDelta(slot.Value, -amount);
+      if (slot.HasValue)
+        SetPendingReapAndRenewContext(__instance, slot.Value);
 
       if (slot.HasValue && EffectTracker != null)
       {
@@ -226,5 +228,31 @@ public static class DamageMePatch
   public static void Finalizer(IDisposable? __state)
   {
     __state?.Dispose();
+  }
+
+  private static void SetPendingReapAndRenewContext(Character target, int slot)
+  {
+    var tracked = EffectTracker?.GetTrackedEffect(target, slot);
+    var status = target.MyStats?.StatusEffects?[slot];
+    var spell = tracked?.Spell ?? status?.Effect;
+    if (spell?.ReapAndRenew != true)
+      return;
+
+    var source = tracked?.Credit ?? tracked?.Source ?? status?.CreditDPS ?? status?.Owner;
+    var ability = new AbilityRef
+    {
+      Name = spell.SpellName,
+      Type = AbilityType.Hot,
+      StableKey = $"spell:{spell.Id}",
+    };
+
+    TickEffectsSlotTracker.SetPendingHealingContext(
+      new HealingContextFrame(
+        source,
+        ability,
+        EventType.HealSpell,
+        tracked != null ? AttributionMethod.EffectTracker : AttributionMethod.Context
+      )
+    );
   }
 }

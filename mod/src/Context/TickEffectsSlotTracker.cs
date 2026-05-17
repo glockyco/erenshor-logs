@@ -38,6 +38,9 @@ public static class TickEffectsSlotTracker
   [ThreadStatic]
   private static List<TickHealthDelta>? _healthDeltas;
 
+  [ThreadStatic]
+  private static HealingContextFrame? _pendingHealingContext;
+
   /// <summary>
   /// Called by TickEffectsPatch.Prefix when TickEffects starts.
   /// Initializes tracking state for this character's tick processing.
@@ -48,6 +51,7 @@ public static class TickEffectsSlotTracker
     _lastProcessedSlot = -1;
     _isInTickEffects = true;
     _healthDeltas = null;
+    _pendingHealingContext = null;
   }
 
   /// <summary>
@@ -114,17 +118,21 @@ public static class TickEffectsSlotTracker
     return null;
   }
 
-  public static int? GetCurrentReapAndRenewSlot(Character target)
+  public static void SetPendingHealingContext(HealingContextFrame frame)
   {
-    if (!_isInTickEffects || _currentCharacter != target || _lastProcessedSlot < 0)
-      return null;
+    _pendingHealingContext = frame;
+  }
 
-    var statusEffect = target.MyStats.StatusEffects[_lastProcessedSlot];
-    var spell = statusEffect?.Effect;
-    if (spell?.ReapAndRenew == true && statusEffect!.Duration > 0f)
-      return _lastProcessedSlot;
+  public static HealingContextFrame? ConsumePendingHealingContext()
+  {
+    var frame = _pendingHealingContext;
+    _pendingHealingContext = null;
+    return frame;
+  }
 
-    return null;
+  public static void ClearPendingHealingContext()
+  {
+    _pendingHealingContext = null;
   }
 
   public static void RecordHealthDelta(int slot, int amount)
@@ -151,6 +159,7 @@ public static class TickEffectsSlotTracker
     _lastProcessedSlot = -1;
     _isInTickEffects = false;
     _healthDeltas = null;
+    _pendingHealingContext = null;
   }
 
   /// <summary>
