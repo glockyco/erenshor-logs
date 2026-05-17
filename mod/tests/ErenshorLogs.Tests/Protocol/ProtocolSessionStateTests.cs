@@ -54,6 +54,32 @@ public sealed class ProtocolSessionStateTests
   }
 
   [Fact]
+  public void CreateSnapshot_PreservesSessionEndReason()
+  {
+    var manager = new SessionManager(
+      new FakeEventEmitter(),
+      new FakeGameVersionProvider(),
+      new FakeTimeProvider(),
+      "2026.5.17.14",
+      autoDetectionEnabled: true,
+      inactivityTimeoutSeconds: 5,
+      sessionStartEvents: "DamagePhysical",
+      sessionKeepAliveEvents: "DamagePhysical"
+    );
+    CombatSession? session = null;
+    manager.SessionEnded += (endedSession, _) => session = endedSession;
+
+    manager.StartManualSession();
+    manager.EndManualSession();
+    var state = new ProtocolSessionState(session!);
+
+    var snapshot = state.CreateSnapshot();
+
+    Assert.Equal("ended", snapshot.State);
+    Assert.Equal(SessionEndReasons.Manual, snapshot.EndReason);
+  }
+
+  [Fact]
   public void Append_AreaEffectAbilityMapsToAreaEffectKind()
   {
     var session = new CombatSession("playtest-23258843", "2026.5.17.14");
@@ -92,6 +118,31 @@ public sealed class ProtocolSessionStateTests
     Assert.Null(protocolEvent);
     Assert.Equal(0, state.LastEventSeq);
     Assert.Empty(state.Events);
+  }
+
+  private sealed class FakeEventEmitter : IEventEmitter
+  {
+    public int ListenerCount => 0;
+    public long EventCount => 0;
+
+    public void Emit(CombatEvent evt) { }
+
+    public IDisposable Subscribe(Action<CombatEvent> handler) => new NoopDisposable();
+  }
+
+  private sealed class FakeGameVersionProvider : IGameVersionProvider
+  {
+    public string GetGameVersion() => "playtest-23258843";
+  }
+
+  private sealed class FakeTimeProvider : ITimeProvider
+  {
+    public float CurrentTime => 0;
+  }
+
+  private sealed class NoopDisposable : IDisposable
+  {
+    public void Dispose() { }
   }
 
   private static CombatEvent CreateDamageEvent(long timestamp) =>

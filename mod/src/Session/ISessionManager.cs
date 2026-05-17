@@ -49,5 +49,5 @@ public interface ISessionManager
   /// <summary>
   /// Raised when a combat session ends (timeout or manual).
   /// </summary>
-  event Action<CombatSession>? SessionEnded;
+  event Action<CombatSession, string>? SessionEnded;
 }

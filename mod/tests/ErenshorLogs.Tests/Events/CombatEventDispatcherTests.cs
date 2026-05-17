@@ -49,7 +49,7 @@ public sealed class CombatEventDispatcherTests
     public long? Timestamp { get; private set; }
     public CombatSession? CurrentSession => null;
     public event Action<CombatSession>? SessionStarted;
-    public event Action<CombatSession>? SessionEnded;
+    public event Action<CombatSession, string>? SessionEnded;
 
     public void OnCombatEvent(EventType eventType, long eventTimestamp)
     {
@@ -64,7 +64,7 @@ public sealed class CombatEventDispatcherTests
 
     public void EndManualSession()
     {
-      SessionEnded?.Invoke(new CombatSession("test", "test"));
+      SessionEnded?.Invoke(new CombatSession("test", "test"), SessionEndReasons.Manual);
     }
   }
 

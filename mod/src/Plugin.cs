@@ -177,7 +177,7 @@ public sealed class Plugin : BaseUnityPlugin
 
     // Clear session-scoped caches when combat sessions turn over.
     SessionScopedRegistryReset.Wire(sessionManager, actorRegistry.Clear);
-    sessionManager.SessionEnded += _ => _relevanceChecker?.ClearCache();
+    sessionManager.SessionEnded += (_, _) => _relevanceChecker?.ClearCache();
 
     // Send handshake when clients connect
     _server.ClientConnected += client =>

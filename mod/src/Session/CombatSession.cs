@@ -23,6 +23,11 @@ public sealed class CombatSession
   public long? EndTime { get; private set; }
 
   /// <summary>
+  /// Protocol reason for session termination, or null while active.
+  /// </summary>
+  public string? EndReason { get; private set; }
+
+  /// <summary>
   /// Game version at session start.
   /// </summary>
   public string GameVersion { get; }
@@ -66,11 +71,13 @@ public sealed class CombatSession
   /// <summary>
   /// Marks the session as ended at the current time.
   /// </summary>
-  internal void End()
+  /// <param name="reason">Protocol reason for ending the session.</param>
+  internal void End(string reason)
   {
     if (EndTime == null)
     {
       EndTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+      EndReason = reason;
     }
   }
 
@@ -79,11 +86,13 @@ public sealed class CombatSession
   /// Used for backdating session end to last event time.
   /// </summary>
   /// <param name="endTime">Unix timestamp (ms) when session ended.</param>
-  internal void EndAt(long endTime)
+  /// <param name="reason">Protocol reason for ending the session.</param>
+  internal void EndAt(long endTime, string reason)
   {
     if (EndTime == null)
     {
       EndTime = endTime;
+      EndReason = reason;
     }
   }
 

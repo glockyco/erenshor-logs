@@ -207,7 +207,7 @@ public class SessionManagerTests
     var timeProvider = new FakeTimeProvider { CurrentTime = 0.0f };
     var manager = CreateManager(emitter, versionProvider, timeProvider, inactivityTimeout: 5.0f);
     CombatSession? endedSession = null;
-    manager.SessionEnded += s => endedSession = s;
+    manager.SessionEnded += (session, _) => endedSession = session;
 
     manager.OnCombatEvent(EventType.DamagePhysical, 1000);
     var startedSession = manager.CurrentSession;
@@ -216,6 +216,7 @@ public class SessionManagerTests
 
     Assert.NotNull(endedSession);
     Assert.Same(startedSession, endedSession);
+    Assert.Equal(SessionEndReasons.Inactivity, endedSession.EndReason);
   }
 
   [Fact]
@@ -267,15 +268,18 @@ public class SessionManagerTests
     var versionProvider = new FakeGameVersionProvider();
     var timeProvider = new FakeTimeProvider();
     var manager = CreateManager(emitter, versionProvider, timeProvider);
+    CombatSession? endedSession = null;
+    manager.SessionEnded += (session, _) => endedSession = session;
 
     manager.StartManualSession();
     var firstSession = manager.CurrentSession;
     emitter.EmittedEvents.Clear();
 
     manager.StartManualSession();
-
     // Should have ended first session and started second
     Assert.NotSame(firstSession, manager.CurrentSession);
+    Assert.Same(firstSession, endedSession);
+    Assert.Equal(SessionEndReasons.NewSession, endedSession!.EndReason);
     Assert.Equal(2, emitter.EmittedEvents.Count);
     Assert.Equal(EventType.CombatEnd, emitter.EmittedEvents[0].EventType);
     Assert.Equal(EventType.CombatStart, emitter.EmittedEvents[1].EventType);
@@ -288,13 +292,18 @@ public class SessionManagerTests
     var versionProvider = new FakeGameVersionProvider();
     var timeProvider = new FakeTimeProvider();
     var manager = CreateManager(emitter, versionProvider, timeProvider);
+    CombatSession? endedSession = null;
+    manager.SessionEnded += (session, _) => endedSession = session;
 
     manager.StartManualSession();
+    var activeSession = manager.CurrentSession;
     emitter.EmittedEvents.Clear();
 
     manager.EndManualSession();
 
     Assert.Null(manager.CurrentSession);
+    Assert.Same(activeSession, endedSession);
+    Assert.Equal(SessionEndReasons.Manual, endedSession!.EndReason);
     Assert.Single(emitter.EmittedEvents);
     Assert.Equal(EventType.CombatEnd, emitter.EmittedEvents[0].EventType);
   }

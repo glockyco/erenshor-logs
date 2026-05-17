@@ -172,7 +172,7 @@ public sealed class CombatEventBroadcaster : ICombatEventBroadcaster
     }
   }
 
-  private void OnSessionEnded(CombatSession session)
+  private void OnSessionEnded(CombatSession session, string reason)
   {
     BroadcastQueuedEvents();
 
@@ -192,7 +192,7 @@ public sealed class CombatEventBroadcaster : ICombatEventBroadcaster
           SessionId = session.Id,
           EndedAtUtcMs = session.EndTime ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
           EndedAtEventSeq = GetOrCreateState(session).LastEventSeq,
-          Reason = "inactivity",
+          Reason = reason,
           DurationMs = durationMs,
           Diagnostics = CreateEmptyDiagnostics(),
         }

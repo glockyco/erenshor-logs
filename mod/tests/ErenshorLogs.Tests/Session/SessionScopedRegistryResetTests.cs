@@ -22,7 +22,7 @@ public sealed class SessionScopedRegistryResetTests
   {
     public CombatSession? CurrentSession { get; private set; }
     public event Action<CombatSession>? SessionStarted;
-    public event Action<CombatSession>? SessionEnded;
+    public event Action<CombatSession, string>? SessionEnded;
 
     public void OnCombatEvent(EventType eventType, long eventTimestamp) { }
 
@@ -30,7 +30,8 @@ public sealed class SessionScopedRegistryResetTests
 
     public void StartManualSession() { }
 
-    public void EndManualSession() => SessionEnded?.Invoke(new CombatSession("test", "test"));
+    public void EndManualSession() =>
+      SessionEnded?.Invoke(new CombatSession("test", "test"), SessionEndReasons.Manual);
 
     public void Start(CombatSession session)
     {

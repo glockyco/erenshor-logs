@@ -66,7 +66,7 @@ public sealed class ProtocolSessionState
       Mode = _session.IsManual ? "manual" : "automatic",
       StartedAtUtcMs = _session.StartTime,
       EndedAtUtcMs = _session.EndTime,
-      EndReason = _session.IsActive ? null : "inactivity",
+      EndReason = _session.EndReason,
       DurationMs = _session.IsActive ? null : _session.Duration,
       Producer = new ProducerInfo
       {

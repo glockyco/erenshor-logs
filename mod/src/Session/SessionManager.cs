@@ -36,7 +36,7 @@ public sealed class SessionManager : ISessionManager
   public event Action<CombatSession>? SessionStarted;
 
   /// <inheritdoc />
-  public event Action<CombatSession>? SessionEnded;
+  public event Action<CombatSession, string>? SessionEnded;
 
   /// <summary>
   /// Creates a new SessionManager.
@@ -114,7 +114,7 @@ public sealed class SessionManager : ISessionManager
       );
 
       // Backdate end time to last event
-      EndSession(_lastEventTimestamp);
+      EndSession(_lastEventTimestamp, SessionEndReasons.Inactivity);
     }
   }
 
@@ -129,7 +129,7 @@ public sealed class SessionManager : ISessionManager
         LogLevel.Info,
         $"Ending existing {sessionType} session {_currentSession.Id} for manual start"
       );
-      EndSession(null); // End at current time
+      EndSession(null, SessionEndReasons.NewSession); // End at current time
     }
 
     _log?.Invoke(LogLevel.Info, "Starting manual session via hotkey");
@@ -152,7 +152,7 @@ public sealed class SessionManager : ISessionManager
       $"Manually ending {sessionType} session {_currentSession.Id} via hotkey"
     );
 
-    EndSession(null); // End at current time
+    EndSession(null, SessionEndReasons.Manual); // End at current time
   }
 
   private void StartSession(bool isManual)
@@ -169,18 +169,18 @@ public sealed class SessionManager : ISessionManager
     EmitCombatEvent(EventType.CombatStart);
   }
 
-  private void EndSession(long? backdatedEndTime)
+  private void EndSession(long? backdatedEndTime, string reason)
   {
     if (_currentSession == null)
       return;
 
     if (backdatedEndTime.HasValue)
     {
-      _currentSession.EndAt(backdatedEndTime.Value);
+      _currentSession.EndAt(backdatedEndTime.Value, reason);
     }
     else
     {
-      _currentSession.End(); // Use current time
+      _currentSession.End(reason); // Use current time
     }
 
     _log?.Invoke(
@@ -189,7 +189,7 @@ public sealed class SessionManager : ISessionManager
     );
 
     EmitCombatEvent(EventType.CombatEnd);
-    SessionEnded?.Invoke(_currentSession);
+    SessionEnded?.Invoke(_currentSession, reason);
 
     // Clear all state
     _currentSession = null;
