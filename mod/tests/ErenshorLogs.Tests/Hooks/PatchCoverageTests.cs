@@ -12,4 +12,15 @@ public class PatchCoverageTests
 
     Assert.NotNull(patchType);
   }
+
+  [Theory]
+  [InlineData("ErenshorLogs.Hooks.AddStatusEffectPatch")]
+  [InlineData("ErenshorLogs.Hooks.AddStatusEffectThreeArgPatch")]
+  [InlineData("ErenshorLogs.Hooks.AddStatusEffectFiveArgPatch")]
+  public void HooksIncludeStatusEffectOverloads(string typeName)
+  {
+    var patchType = Type.GetType($"{typeName}, ErenshorLogs");
+
+    Assert.NotNull(patchType);
+  }
 }

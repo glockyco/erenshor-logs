@@ -3,14 +3,42 @@ using HarmonyLib;
 
 namespace ErenshorLogs.Hooks;
 
+internal static class AddStatusEffectRegistration
+{
+  internal static EffectTracker? Tracker { get; set; }
+
+  internal static void Register(Stats stats, Spell spell, int slot)
+  {
+    if (Tracker == null || stats == null || spell == null)
+      return;
+
+    if (slot >= 0 && slot < 30)
+    {
+      Tracker.RegisterEffect(stats.Myself, slot, spell);
+    }
+  }
+}
+
 /// <summary>
-/// Harmony patch for Stats.AddStatusEffect to track when effects are applied.
-/// Registers the effect with EffectTracker so DoT/HoT ticks can be attributed.
+/// Harmony patch for the 3-parameter Stats.AddStatusEffect overload.
 /// </summary>
-/// <remarks>
-/// Hooks the 4-parameter overload which is called by SpellVessel and other game systems.
-/// Uses the return value (slot index) directly instead of scanning the array.
-/// </remarks>
+[HarmonyPatch(
+  typeof(Stats),
+  nameof(Stats.AddStatusEffect),
+  new[] { typeof(Spell), typeof(bool), typeof(int) }
+)]
+public static class AddStatusEffectThreeArgPatch
+{
+  [HarmonyPostfix]
+  public static void Postfix(Stats __instance, Spell spell, int __result)
+  {
+    AddStatusEffectRegistration.Register(__instance, spell, __result);
+  }
+}
+
+/// <summary>
+/// Harmony patch for the 4-parameter Stats.AddStatusEffect overload.
+/// </summary>
 [HarmonyPatch(
   typeof(Stats),
   nameof(Stats.AddStatusEffect),
@@ -18,29 +46,32 @@ namespace ErenshorLogs.Hooks;
 )]
 public static class AddStatusEffectPatch
 {
-  /// <summary>
-  /// Effect tracker instance. Set by Plugin during initialization.
-  /// </summary>
-  internal static EffectTracker? Tracker { get; set; }
+  internal static EffectTracker? Tracker
+  {
+    get => AddStatusEffectRegistration.Tracker;
+    set => AddStatusEffectRegistration.Tracker = value;
+  }
 
-  /// <summary>
-  /// Postfix: Register the effect after it has been added to StatusEffects array.
-  /// Uses the method's return value (slot index) directly - no scanning needed!
-  /// </summary>
-  /// <param name="__instance">The Stats instance receiving the effect.</param>
-  /// <param name="spell">The spell providing the effect.</param>
-  /// <param name="__result">The slot index where effect was added, or -1 if failed.</param>
   [HarmonyPostfix]
   public static void Postfix(Stats __instance, Spell spell, int __result)
   {
-    if (Tracker == null || __instance == null || spell == null)
-      return;
+    AddStatusEffectRegistration.Register(__instance, spell, __result);
+  }
+}
 
-    // __result is the slot index returned by AddStatusEffect
-    // -1 means effect was not added (failed resist check, etc.)
-    if (__result >= 0 && __result < 30)
-    {
-      Tracker.RegisterEffect(__instance.Myself, __result, spell);
-    }
+/// <summary>
+/// Harmony patch for the 5-parameter Stats.AddStatusEffect overload.
+/// </summary>
+[HarmonyPatch(
+  typeof(Stats),
+  nameof(Stats.AddStatusEffect),
+  new[] { typeof(Spell), typeof(bool), typeof(int), typeof(Character), typeof(float) }
+)]
+public static class AddStatusEffectFiveArgPatch
+{
+  [HarmonyPostfix]
+  public static void Postfix(Stats __instance, Spell spell, int __result)
+  {
+    AddStatusEffectRegistration.Register(__instance, spell, __result);
   }
 }
