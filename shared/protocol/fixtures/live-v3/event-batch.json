@@ -1,0 +1,40 @@
+{
+  "protocol": "erenshor.logs.live",
+  "protocolVersion": "3.0.0",
+  "schemaVersion": "3.0.0",
+  "frameId": 4,
+  "kind": "eventBatch",
+  "sentAtMs": 1800000000300,
+  "sessionId": "session-1",
+  "producer": {
+    "name": "ErenshorLogsMod",
+    "modVersion": "2026.5.17.95539912",
+    "gameVersion": "playtest",
+    "buildCommit": "5b1d2c8"
+  },
+  "payload": {
+    "sessionId": "session-1",
+    "registryRevision": 3,
+    "eventSeqStart": 1,
+    "eventSeqEnd": 1,
+    "events": [
+      {
+        "eventSeq": 1,
+        "offsetMs": 250,
+        "kind": "damage",
+        "action": "hit",
+        "sourceActorId": "player:0",
+        "creditActorId": "player:0",
+        "targetActorId": "npc:1",
+        "abilityId": "skill:101",
+        "data": {
+          "amount": 350,
+          "damageType": "physical",
+          "outcome": {
+            "result": "landed"
+          }
+        }
+      }
+    ]
+  }
+}

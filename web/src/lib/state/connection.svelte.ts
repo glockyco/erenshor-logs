@@ -51,10 +51,7 @@ export function setConnected(hello: LiveEnvelope): void {
   state.connectionError = null;
   state.suppressErrorsUntilConnected = false;
   state.protocolVersion = hello.protocolVersion;
-  state.modVersion =
-    hello.kind === "hello"
-      ? ((hello.payload as { producer?: { modVersion?: string } }).producer?.modVersion ?? null)
-      : null;
+  state.modVersion = hello.producer.modVersion ?? null;
 }
 
 export function setDisconnected(): void {

@@ -35,4 +35,16 @@ describe("getConnectionAlert", () => {
       tone: "error",
     });
   });
+
+  it("surfaces preview mismatches with an update-specific title", () => {
+    const alert = getConnectionAlert(
+      error("preview_mismatch", "Unsupported protocol version: 2.0.0")
+    );
+
+    expect(alert).toEqual({
+      title: "Preview mod is out of date",
+      message: "Unsupported protocol version: 2.0.0",
+      tone: "error",
+    });
+  });
 });

@@ -206,7 +206,7 @@ type CombatEventRecord =
 Combat events reference actors, abilities, and effects by registry ID. This
 keeps event batches small and prevents stale duplicated metadata. Lifecycle is
 not represented by synthetic combat events; live clients receive
-`sessionSnapshot` and `sessionEnded` frames instead.
+`sessionOpened` and `sessionClosed` frames instead.
 
 ## Two-Tier Accuracy
 

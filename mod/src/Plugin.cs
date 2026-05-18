@@ -3,6 +3,7 @@ using BepInEx.Logging;
 using ErenshorLogs.Broadcast;
 using ErenshorLogs.Config;
 using ErenshorLogs.Context;
+using ErenshorLogs.Diagnostics;
 using ErenshorLogs.Events;
 using ErenshorLogs.Hooks;
 using ErenshorLogs.Logging;
@@ -45,7 +46,14 @@ public sealed class Plugin : BaseUnityPlugin
 
     ConfigureDamagePatches();
     ConfigureWebSocket();
-    _harmony.PatchAll();
+    var patchResult = PatchManifest.Apply(
+      PatchManifest.CreateDefault(_harmony),
+      _services.GetRequiredService<IDiagnosticReporter>()
+    );
+    if (_broadcaster == null)
+      throw new InvalidOperationException("Combat broadcaster was not initialized.");
+
+    _broadcaster.SetPatchManifestResult(patchResult);
 
     _log.Info($"{PluginInfo.Name} v{PluginInfo.Version} loaded");
   }
@@ -185,6 +193,7 @@ public sealed class Plugin : BaseUnityPlugin
     var sessionManager = services.GetRequiredService<ISessionManager>();
     var actorRegistry = services.GetRequiredService<IActorRegistry>();
     var log = _log!;
+    var diagnostics = services.GetRequiredService<IDiagnosticReporter>();
     // Store references for Update() method
     _config = config;
     _sessionManager = sessionManager;
@@ -200,7 +209,8 @@ public sealed class Plugin : BaseUnityPlugin
       _server,
       config,
       PluginInfo.Version,
-      log: log.Debug
+      log: log.Debug,
+      reporter: diagnostics
     );
 
     // Clear session-scoped caches when combat sessions turn over.
@@ -222,6 +232,7 @@ public sealed class Plugin : BaseUnityPlugin
     // Configuration
     services.AddSingleton(config);
     // Event system
+    services.AddSingleton<IDiagnosticReporter>(new DiagnosticReporter(log.Warning));
     services.AddSingleton<IEventEmitter>(new EventEmitter(log.Error));
 
     // Actor registry

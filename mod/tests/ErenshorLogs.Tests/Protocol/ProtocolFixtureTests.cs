@@ -7,13 +7,22 @@ namespace ErenshorLogs.Tests.Protocol;
 public class ProtocolFixtureTests
 {
   public static TheoryData<string> LiveFixtures =>
-    new() { "hello", "session-snapshot", "registry-delta", "events", "session-ended", "error" };
+    new()
+    {
+      "hello",
+      "session-opened",
+      "registry-delta",
+      "event-batch",
+      "diagnostic-batch",
+      "stats",
+      "session-closed",
+    };
 
   [Theory]
   [MemberData(nameof(LiveFixtures))]
   public void Deserialize_LiveFixture_RoundTrips(string fixtureName)
   {
-    var json = ReadFixture($"live/{fixtureName}.json");
+    var json = ReadFixture($"live-v3/{fixtureName}.json");
 
     var frame = MessageSerializer.Deserialize<LiveEnvelope>(json);
     var serialized = MessageSerializer.Serialize(frame!);
@@ -24,8 +33,8 @@ public class ProtocolFixtureTests
     Assert.NotNull(frame);
     Assert.NotNull(reparsed);
     Assert.Equal("erenshor.logs.live", frame.Protocol);
-    Assert.StartsWith("2.", frame.ProtocolVersion);
-    Assert.StartsWith("2.", frame.SchemaVersion);
+    Assert.StartsWith("3.", frame.ProtocolVersion);
+    Assert.StartsWith("3.", frame.SchemaVersion);
     AssertLivePayloadMatchesKind(frame);
   }
 
@@ -66,20 +75,20 @@ public class ProtocolFixtureTests
     {
       case "hello":
         var hello = payload.ToObject<HelloPayload>()!;
-        Assert.Equal("ErenshorLogsMod", hello.Producer.Name);
-        Assert.Contains("sessionSnapshot", hello.Capabilities);
+        Assert.Equal("ErenshorLogsMod", frame.Producer.Name);
+        Assert.Contains("eventBatch", hello.Capabilities);
         break;
-      case "sessionSnapshot":
+      case "sessionOpened":
         var snapshot = payload.ToObject<SessionSnapshotPayload>()!;
         Assert.Equal(frame.SessionId, snapshot.SessionId);
-        Assert.NotEmpty(snapshot.Registries.Actors);
+        Assert.NotNull(snapshot.Registries.Actors);
         break;
       case "registryDelta":
         var delta = payload.ToObject<RegistryDeltaPayload>()!;
         Assert.True(delta.Revision > 0);
         Assert.NotNull(delta.Abilities);
         break;
-      case "events":
+      case "eventBatch":
         var events = payload.ToObject<EventsPayload>()!;
         Assert.Equal(frame.SessionId, events.SessionId);
         Assert.NotEmpty(events.Events);
@@ -89,15 +98,19 @@ public class ProtocolFixtureTests
           AssertCombatEventMatchesKind(events.Events[index]);
         }
         break;
-      case "sessionEnded":
+      case "sessionClosed":
         var ended = payload.ToObject<SessionEndedPayload>()!;
         Assert.Equal(frame.SessionId, ended.SessionId);
         Assert.True(ended.EndedAtEventSeq > 0);
         break;
-      case "error":
-        var error = payload.ToObject<ErrorPayload>()!;
-        Assert.False(string.IsNullOrWhiteSpace(error.Code));
-        Assert.False(string.IsNullOrWhiteSpace(error.Severity));
+      case "diagnosticBatch":
+        var diagnostics = payload.ToObject<DiagnosticBatchPayload>()!;
+        Assert.NotEmpty(diagnostics.Diagnostics);
+        Assert.False(string.IsNullOrWhiteSpace(diagnostics.Diagnostics[0].Code));
+        break;
+      case "stats":
+        var stats = payload.ToObject<StatsPayload>()!;
+        Assert.True(stats.CapturedEvents > 0);
         break;
       default:
         throw new InvalidOperationException($"Unhandled fixture kind: {frame.Kind}");

@@ -12,14 +12,18 @@ import { resetConnectionState, setConnected, setDisconnected } from "./connectio
 function helloWithModVersion(modVersion: string): LiveEnvelope {
   return {
     protocol: "erenshor.logs.live",
-    protocolVersion: "2.0.0",
-    schemaVersion: "2.0.0",
+    protocolVersion: "3.0.0",
+    schemaVersion: "3.0.0",
+    frameId: 1,
     kind: "hello",
-    frameSeq: 1,
     sentAtMs: 1_800_000_000_000,
+    producer: { name: "ErenshorLogsMod", modVersion },
     payload: {
-      producer: { name: "ErenshorLogsMod", modVersion },
-      capabilities: ["registryDelta", "sessionSnapshot"],
+      capabilities: ["eventBatch", "diagnosticBatch", "stats"],
+      health: { status: "healthy", captureAvailable: true },
+      patches: [],
+      limits: { maxFrameBytes: 262144, maxEventsPerBatch: 256, diagnosticRingSize: 32 },
+      diagnosticSummary: { fatal: 0, error: 0, warning: 0, info: 0 },
     },
   };
 }

@@ -123,17 +123,22 @@ export const AttributionDebugInfoSchema = z.object({
 export type AttributionDebugInfo = z.infer<typeof AttributionDebugInfoSchema>;
 
 // =============================================================================
-// Protocol V2
+// Protocol
 // =============================================================================
 
 export const ProtocolVersionSchema = z.string().regex(/^2\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$/);
 export const SchemaVersionSchema = ProtocolVersionSchema;
+export const LiveProtocolVersionSchema = z
+  .string()
+  .regex(/^3\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$/);
+export const LiveSchemaVersionSchema = LiveProtocolVersionSchema;
 
 export const CapabilitySchema = z.enum([
+  "eventBatch",
+  "diagnosticBatch",
+  "stats",
   "registryDelta",
-  "sessionSnapshot",
-  "gzipFileExport",
-  "perMessageDeflate",
+  "protocolV3",
 ]);
 export type Capability = z.infer<typeof CapabilitySchema>;
 
@@ -413,12 +418,39 @@ export const DerivedSummarySchema = z.object({
 });
 export type DerivedSummary = z.infer<typeof DerivedSummarySchema>;
 
-export const HelloPayloadSchema = z.object({
-  producer: ProducerInfoSchema,
-  activeSessionId: z.string().optional(),
-  capabilities: z.array(CapabilitySchema),
-  requiredCapabilities: z.array(CapabilitySchema).optional(),
+export const PatchStatusSchema = z.object({
+  id: z.string(),
+  required: z.boolean(),
+  status: z.enum(["active", "missing", "failed"]),
 });
+export type PatchStatus = z.infer<typeof PatchStatusSchema>;
+
+export const StreamHealthStatusSchema = z.enum(["healthy", "degraded", "fatal"]);
+export type StreamHealthStatus = z.infer<typeof StreamHealthStatusSchema>;
+
+export const HelloPayloadSchema = z
+  .object({
+    activeSessionId: z.string().optional(),
+    capabilities: z.array(CapabilitySchema),
+    requiredWebCapabilities: z.array(CapabilitySchema).optional(),
+    health: z.object({
+      status: StreamHealthStatusSchema,
+      captureAvailable: z.boolean(),
+    }),
+    patches: z.array(PatchStatusSchema),
+    limits: z.object({
+      maxFrameBytes: z.number().int().positive(),
+      maxEventsPerBatch: z.number().int().positive(),
+      diagnosticRingSize: z.number().int().positive(),
+    }),
+    diagnosticSummary: z.object({
+      fatal: z.number().int().nonnegative(),
+      error: z.number().int().nonnegative(),
+      warning: z.number().int().nonnegative(),
+      info: z.number().int().nonnegative(),
+    }),
+  })
+  .strict();
 export type HelloPayload = z.infer<typeof HelloPayloadSchema>;
 
 export const SessionSnapshotPayloadSchema = z
@@ -465,8 +497,9 @@ export const EventsPayloadSchema = z
     registryRevision: z.number().int().nonnegative(),
     eventSeqStart: z.number().int().positive(),
     eventSeqEnd: z.number().int().positive(),
-    events: z.array(CombatEventRecordSchema),
+    events: z.array(CombatEventRecordSchema).min(1),
   })
+  .strict()
   .superRefine((value, ctx) => {
     if (value.events.length === 0) return;
 
@@ -508,71 +541,124 @@ export const SessionEndedPayloadSchema = z.object({
 });
 export type SessionEndedPayload = z.infer<typeof SessionEndedPayloadSchema>;
 
-export const ErrorPayloadSchema = z.object({
-  code: z.string(),
-  severity: z.enum(["info", "warning", "error", "fatal"]),
-  message: z.string(),
-  recoverable: z.boolean(),
-  sessionId: z.string().optional(),
-  eventSeq: z.number().int().positive().optional(),
-  details: z.record(z.string(), z.unknown()).optional(),
-});
-export type ErrorPayload = z.infer<typeof ErrorPayloadSchema>;
+export const DiagnosticSeveritySchema = z.enum(["info", "warning", "error", "fatal"]);
+export type DiagnosticSeverity = z.infer<typeof DiagnosticSeveritySchema>;
 
-export const ServerStatsPayloadSchema = z.object({
-  connectedClients: z.number().int().nonnegative(),
-  eventsCaptured: z.number().int().nonnegative(),
-  eventsSent: z.number().int().nonnegative(),
-  registryRevision: z.number().int().nonnegative(),
-  queuedFrames: z.number().int().nonnegative(),
-  droppedEvents: z.number().int().nonnegative(),
-  attributionFailures: z.number().int().nonnegative(),
-  hookWarnings: z.number().int().nonnegative(),
-  bytesSent: z.number().int().nonnegative().optional(),
-});
-export type ServerStatsPayload = z.infer<typeof ServerStatsPayloadSchema>;
+export const DiagnosticImpactSchema = z.enum([
+  "none",
+  "frameSkipped",
+  "eventDropped",
+  "sessionPartial",
+  "captureDegraded",
+  "streamFatal",
+  "modFatal",
+]);
+export type DiagnosticImpact = z.infer<typeof DiagnosticImpactSchema>;
+
+export const DiagnosticDetailsSchema = z.record(
+  z.string(),
+  z.union([z.string(), z.number(), z.boolean()])
+);
+export type DiagnosticDetails = z.infer<typeof DiagnosticDetailsSchema>;
+
+export const DiagnosticRecordSchema = z
+  .object({
+    id: z.string(),
+    code: z.string(),
+    severity: DiagnosticSeveritySchema,
+    impact: DiagnosticImpactSchema,
+    component: z.string(),
+    operation: z.string(),
+    message: z.string(),
+    sessionId: z.string().optional(),
+    frameId: z.number().int().positive().optional(),
+    firstSeenAtMs: z.number().int().nonnegative(),
+    lastSeenAtMs: z.number().int().nonnegative(),
+    count: z.number().int().positive(),
+    suppressedCount: z.number().int().nonnegative(),
+    details: DiagnosticDetailsSchema.optional(),
+  })
+  .strict();
+export type DiagnosticRecord = z.infer<typeof DiagnosticRecordSchema>;
+
+export const DiagnosticBatchPayloadSchema = z
+  .object({
+    diagnostics: z.array(DiagnosticRecordSchema).min(1),
+  })
+  .strict();
+export type DiagnosticBatchPayload = z.infer<typeof DiagnosticBatchPayloadSchema>;
+
+export const StatsPayloadSchema = z
+  .object({
+    uptimeMs: z.number().int().nonnegative(),
+    connectedClients: z.number().int().nonnegative(),
+    capturedEvents: z.number().int().nonnegative(),
+    projectedEvents: z.number().int().nonnegative(),
+    sentEvents: z.number().int().nonnegative(),
+    sentFrames: z.number().int().nonnegative(),
+    droppedEvents: z.number().int().nonnegative(),
+    droppedFrames: z.number().int().nonnegative(),
+    projectionErrors: z.number().int().nonnegative(),
+    serializationErrors: z.number().int().nonnegative(),
+    clientSendErrors: z.number().int().nonnegative(),
+    hookWarnings: z.number().int().nonnegative(),
+    attributionFailures: z.number().int().nonnegative(),
+    diagnosticsEmitted: z.number().int().nonnegative(),
+    diagnosticsSuppressed: z.number().int().nonnegative(),
+    queueDepth: z.number().int().nonnegative(),
+    registryRevision: z.number().int().nonnegative(),
+    healthStatus: StreamHealthStatusSchema,
+  })
+  .strict();
+export type StatsPayload = z.infer<typeof StatsPayloadSchema>;
+export const ErrorPayloadSchema = DiagnosticRecordSchema;
+export type ErrorPayload = DiagnosticRecord;
+export const ServerStatsPayloadSchema = StatsPayloadSchema;
+export type ServerStatsPayload = StatsPayload;
 
 export const LiveEnvelopeKindSchema = z.enum([
   "hello",
-  "sessionSnapshot",
+  "sessionOpened",
   "registryDelta",
-  "events",
-  "sessionEnded",
-  "error",
+  "eventBatch",
+  "diagnosticBatch",
+  "stats",
   "heartbeat",
-  "serverStats",
+  "sessionClosed",
 ]);
 export type LiveEnvelopeKind = z.infer<typeof LiveEnvelopeKindSchema>;
 
 const sessionScopedLiveKinds = new Set<LiveEnvelopeKind>([
-  "sessionSnapshot",
+  "sessionOpened",
   "registryDelta",
-  "events",
-  "sessionEnded",
+  "eventBatch",
+  "sessionClosed",
 ]);
 
 const livePayloadSchemas = {
   hello: HelloPayloadSchema,
-  sessionSnapshot: SessionSnapshotPayloadSchema,
+  sessionOpened: SessionSnapshotPayloadSchema,
   registryDelta: RegistryDeltaPayloadSchema,
-  events: EventsPayloadSchema,
-  sessionEnded: SessionEndedPayloadSchema,
-  error: ErrorPayloadSchema,
-  heartbeat: z.object({}).passthrough(),
-  serverStats: ServerStatsPayloadSchema,
+  eventBatch: EventsPayloadSchema,
+  diagnosticBatch: DiagnosticBatchPayloadSchema,
+  stats: StatsPayloadSchema,
+  heartbeat: z.object({}).strict(),
+  sessionClosed: SessionEndedPayloadSchema,
 };
 
 export const LiveEnvelopeSchema = z
   .object({
     protocol: z.literal("erenshor.logs.live"),
-    protocolVersion: ProtocolVersionSchema,
-    schemaVersion: SchemaVersionSchema,
+    protocolVersion: LiveProtocolVersionSchema,
+    schemaVersion: LiveSchemaVersionSchema,
+    frameId: z.number().int().positive(),
     kind: LiveEnvelopeKindSchema,
-    frameSeq: z.number().int().positive(),
     sessionId: z.string().optional(),
     sentAtMs: z.number().int().nonnegative(),
+    producer: ProducerInfoSchema,
     payload: z.unknown(),
   })
+  .strict()
   .superRefine((value, ctx) => {
     const payload = livePayloadSchemas[value.kind].safeParse(value.payload);
     if (!payload.success) {
@@ -821,13 +907,26 @@ export const ParseErrorCodeSchema = z.enum([
   "unsupported_version",
   "unknown_kind",
   "invalid_structure",
+  "message_too_large",
 ]);
 export type ParseErrorCode = z.infer<typeof ParseErrorCodeSchema>;
+
+export const ParseErrorHeaderSchema = z.object({
+  protocol: z.string().optional(),
+  protocolVersion: z.string().optional(),
+  schemaVersion: z.string().optional(),
+  kind: z.string().optional(),
+  frameId: z.number().int().positive().optional(),
+  sessionId: z.string().optional(),
+});
+export type ParseErrorHeader = z.infer<typeof ParseErrorHeaderSchema>;
 
 export const ParseErrorSchema = z.object({
   code: ParseErrorCodeSchema,
   message: z.string(),
   raw: z.string().optional(),
+  rawHash: z.string().optional(),
+  header: ParseErrorHeaderSchema.optional(),
 });
 export type ParseError = z.infer<typeof ParseErrorSchema>;
 
@@ -836,6 +935,9 @@ export const ConnectionErrorCodeSchema = z.enum([
   "parse_error",
   "legacy_mod",
   "unexpected_disconnect",
+  "preview_mismatch",
+  "stream_degraded",
+  "capture_unavailable",
 ]);
 export type ConnectionErrorCode = z.infer<typeof ConnectionErrorCodeSchema>;
 

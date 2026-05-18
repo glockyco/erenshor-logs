@@ -2,6 +2,13 @@
 
 import type { LiveEnvelope } from "$lib/types";
 import { parseMessage, isParseError } from "./message-parser";
+import {
+  liveDiagnostics,
+  recordDiagnosticBatch,
+  recordParseError,
+  recordStats,
+  recordValidFrame,
+} from "$lib/state/live-diagnostics.svelte";
 import { DEFAULT_WEBSOCKET_URL, RECONNECT_INTERVAL_MS } from "$lib/utils/constants";
 
 export interface WebSocketCallbacks {
@@ -10,7 +17,14 @@ export interface WebSocketCallbacks {
   onFrame: (message: LiveEnvelope) => void;
   onDisconnected: () => void;
   onError: (
-    code: "connection_failed" | "parse_error" | "legacy_mod" | "unexpected_disconnect",
+    code:
+      | "connection_failed"
+      | "parse_error"
+      | "legacy_mod"
+      | "unexpected_disconnect"
+      | "preview_mismatch"
+      | "stream_degraded"
+      | "capture_unavailable",
     message: string
   ) => void;
 }
@@ -67,10 +81,14 @@ export function createWebSocketClient(
       const result = parseMessage(event.data as string);
 
       if (isParseError(result)) {
-        callbacks.onError(
-          result.code === "legacy_mod" ? "legacy_mod" : "parse_error",
-          result.message
-        );
+        recordParseError(result);
+        if (result.code === "legacy_mod") {
+          callbacks.onError("legacy_mod", result.message);
+        } else if (result.code === "unsupported_version" || result.code === "unknown_kind") {
+          callbacks.onError("preview_mismatch", result.message);
+        } else if (liveDiagnostics.value.health === "fatal") {
+          callbacks.onError("parse_error", result.message);
+        }
         return;
       }
 
@@ -98,11 +116,42 @@ export function createWebSocketClient(
   }
 
   function handleMessage(message: LiveEnvelope): void {
+    recordValidFrame(message);
+    if (message.kind === "diagnosticBatch") {
+      recordDiagnosticBatch(message);
+    } else if (message.kind === "stats") {
+      recordStats(message);
+    }
+    surfaceHealthErrors(message);
+
     if (message.kind === "hello") {
       receivedHello = true;
       callbacks.onConnected(message);
     }
     callbacks.onFrame(message);
+  }
+
+  function surfaceHealthErrors(message: LiveEnvelope): void {
+    if (message.kind === "hello") {
+      const payload = message.payload as {
+        health?: { status?: string; captureAvailable?: boolean };
+      };
+      if (payload.health?.status === "fatal" || payload.health?.captureAvailable === false) {
+        callbacks.onError("capture_unavailable", "Combat capture is unavailable.");
+      } else if (payload.health?.status === "degraded") {
+        callbacks.onError("stream_degraded", "Combat capture is degraded.");
+      }
+      return;
+    }
+
+    if (message.kind === "stats") {
+      const payload = message.payload as { healthStatus?: string };
+      if (payload.healthStatus === "fatal") {
+        callbacks.onError("capture_unavailable", "Combat capture is unavailable.");
+      } else if (payload.healthStatus === "degraded") {
+        callbacks.onError("stream_degraded", "Some live data was skipped.");
+      }
+    }
   }
 
   function scheduleReconnect(): void {

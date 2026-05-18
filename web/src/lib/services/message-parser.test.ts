@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
-import hello from "../../../../shared/protocol/fixtures/live/hello.json";
+import hello from "../../../../shared/protocol/fixtures/live-v3/hello.json";
 import { isParseError, parseMessage } from "./message-parser";
+import legacyHello from "../../../../shared/protocol/fixtures/live/hello.json";
 
 const asJson = (value: unknown) => JSON.stringify(value);
 
 describe("parseMessage", () => {
-  it("parses protocol v2 hello envelopes", () => {
+  it("parses protocol v3 hello envelopes", () => {
     const result = parseMessage(asJson(hello));
 
     expect(isParseError(result)).toBe(false);
@@ -27,12 +28,13 @@ describe("parseMessage", () => {
     }
   });
 
-  it("rejects unsupported major protocol versions", () => {
-    const result = parseMessage(asJson({ ...hello, protocolVersion: "3.0.0" }));
+  it("rejects preview protocol v2 as outdated", () => {
+    const result = parseMessage(asJson(legacyHello));
 
     expect(isParseError(result)).toBe(true);
     if (isParseError(result)) {
       expect(result.code).toBe("unsupported_version");
+      expect(result.header?.protocolVersion).toBe("2.0.0");
     }
   });
 
@@ -64,12 +66,18 @@ describe("parseMessage", () => {
     }
   });
 
-  it("returns invalid structure for malformed v2 envelopes", () => {
+  it("returns invalid structure with header context for malformed v3 envelopes", () => {
     const result = parseMessage(asJson({ ...hello, payload: {} }));
 
     expect(isParseError(result)).toBe(true);
     if (isParseError(result)) {
       expect(result.code).toBe("invalid_structure");
+      expect(result.header).toMatchObject({
+        protocolVersion: "3.0.0",
+        schemaVersion: "3.0.0",
+        kind: "hello",
+        frameId: 1,
+      });
     }
   });
 });

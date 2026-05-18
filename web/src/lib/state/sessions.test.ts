@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import eventsFrame from "../../../../shared/protocol/fixtures/live/events.json";
-import registryDeltaFrame from "../../../../shared/protocol/fixtures/live/registry-delta.json";
-import sessionEndedFrame from "../../../../shared/protocol/fixtures/live/session-ended.json";
-import snapshotFrame from "../../../../shared/protocol/fixtures/live/session-snapshot.json";
+import eventsFrame from "../../../../shared/protocol/fixtures/live-v3/event-batch.json";
+import registryDeltaFrame from "../../../../shared/protocol/fixtures/live-v3/registry-delta.json";
+import sessionEndedFrame from "../../../../shared/protocol/fixtures/live-v3/session-closed.json";
+import snapshotFrame from "../../../../shared/protocol/fixtures/live-v3/session-opened.json";
+import helloFrame from "../../../../shared/protocol/fixtures/live-v3/hello.json";
 import {
   activeSessionId,
   applyLiveEnvelope,
@@ -16,19 +17,19 @@ import type { LiveEnvelope } from "$lib/types";
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
-describe("protocol v2 session state", () => {
+describe("protocol v3 session state", () => {
   beforeEach(() => resetSessionsState());
 
   it("replaces retained session state when a snapshot arrives", () => {
     applyLiveEnvelope(snapshotFrame as LiveEnvelope);
     applyLiveEnvelope(eventsFrame as LiveEnvelope);
 
-    expect(sessions.get("session-1")?.events).toHaveLength(6);
+    expect(sessions.get("session-1")?.events).toHaveLength(1);
 
     applyLiveEnvelope(snapshotFrame as LiveEnvelope);
 
     expect(sessions.get("session-1")?.events).toHaveLength(0);
-    expect(sessions.get("session-1")?.registries.actors.a1.name).toBe("Player");
+    expect(sessions.get("session-1")?.registries.revision).toBe(0);
     expect(activeSessionId.value).toBe("session-1");
   });
 
@@ -38,26 +39,26 @@ describe("protocol v2 session state", () => {
     applyLiveEnvelope(eventsFrame as LiveEnvelope);
 
     const session = sessions.get("session-1")!;
-    expect(session.registries.effects.ef1.name).toBe("Poisoned Wound");
+    expect(session.registries.abilities["skill:101"].name).toBe("Backstab");
     expect(session.events[0].eventSeq).toBe(1);
-    expect(session.lastEventSeq).toBe(6);
+    expect(session.lastEventSeq).toBe(1);
   });
 
   it("accepts replayed catch-up events after a non-empty snapshot", () => {
     const snapshot = clone(snapshotFrame) as LiveEnvelope;
     snapshot.payload = {
       ...(snapshot.payload as Record<string, unknown>),
-      lastEventSeq: 6,
-      eventCount: 6,
+      lastEventSeq: 1,
+      eventCount: 1,
     };
 
     applyLiveEnvelope(snapshot);
     applyLiveEnvelope(eventsFrame as LiveEnvelope);
 
     const session = sessions.get("session-1")!;
-    expect(session.events).toHaveLength(6);
-    expect(session.lastEventSeq).toBe(6);
-    expect(session.eventCount).toBe(6);
+    expect(session.events).toHaveLength(1);
+    expect(session.lastEventSeq).toBe(1);
+    expect(session.eventCount).toBe(1);
     expect(protocolErrors.value).not.toContainEqual(
       expect.objectContaining({ code: "event_sequence_gap", sessionId: "session-1" })
     );
@@ -87,7 +88,7 @@ describe("protocol v2 session state", () => {
 
     const session = sessions.get("session-1")!;
     expect(session.state).toBe("ended");
-    expect(session.endedAtUtcMs).toBe(1800000019000);
+    expect(session.endedAtUtcMs).toBe(1800000000600);
     expect(session.endReason).toBe("inactivity");
   });
 
@@ -95,15 +96,11 @@ describe("protocol v2 session state", () => {
     applyLiveEnvelope(snapshotFrame as LiveEnvelope);
 
     applyLiveEnvelope({
-      protocol: "erenshor.logs.live",
-      protocolVersion: "2.0.0",
-      schemaVersion: "2.0.0",
-      kind: "hello",
-      frameSeq: 99,
+      ...(helloFrame as LiveEnvelope),
       sentAtMs: 1800000010000,
       payload: {
-        producer: { name: "ErenshorLogsMod", modVersion: "2.0.0" },
-        capabilities: ["sessionSnapshot", "registryDelta"],
+        ...((helloFrame as LiveEnvelope).payload as Record<string, unknown>),
+        activeSessionId: undefined,
       },
     } as LiveEnvelope);
 
@@ -137,30 +134,36 @@ describe("protocol v2 session state", () => {
     expect(sessions.get("session-2")?.state).toBe("active");
   });
 
-  it("records error frames as protocol errors", () => {
+  it("does not store transient diagnostic batches as protocol errors", () => {
     applyLiveEnvelope({
       protocol: "erenshor.logs.live",
-      protocolVersion: "2.0.0",
-      schemaVersion: "2.0.0",
-      kind: "error",
-      frameSeq: 1,
+      protocolVersion: "3.0.0",
+      schemaVersion: "3.0.0",
+      kind: "diagnosticBatch",
+      frameId: 100,
       sentAtMs: 1800000021000,
+      producer: { name: "ErenshorLogsMod", modVersion: "2026.5.17.95539912" },
       payload: {
-        code: "hookCompatibilityWarning",
-        severity: "warning",
-        message: "Optional hook missing.",
-        recoverable: true,
-        sessionId: "session-1",
+        diagnostics: [
+          {
+            id: "d-1",
+            code: "hookCompatibilityWarning",
+            severity: "warning",
+            impact: "captureDegraded",
+            component: "mod.hooks",
+            operation: "patch",
+            message: "Optional hook missing.",
+            sessionId: "session-1",
+            firstSeenAtMs: 1800000021000,
+            lastSeenAtMs: 1800000021000,
+            count: 1,
+            suppressedCount: 0,
+          },
+        ],
       },
     } as LiveEnvelope);
 
-    expect(protocolErrors.value).toContainEqual(
-      expect.objectContaining({
-        code: "hookCompatibilityWarning",
-        message: "Optional hook missing.",
-        sessionId: "session-1",
-      })
-    );
+    expect(protocolErrors.value).toEqual([]);
   });
 
   it("keeps active session selection guarded", () => {

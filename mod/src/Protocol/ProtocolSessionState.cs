@@ -19,6 +19,7 @@ public sealed class ProtocolSessionState
 
   public long LastEventSeq { get; private set; }
   public int RegistryRevision { get; private set; }
+  public int DroppedEvents { get; private set; }
   public IReadOnlyList<JObject> Events => _events;
 
   public Registries Registries =>
@@ -30,12 +31,51 @@ public sealed class ProtocolSessionState
       Effects = _effects,
     };
 
-  public JObject? Append(CombatEvent evt)
-  {
-    if (!IsProtocolCombatEvent(evt))
-      return null;
+  public JObject? Append(CombatEvent evt) =>
+    TryAppend(evt, out var protocolEvent, out _) ? protocolEvent : null;
 
-    var protocolEvent = evt.EventType switch
+  public bool TryAppend(CombatEvent evt, out JObject? protocolEvent, out string? errorPath)
+  {
+    protocolEvent = null;
+    errorPath = null;
+
+    if (!IsProtocolCombatEvent(evt))
+      return false;
+
+    var actors = new Dictionary<string, ActorRecord>(_actors);
+    var abilities = new Dictionary<string, AbilityRecord>(_abilities);
+    var effects = new Dictionary<string, EffectRecord>(_effects);
+    var lastEventSeq = LastEventSeq;
+    var registryRevision = RegistryRevision;
+
+    try
+    {
+      protocolEvent = CreateProtocolEvent(evt);
+      if (protocolEvent == null)
+        return false;
+
+      errorPath = ValidateProtocolEvent(protocolEvent);
+      if (errorPath != null)
+      {
+        Restore(actors, abilities, effects, lastEventSeq, registryRevision);
+        protocolEvent = null;
+        return false;
+      }
+
+      _events.Add(protocolEvent);
+      return true;
+    }
+    catch
+    {
+      Restore(actors, abilities, effects, lastEventSeq, registryRevision);
+      protocolEvent = null;
+      throw;
+    }
+  }
+
+  private JObject? CreateProtocolEvent(CombatEvent evt)
+  {
+    return evt.EventType switch
     {
       EventType.DamagePhysical
       or EventType.DamageMagic
@@ -61,12 +101,11 @@ public sealed class ProtocolSessionState
       EventType.Mechanic => CreateMechanicEvent(evt),
       _ => null,
     };
+  }
 
-    if (protocolEvent == null)
-      return null;
-
-    _events.Add(protocolEvent);
-    return protocolEvent;
+  public void RecordDroppedEvent()
+  {
+    DroppedEvents += 1;
   }
 
   public SessionSnapshotPayload CreateSnapshot()
@@ -89,18 +128,30 @@ public sealed class ProtocolSessionState
       RegistryRevision = RegistryRevision,
       LastEventSeq = LastEventSeq,
       EventCount = _events.Count,
-      Completeness = "complete",
+      Completeness = DroppedEvents > 0 ? "partial" : "complete",
+      Loss =
+        DroppedEvents > 0
+          ? new LossCounters
+          {
+            EventsDropped = DroppedEvents,
+            FramesDropped = 0,
+            Reason = "projection.failed",
+          }
+          : null,
       Registries = Registries,
-      Diagnostics = new SessionDiagnostics
-      {
-        HookWarnings = [],
-        AttributionFailures = 0,
-        DroppedEvents = 0,
-        DroppedFrames = 0,
-        SerializationErrors = 0,
-      },
+      Diagnostics = CreateDiagnostics(),
     };
   }
+
+  public SessionDiagnostics CreateDiagnostics() =>
+    new()
+    {
+      HookWarnings = [],
+      AttributionFailures = 0,
+      DroppedEvents = DroppedEvents,
+      DroppedFrames = 0,
+      SerializationErrors = 0,
+    };
 
   public EventsPayload CreateEventsPayload(IReadOnlyList<JObject> events)
   {
@@ -319,6 +370,58 @@ public sealed class ProtocolSessionState
     );
     RegistryRevision += 1;
     return id;
+  }
+
+  private void Restore(
+    Dictionary<string, ActorRecord> actors,
+    Dictionary<string, AbilityRecord> abilities,
+    Dictionary<string, EffectRecord> effects,
+    long lastEventSeq,
+    int registryRevision
+  )
+  {
+    _actors.Clear();
+    foreach (var item in actors)
+      _actors.Add(item.Key, item.Value);
+
+    _abilities.Clear();
+    foreach (var item in abilities)
+      _abilities.Add(item.Key, item.Value);
+
+    _effects.Clear();
+    foreach (var item in effects)
+      _effects.Add(item.Key, item.Value);
+
+    LastEventSeq = lastEventSeq;
+    RegistryRevision = registryRevision;
+  }
+
+  private static string? ValidateProtocolEvent(JObject evt)
+  {
+    var kind = evt.Value<string>("kind");
+    var action = evt.Value<string>("action");
+    return kind switch
+    {
+      "damage" when action is not ("hit" or "tick" or "reflect") => "payload.events.0.action",
+      "heal" when action is not ("direct" or "tick" or "lifesteal" or "regen" or "scripted") =>
+        "payload.events.0.action",
+      "resource" when action is not ("spend" or "restore" or "regen" or "drain") =>
+        "payload.events.0.action",
+      "effect" when action is not ("apply" or "refresh" or "fade") => "payload.events.0.action",
+      "death" when action is not "die" => "payload.events.0.action",
+      "interrupt" when action is not "interrupt" => "payload.events.0.action",
+      "mechanic"
+        when action
+          is not (
+            "phase"
+            or "invulnerability"
+            or "spawn"
+            or "despawn"
+            or "statChange"
+            or "targetAssignment"
+          ) => "payload.events.0.action",
+      _ => null,
+    };
   }
 
   private static bool IsProtocolCombatEvent(CombatEvent evt)

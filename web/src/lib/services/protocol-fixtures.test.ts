@@ -1,20 +1,29 @@
 import { describe, expect, it } from "vitest";
-import hello from "../../../../shared/protocol/fixtures/live/hello.json";
-import sessionSnapshot from "../../../../shared/protocol/fixtures/live/session-snapshot.json";
-import registryDelta from "../../../../shared/protocol/fixtures/live/registry-delta.json";
-import events from "../../../../shared/protocol/fixtures/live/events.json";
-import sessionEnded from "../../../../shared/protocol/fixtures/live/session-ended.json";
-import errorFrame from "../../../../shared/protocol/fixtures/live/error.json";
+import hello from "../../../../shared/protocol/fixtures/live-v3/hello.json";
+import sessionOpened from "../../../../shared/protocol/fixtures/live-v3/session-opened.json";
+import registryDelta from "../../../../shared/protocol/fixtures/live-v3/registry-delta.json";
+import eventBatch from "../../../../shared/protocol/fixtures/live-v3/event-batch.json";
+import diagnosticBatch from "../../../../shared/protocol/fixtures/live-v3/diagnostic-batch.json";
+import stats from "../../../../shared/protocol/fixtures/live-v3/stats.json";
+import sessionClosed from "../../../../shared/protocol/fixtures/live-v3/session-closed.json";
 import singleSessionExport from "../../../../shared/protocol/fixtures/export/single-session.json";
 import multiSessionExport from "../../../../shared/protocol/fixtures/export/multi-session.json";
 import demoExport from "../../../static/demo/sessions.json";
 import { CombatLogFileSchema, LiveEnvelopeSchema } from "$lib/types/schemas";
 
-const liveFixtures = [hello, sessionSnapshot, registryDelta, events, sessionEnded, errorFrame];
+const liveFixtures = [
+  hello,
+  sessionOpened,
+  registryDelta,
+  eventBatch,
+  diagnosticBatch,
+  stats,
+  sessionClosed,
+];
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
-describe("protocol v2 fixtures", () => {
+describe("protocol v3 fixtures", () => {
   it.each(liveFixtures)("validates live fixture %#", (fixture) => {
     expect(() => LiveEnvelopeSchema.parse(fixture)).not.toThrow();
   });
@@ -57,8 +66,8 @@ describe("protocol v2 fixtures", () => {
   });
 
   it("rejects event batches with gaps", () => {
-    const gappedEvents = clone(events);
-    gappedEvents.payload.events[1].eventSeq = 3;
+    const gappedEvents = clone(eventBatch);
+    gappedEvents.payload.events[0].eventSeq = 2;
 
     expect(() => LiveEnvelopeSchema.parse(gappedEvents)).toThrow();
   });
@@ -67,23 +76,27 @@ describe("protocol v2 fixtures", () => {
     expect(() =>
       LiveEnvelopeSchema.parse({
         protocol: "erenshor.logs.live",
-        protocolVersion: "2.0.0",
-        schemaVersion: "2.0.0",
+        protocolVersion: "3.0.0",
+        schemaVersion: "3.0.0",
+        frameId: 8,
         kind: "heartbeat",
-        frameSeq: 7,
-        sentAtMs: 1_764_000_000_000,
+        sentAtMs: 1_800_000_000_700,
+        producer: {
+          name: "ErenshorLogsMod",
+          modVersion: "2026.5.17.95539912",
+        },
         payload: {},
       })
     ).not.toThrow();
   });
 
-  it("rejects partial snapshots without loss counters", () => {
-    const partialSnapshot = clone(sessionSnapshot) as {
+  it("rejects partial session-opened frames without loss counters", () => {
+    const partialSessionOpened = clone(sessionOpened) as {
       payload: { completeness: string; loss?: unknown };
     };
-    partialSnapshot.payload.completeness = "partial";
-    delete partialSnapshot.payload.loss;
+    partialSessionOpened.payload.completeness = "partial";
+    delete partialSessionOpened.payload.loss;
 
-    expect(() => LiveEnvelopeSchema.parse(partialSnapshot)).toThrow();
+    expect(() => LiveEnvelopeSchema.parse(partialSessionOpened)).toThrow();
   });
 });

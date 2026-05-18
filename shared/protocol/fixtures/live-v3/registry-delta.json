@@ -1,0 +1,42 @@
+{
+  "protocol": "erenshor.logs.live",
+  "protocolVersion": "3.0.0",
+  "schemaVersion": "3.0.0",
+  "frameId": 3,
+  "kind": "registryDelta",
+  "sentAtMs": 1800000000200,
+  "sessionId": "session-1",
+  "producer": {
+    "name": "ErenshorLogsMod",
+    "modVersion": "2026.5.17.95539912",
+    "gameVersion": "playtest",
+    "buildCommit": "5b1d2c8"
+  },
+  "payload": {
+    "revision": 3,
+    "actors": {
+      "player:0": {
+        "id": "player:0",
+        "name": "Player",
+        "kind": "player",
+        "isPlayerControlled": true,
+        "firstSeenEventSeq": 1
+      },
+      "npc:1": {
+        "id": "npc:1",
+        "name": "Raid Boss",
+        "kind": "npc",
+        "faction": "hostile",
+        "firstSeenEventSeq": 1
+      }
+    },
+    "abilities": {
+      "skill:101": {
+        "id": "skill:101",
+        "name": "Backstab",
+        "kind": "skill",
+        "stableKey": "skill:101"
+      }
+    }
+  }
+}

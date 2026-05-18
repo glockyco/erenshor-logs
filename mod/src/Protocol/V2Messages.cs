@@ -1,3 +1,4 @@
+using ErenshorLogs.Diagnostics;
 using Newtonsoft.Json.Linq;
 
 namespace ErenshorLogs.Protocol;
@@ -5,21 +6,53 @@ namespace ErenshorLogs.Protocol;
 public sealed record LiveEnvelope
 {
   public string Protocol { get; init; } = "erenshor.logs.live";
-  public string ProtocolVersion { get; init; } = "2.0.0";
-  public string SchemaVersion { get; init; } = "2.0.0";
+  public string ProtocolVersion { get; init; } = "3.0.0";
+  public string SchemaVersion { get; init; } = "3.0.0";
+  public required long FrameId { get; init; }
   public required string Kind { get; init; }
-  public required long FrameSeq { get; init; }
   public string? SessionId { get; init; }
   public required long SentAtMs { get; init; }
+  public required ProducerInfo Producer { get; init; }
   public required object Payload { get; init; }
 }
 
 public sealed record HelloPayload
 {
-  public required ProducerInfo Producer { get; init; }
   public string? ActiveSessionId { get; init; }
   public required IReadOnlyList<string> Capabilities { get; init; }
-  public IReadOnlyList<string>? RequiredCapabilities { get; init; }
+  public IReadOnlyList<string>? RequiredWebCapabilities { get; init; }
+  public required HealthPayload Health { get; init; }
+  public required IReadOnlyList<PatchStatusPayload> Patches { get; init; }
+  public required LimitsPayload Limits { get; init; }
+  public required SeverityCountsPayload DiagnosticSummary { get; init; }
+}
+
+public sealed record HealthPayload
+{
+  public required string Status { get; init; }
+  public required bool CaptureAvailable { get; init; }
+}
+
+public sealed record PatchStatusPayload
+{
+  public required string Id { get; init; }
+  public required bool Required { get; init; }
+  public required string Status { get; init; }
+}
+
+public sealed record LimitsPayload
+{
+  public required int MaxFrameBytes { get; init; }
+  public required int MaxEventsPerBatch { get; init; }
+  public required int DiagnosticRingSize { get; init; }
+}
+
+public sealed record SeverityCountsPayload
+{
+  public required int Fatal { get; init; }
+  public required int Error { get; init; }
+  public required int Warning { get; init; }
+  public required int Info { get; init; }
 }
 
 public sealed record RegistryDeltaPayload
@@ -39,28 +72,31 @@ public sealed record EventsPayload
   public required IReadOnlyList<JObject> Events { get; init; }
 }
 
-public sealed record ErrorPayload
+public sealed record DiagnosticBatchPayload
 {
-  public required string Code { get; init; }
-  public required string Severity { get; init; }
-  public required string Message { get; init; }
-  public required bool Recoverable { get; init; }
-  public string? SessionId { get; init; }
-  public long? EventSeq { get; init; }
-  public IReadOnlyDictionary<string, object>? Details { get; init; }
+  public required IReadOnlyList<DiagnosticRecord> Diagnostics { get; init; }
 }
 
-public sealed record ServerStatsPayload
+public sealed record StatsPayload
 {
+  public required long UptimeMs { get; init; }
   public required int ConnectedClients { get; init; }
-  public required long EventsCaptured { get; init; }
-  public required long EventsSent { get; init; }
+  public required long CapturedEvents { get; init; }
+  public required long ProjectedEvents { get; init; }
+  public required long SentEvents { get; init; }
+  public required long SentFrames { get; init; }
+  public required long DroppedEvents { get; init; }
+  public required long DroppedFrames { get; init; }
+  public required long ProjectionErrors { get; init; }
+  public required long SerializationErrors { get; init; }
+  public required long ClientSendErrors { get; init; }
+  public required long HookWarnings { get; init; }
+  public required long AttributionFailures { get; init; }
+  public required long DiagnosticsEmitted { get; init; }
+  public required long DiagnosticsSuppressed { get; init; }
+  public required int QueueDepth { get; init; }
   public required int RegistryRevision { get; init; }
-  public required int QueuedFrames { get; init; }
-  public required int DroppedEvents { get; init; }
-  public required int AttributionFailures { get; init; }
-  public required int HookWarnings { get; init; }
-  public long? BytesSent { get; init; }
+  public required string HealthStatus { get; init; }
 }
 
 public sealed record CombatLogFile

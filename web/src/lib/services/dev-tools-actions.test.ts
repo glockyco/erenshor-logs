@@ -23,14 +23,14 @@ describe("dev tools actions", () => {
     expect(connectionStatus.value).toBe("disconnected");
     expect(connectionError.value?.code).toBe("legacy_mod");
     expect(connectionError.value?.message).toContain("old Erenshor Logs mod");
-    expect(connectionError.value?.message).toContain("protocol v2");
+    expect(connectionError.value?.message).toContain("protocol v3");
   });
 
   it("can simulate malformed live data", () => {
     simulateMalformedLiveFrameError();
 
     expect(connectionError.value?.code).toBe("parse_error");
-    expect(connectionError.value?.message).toBe("Received malformed protocol v2 live data.");
+    expect(connectionError.value?.message).toBe("Received malformed protocol v3 live data.");
   });
 
   it("can simulate an unexpected disconnect", () => {

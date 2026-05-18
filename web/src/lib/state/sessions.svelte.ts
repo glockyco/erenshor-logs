@@ -103,13 +103,13 @@ export function applyLiveEnvelope(envelope: LiveEnvelope): void {
     case "hello":
       reconcileActiveSessionsFromHello(envelope);
       return;
-    case "sessionSnapshot":
+    case "sessionOpened":
       applySessionSnapshot(envelope.payload as SessionSnapshotPayload, envelope.sentAtMs);
       return;
     case "registryDelta":
       applyRegistryDelta(envelope.sessionId!, envelope.payload as RegistryDeltaPayload);
       return;
-    case "events": {
+    case "eventBatch": {
       const payload = envelope.payload as {
         eventSeqStart: number;
         events: CombatEventRecord[];
@@ -118,26 +118,12 @@ export function applyLiveEnvelope(envelope: LiveEnvelope): void {
       return;
     }
 
-    case "sessionEnded":
+    case "sessionClosed":
       applySessionEnded(envelope.payload as SessionEndedPayload);
       return;
-    case "error": {
-      const payload = envelope.payload as {
-        code: string;
-        message: string;
-        sessionId?: string;
-        eventSeq?: number;
-      };
-      recordProtocolError({
-        code: payload.code,
-        message: payload.message,
-        sessionId: payload.sessionId,
-        eventSeq: payload.eventSeq,
-      });
-      return;
-    }
+    case "diagnosticBatch":
     case "heartbeat":
-    case "serverStats":
+    case "stats":
       return;
   }
 }

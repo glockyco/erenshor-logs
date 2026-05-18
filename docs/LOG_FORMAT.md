@@ -1,6 +1,6 @@
 # Combat Log Format Specification
 
-Version: 2.0.0
+Version: 3.0.0 live protocol, 2.0.0 export format
 
 ## Overview
 
@@ -25,12 +25,17 @@ Every live WebSocket message is an envelope:
 ```json
 {
   "protocol": "erenshor.logs.live",
-  "protocolVersion": "2.0.0",
-  "schemaVersion": "2.0.0",
-  "kind": "events",
-  "frameSeq": 4,
+  "protocolVersion": "3.0.0",
+  "schemaVersion": "3.0.0",
+  "frameId": 4,
+  "kind": "eventBatch",
   "sessionId": "session-1",
   "sentAtMs": 1800000001500,
+  "producer": {
+    "name": "ErenshorLogsMod",
+    "modVersion": "2026.5.17.95539912",
+    "gameVersion": "playtest"
+  },
   "payload": { }
 }
 ```
@@ -39,26 +44,26 @@ Supported `kind` values are:
 
 | Kind | Payload |
 | --- | --- |
-| `hello` | Producer identity, capabilities, active session ID |
-| `sessionSnapshot` | Full session state and full registries |
+| `hello` | Producer capabilities, active session ID, health, patch status, limits |
+| `sessionOpened` | Full session state and full registries |
 | `registryDelta` | Registry additions/enrichment for one revision |
-| `events` | Contiguous combat event batch |
-| `sessionEnded` | End timestamp, reason, duration, diagnostics |
-| `error` | Protocol or producer error details |
+| `eventBatch` | Contiguous combat event batch |
+| `diagnosticBatch` | Structured bounded diagnostics |
+| `stats` | Producer-side counters and health summary |
 | `heartbeat` | Empty keepalive payload |
-| `serverStats` | Producer-side counters |
+| `sessionClosed` | End timestamp, reason, duration, diagnostics |
 
-Clients validate the semver major version, not the exact literal. Current major
-is `2`.
+Clients validate the semver major version, not the exact literal. Current live
+major is `3`.
 
 ## Reconnect and Ordering Rules
 
-`sessionSnapshot` is a replacement boundary for its `sessionId`: discard any
+`sessionOpened` is a replacement boundary for its `sessionId`: discard any
 retained in-memory copy, then apply the snapshot. For active complete sessions,
 the producer replays `eventSeq` 1 through `lastEventSeq` after the snapshot
 before live tail frames.
 
-Within a connection, `events` frames must be strictly contiguous. Gaps or
+Within a connection, `eventBatch` frames must be strictly contiguous. Gaps or
 overlaps mark the session partial and surface a protocol error. Duplicate event
 ranges are not valid in the normal live stream.
 
@@ -229,8 +234,8 @@ Event families:
 | `interrupt` | `interrupt` |
 | `mechanic` | `invulnerability`, `spawn`, `despawn`, `phase`, `statChange` |
 
-`combatStart` and `combatEnd` are not combat event records in v2. Session
-lifecycle is represented by `sessionSnapshot` and `sessionEnded` frames.
+`combatStart` and `combatEnd` are not combat event records in live protocol v3.
+Session lifecycle is represented by `sessionOpened` and `sessionClosed` frames.
 
 ## Damage Types
 

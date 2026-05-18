@@ -278,6 +278,28 @@ public sealed class ProtocolSessionStateTests
     Assert.Empty(state.Events);
   }
 
+  [Fact]
+  public void TryAppend_InvalidProjection_DoesNotMutateSessionState()
+  {
+    var session = new CombatSession("playtest-raid", "2026.5.17.1");
+    var state = new ProtocolSessionState(session);
+    var evt = CreateMechanicEvent(session.StartTime + 1500) with
+    {
+      Mechanic = new EventMechanicData { Name = "Bad mechanic", Action = "notAProtocolAction" },
+    };
+
+    var appended = state.TryAppend(evt, out var record, out var errorPath);
+
+    Assert.False(appended);
+    Assert.Null(record);
+    Assert.Equal("payload.events.0.action", errorPath);
+    Assert.Equal(0, state.LastEventSeq);
+    Assert.Equal(0, state.RegistryRevision);
+    Assert.Empty(state.Events);
+    Assert.Empty(state.Registries.Actors);
+    Assert.Empty(state.Registries.Abilities);
+  }
+
   private sealed class FakeEventEmitter : IEventEmitter
   {
     public int ListenerCount => 0;

@@ -1,0 +1,34 @@
+{
+  "protocol": "erenshor.logs.live",
+  "protocolVersion": "3.0.0",
+  "schemaVersion": "3.0.0",
+  "frameId": 6,
+  "kind": "stats",
+  "sentAtMs": 1800000000500,
+  "producer": {
+    "name": "ErenshorLogsMod",
+    "modVersion": "2026.5.17.95539912",
+    "gameVersion": "playtest",
+    "buildCommit": "5b1d2c8"
+  },
+  "payload": {
+    "uptimeMs": 120000,
+    "connectedClients": 1,
+    "capturedEvents": 1200,
+    "projectedEvents": 1198,
+    "sentEvents": 1198,
+    "sentFrames": 57,
+    "droppedEvents": 2,
+    "droppedFrames": 1,
+    "projectionErrors": 2,
+    "serializationErrors": 0,
+    "clientSendErrors": 1,
+    "hookWarnings": 3,
+    "attributionFailures": 8,
+    "diagnosticsEmitted": 4,
+    "diagnosticsSuppressed": 17,
+    "queueDepth": 0,
+    "registryRevision": 12,
+    "healthStatus": "degraded"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "protocol": "erenshor.logs.live",
+  "protocolVersion": "3.0.0",
+  "schemaVersion": "3.0.0",
+  "frameId": 5,
+  "kind": "diagnosticBatch",
+  "sentAtMs": 1800000000400,
+  "sessionId": "session-1",
+  "producer": {
+    "name": "ErenshorLogsMod",
+    "modVersion": "2026.5.17.95539912",
+    "gameVersion": "playtest",
+    "buildCommit": "5b1d2c8"
+  },
+  "payload": {
+    "diagnostics": [
+      {
+        "id": "d-42",
+        "code": "projection.failed",
+        "severity": "error",
+        "impact": "eventDropped",
+        "component": "mod.protocol",
+        "operation": "projectEvent",
+        "message": "A combat event could not be converted to protocol v3.",
+        "sessionId": "session-1",
+        "frameId": 4,
+        "firstSeenAtMs": 1800000000300,
+        "lastSeenAtMs": 1800000000400,
+        "count": 3,
+        "suppressedCount": 2,
+        "details": {
+          "eventType": "Mechanic",
+          "exceptionType": "ArgumentException",
+          "path": "payload.events.0.action"
+        }
+      }
+    ]
+  }
+}

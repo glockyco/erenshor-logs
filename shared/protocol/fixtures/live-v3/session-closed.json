@@ -1,0 +1,29 @@
+{
+  "protocol": "erenshor.logs.live",
+  "protocolVersion": "3.0.0",
+  "schemaVersion": "3.0.0",
+  "frameId": 7,
+  "kind": "sessionClosed",
+  "sentAtMs": 1800000000600,
+  "sessionId": "session-1",
+  "producer": {
+    "name": "ErenshorLogsMod",
+    "modVersion": "2026.5.17.95539912",
+    "gameVersion": "playtest",
+    "buildCommit": "5b1d2c8"
+  },
+  "payload": {
+    "sessionId": "session-1",
+    "endedAtUtcMs": 1800000000600,
+    "endedAtEventSeq": 1,
+    "reason": "inactivity",
+    "durationMs": 600,
+    "diagnostics": {
+      "hookWarnings": [],
+      "attributionFailures": 0,
+      "droppedEvents": 0,
+      "droppedFrames": 0,
+      "serializationErrors": 0
+    }
+  }
+}

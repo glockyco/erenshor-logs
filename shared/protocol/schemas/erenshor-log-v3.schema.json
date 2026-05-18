@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://erenshor-logs.local/schemas/erenshor-log-v3.schema.json",
+  "title": "Erenshor Logs live protocol v3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocol", "protocolVersion", "schemaVersion", "frameId", "kind", "sentAtMs", "producer", "payload"],
+  "properties": {
+    "protocol": { "const": "erenshor.logs.live" },
+    "protocolVersion": { "type": "string", "pattern": "^3\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$" },
+    "schemaVersion": { "type": "string", "pattern": "^3\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$" },
+    "frameId": { "type": "integer", "minimum": 1 },
+    "kind": {
+      "enum": ["hello", "sessionOpened", "registryDelta", "eventBatch", "diagnosticBatch", "stats", "heartbeat", "sessionClosed"]
+    },
+    "sessionId": { "type": "string", "minLength": 1 },
+    "sentAtMs": { "type": "integer", "minimum": 0 },
+    "producer": { "$ref": "#/$defs/producer" },
+    "payload": { "type": "object" }
+  },
+  "allOf": [
+    { "if": { "properties": { "kind": { "const": "hello" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/hello" } } } },
+    { "if": { "properties": { "kind": { "const": "sessionOpened" } } }, "then": { "required": ["sessionId"], "properties": { "payload": { "$ref": "#/$defs/sessionOpened" } } } },
+    { "if": { "properties": { "kind": { "const": "registryDelta" } } }, "then": { "required": ["sessionId"], "properties": { "payload": { "$ref": "#/$defs/registryDelta" } } } },
+    { "if": { "properties": { "kind": { "const": "eventBatch" } } }, "then": { "required": ["sessionId"], "properties": { "payload": { "$ref": "#/$defs/eventBatch" } } } },
+    { "if": { "properties": { "kind": { "const": "diagnosticBatch" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/diagnosticBatch" } } } },
+    { "if": { "properties": { "kind": { "const": "stats" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/stats" } } } },
+    { "if": { "properties": { "kind": { "const": "heartbeat" } } }, "then": { "properties": { "payload": { "type": "object", "additionalProperties": false } } } },
+    { "if": { "properties": { "kind": { "const": "sessionClosed" } } }, "then": { "required": ["sessionId"], "properties": { "payload": { "$ref": "#/$defs/sessionClosed" } } } }
+  ],
+  "$defs": {
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "enum": ["ErenshorLogsMod", "ErenshorLogsWeb"] },
+        "modVersion": { "type": "string" },
+        "webVersion": { "type": "string" },
+        "gameVersion": { "type": "string" },
+        "buildCommit": { "type": "string" }
+      }
+    },
+    "hello": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capabilities", "health", "patches", "limits", "diagnosticSummary"],
+      "properties": {
+        "activeSessionId": { "type": "string" },
+        "capabilities": { "type": "array", "items": { "$ref": "#/$defs/capability" } },
+        "requiredWebCapabilities": { "type": "array", "items": { "$ref": "#/$defs/capability" } },
+        "health": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "captureAvailable"],
+          "properties": {
+            "status": { "$ref": "#/$defs/healthStatus" },
+            "captureAvailable": { "type": "boolean" }
+          }
+        },
+        "patches": { "type": "array", "items": { "$ref": "#/$defs/patch" } },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["maxFrameBytes", "maxEventsPerBatch", "diagnosticRingSize"],
+          "properties": {
+            "maxFrameBytes": { "type": "integer", "minimum": 1 },
+            "maxEventsPerBatch": { "type": "integer", "minimum": 1 },
+            "diagnosticRingSize": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "diagnosticSummary": { "$ref": "#/$defs/severityCounts" }
+      }
+    },
+    "capability": { "enum": ["eventBatch", "diagnosticBatch", "stats", "registryDelta", "protocolV3"] },
+    "patch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "required", "status"],
+      "properties": {
+        "id": { "type": "string" },
+        "required": { "type": "boolean" },
+        "status": { "enum": ["active", "missing", "failed"] }
+      }
+    },
+    "healthStatus": { "enum": ["healthy", "degraded", "fatal"] },
+    "severityCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fatal", "error", "warning", "info"],
+      "properties": {
+        "fatal": { "type": "integer", "minimum": 0 },
+        "error": { "type": "integer", "minimum": 0 },
+        "warning": { "type": "integer", "minimum": 0 },
+        "info": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "sessionOpened": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["sessionId", "state", "mode", "startedAtUtcMs", "producer", "registryRevision", "lastEventSeq", "eventCount", "completeness", "registries"],
+      "properties": {
+        "sessionId": { "type": "string" },
+        "state": { "enum": ["active", "ended"] },
+        "mode": { "enum": ["automatic", "manual", "imported"] },
+        "startedAtUtcMs": { "type": "integer", "minimum": 0 },
+        "endedAtUtcMs": { "type": "integer", "minimum": 0 },
+        "endReason": { "$ref": "#/$defs/sessionEndReason" },
+        "durationMs": { "type": "integer", "minimum": 0 },
+        "producer": { "$ref": "#/$defs/producer" },
+        "registryRevision": { "type": "integer", "minimum": 0 },
+        "lastEventSeq": { "type": "integer", "minimum": 0 },
+        "eventCount": { "type": "integer", "minimum": 0 },
+        "completeness": { "enum": ["complete", "partial"] },
+        "registries": { "$ref": "#/$defs/registries" }
+      }
+    },
+    "registryDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revision"],
+      "properties": {
+        "revision": { "type": "integer", "minimum": 0 },
+        "actors": { "type": "object", "additionalProperties": true },
+        "abilities": { "type": "object", "additionalProperties": true },
+        "effects": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "eventBatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sessionId", "registryRevision", "eventSeqStart", "eventSeqEnd", "events"],
+      "properties": {
+        "sessionId": { "type": "string" },
+        "registryRevision": { "type": "integer", "minimum": 0 },
+        "eventSeqStart": { "type": "integer", "minimum": 1 },
+        "eventSeqEnd": { "type": "integer", "minimum": 1 },
+        "events": { "type": "array", "minItems": 1, "items": { "type": "object" } }
+      }
+    },
+    "diagnosticBatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["diagnostics"],
+      "properties": {
+        "diagnostics": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/diagnostic" } }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "code", "severity", "impact", "component", "operation", "message", "firstSeenAtMs", "lastSeenAtMs", "count", "suppressedCount"],
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "severity": { "enum": ["info", "warning", "error", "fatal"] },
+        "impact": { "enum": ["none", "frameSkipped", "eventDropped", "sessionPartial", "captureDegraded", "streamFatal", "modFatal"] },
+        "component": { "type": "string" },
+        "operation": { "type": "string" },
+        "message": { "type": "string" },
+        "sessionId": { "type": "string" },
+        "frameId": { "type": "integer", "minimum": 1 },
+        "firstSeenAtMs": { "type": "integer", "minimum": 0 },
+        "lastSeenAtMs": { "type": "integer", "minimum": 0 },
+        "count": { "type": "integer", "minimum": 1 },
+        "suppressedCount": { "type": "integer", "minimum": 0 },
+        "details": { "type": "object", "additionalProperties": { "type": ["string", "number", "boolean"] } }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uptimeMs", "connectedClients", "capturedEvents", "projectedEvents", "sentEvents", "sentFrames", "droppedEvents", "droppedFrames", "projectionErrors", "serializationErrors", "clientSendErrors", "hookWarnings", "attributionFailures", "diagnosticsEmitted", "diagnosticsSuppressed", "queueDepth", "registryRevision", "healthStatus"],
+      "properties": {
+        "uptimeMs": { "type": "integer", "minimum": 0 },
+        "connectedClients": { "type": "integer", "minimum": 0 },
+        "capturedEvents": { "type": "integer", "minimum": 0 },
+        "projectedEvents": { "type": "integer", "minimum": 0 },
+        "sentEvents": { "type": "integer", "minimum": 0 },
+        "sentFrames": { "type": "integer", "minimum": 0 },
+        "droppedEvents": { "type": "integer", "minimum": 0 },
+        "droppedFrames": { "type": "integer", "minimum": 0 },
+        "projectionErrors": { "type": "integer", "minimum": 0 },
+        "serializationErrors": { "type": "integer", "minimum": 0 },
+        "clientSendErrors": { "type": "integer", "minimum": 0 },
+        "hookWarnings": { "type": "integer", "minimum": 0 },
+        "attributionFailures": { "type": "integer", "minimum": 0 },
+        "diagnosticsEmitted": { "type": "integer", "minimum": 0 },
+        "diagnosticsSuppressed": { "type": "integer", "minimum": 0 },
+        "queueDepth": { "type": "integer", "minimum": 0 },
+        "registryRevision": { "type": "integer", "minimum": 0 },
+        "healthStatus": { "$ref": "#/$defs/healthStatus" }
+      }
+    },
+    "sessionClosed": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["sessionId", "endedAtUtcMs", "endedAtEventSeq", "reason", "durationMs"],
+      "properties": {
+        "sessionId": { "type": "string" },
+        "endedAtUtcMs": { "type": "integer", "minimum": 0 },
+        "endedAtEventSeq": { "type": "integer", "minimum": 0 },
+        "reason": { "$ref": "#/$defs/sessionEndReason" },
+        "durationMs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "sessionEndReason": { "enum": ["inactivity", "manual", "shutdown", "newSession", "error"] },
+    "registries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revision", "actors", "abilities", "effects"],
+      "properties": {
+        "revision": { "type": "integer", "minimum": 0 },
+        "actors": { "type": "object" },
+        "abilities": { "type": "object" },
+        "effects": { "type": "object" }
+      }
+    }
+  }
+}

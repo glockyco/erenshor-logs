@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import hello from "../../../../shared/protocol/fixtures/live/hello.json";
+import hello from "../../../../shared/protocol/fixtures/live-v3/hello.json";
 import {
   connectionStatus,
   connectionError,
@@ -66,8 +66,8 @@ describe("connection state", () => {
     it("stores protocol and mod versions", () => {
       setConnected(helloFrame);
 
-      expect(protocolVersion.value).toBe("2.0.0");
-      expect(modVersion.value).toBe("2026.5.17.14");
+      expect(protocolVersion.value).toBe("3.0.0");
+      expect(modVersion.value).toBe("2026.5.17.95539912");
     });
 
     it("clears any existing error", () => {

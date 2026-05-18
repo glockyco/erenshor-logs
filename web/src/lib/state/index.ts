@@ -2,6 +2,7 @@
 
 export * from "./clock.svelte";
 export * from "./connection.svelte";
+export * from "./live-diagnostics.svelte";
 export * from "./hydration.svelte";
 export * from "./sessions.svelte";
 export * from "./settings.svelte";

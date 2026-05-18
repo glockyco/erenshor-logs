@@ -1,3 +1,5 @@
+using ErenshorLogs.Hooks;
+
 namespace ErenshorLogs.Broadcast;
 
 /// <summary>
@@ -15,4 +17,6 @@ public interface ICombatEventBroadcaster : IDisposable
   /// Sends handshake message to a newly connected client.
   /// </summary>
   void SendHandshakeToNewClient(Server.IWebSocketClient client);
+
+  void SetPatchManifestResult(PatchManifestResult result);
 }

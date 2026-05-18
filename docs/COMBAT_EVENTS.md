@@ -527,13 +527,13 @@ links the event to the latest damage event against the dead actor when known.
 
 ## Combat State
 
-Combat state boundaries define session start/end. Protocol v2 does not emit
+Combat state boundaries define session start/end. Live protocol v3 does not emit
 synthetic combat events for lifecycle transitions.
 
 ### Combat Detection
 
 **Source**: `SessionManager` lazy session lifecycle
-**Protocol**: `sessionSnapshot` starts/replaces session state; `sessionEnded`
+**Protocol**: `sessionOpened` starts/replaces session state; `sessionClosed`
 ends a session.
 **Implementation**: Damage hooks notify `SessionManager` before emitting combat
 events, so the first event is captured under the newly-created session. The
@@ -762,7 +762,7 @@ Pets and charmed NPCs deal damage that should credit their owner.
 | **Damage** | `damage` with `hit`, `tick`, `reflect` actions | Partial: physical, magic, DoT, environmental implemented |
 | **Healing** | `heal` with `direct`, `tick`, `lifesteal`, `regen` actions | Not implemented |
 | **Status Effects** | `effect` with `apply`, `refresh`, `fade` actions | Tracking hooks partial; event emission not implemented |
-| **Combat State** | `sessionSnapshot`, `sessionEnded` | Implemented |
+| **Combat State** | `sessionOpened`, `sessionClosed` | Implemented |
 | **Death** | `death` / `die` | Not implemented |
 | **Resources** | `resource` with `spend`, `restore`, `regen` actions | Not implemented |
 | **Interrupts** | `interrupt` / `interrupt` | Not implemented |

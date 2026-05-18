@@ -1,0 +1,37 @@
+{
+  "protocol": "erenshor.logs.live",
+  "protocolVersion": "3.0.0",
+  "schemaVersion": "3.0.0",
+  "frameId": 2,
+  "kind": "sessionOpened",
+  "sentAtMs": 1800000000100,
+  "sessionId": "session-1",
+  "producer": {
+    "name": "ErenshorLogsMod",
+    "modVersion": "2026.5.17.95539912",
+    "gameVersion": "playtest",
+    "buildCommit": "5b1d2c8"
+  },
+  "payload": {
+    "sessionId": "session-1",
+    "state": "active",
+    "mode": "automatic",
+    "startedAtUtcMs": 1800000000000,
+    "producer": {
+      "name": "ErenshorLogsMod",
+      "modVersion": "2026.5.17.95539912",
+      "gameVersion": "playtest",
+      "buildCommit": "5b1d2c8"
+    },
+    "registryRevision": 0,
+    "lastEventSeq": 0,
+    "eventCount": 0,
+    "completeness": "complete",
+    "registries": {
+      "revision": 0,
+      "actors": {},
+      "abilities": {},
+      "effects": {}
+    }
+  }
+}
