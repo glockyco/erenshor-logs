@@ -15,7 +15,7 @@ for contributing to the project.
 ### Prerequisites (All Platforms)
 
 - .NET SDK 8.0+
-- Node.js 18+ and pnpm
+- Node.js and pnpm, in the versions that [CI](.github/workflows/ci.yml) sets up
 - Python 3.11+ and uv (`pip install uv`)
 - pre-commit (`pip install pre-commit && pre-commit install`)
 

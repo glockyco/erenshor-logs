@@ -12,7 +12,7 @@ analyzes via static web app.
 
 ```
 BepInEx Mod (C#) → WebSocket → Web App (Svelte) → Live DPS/HPS analysis
-                → JSON export → File import (later)
+                → JSON export → File import → Offline analysis
 ```
 
 Components:
@@ -20,8 +20,8 @@ Components:
 - **web/**: Static SvelteKit app for log analysis (Cloudflare Pages)
 - **cli/**: Development tools (deploy, launch, setup)
 
-Live streaming via WebSocket (port 38729) is the primary mode. JSON file
-export exists for offline analysis but is secondary.
+Live streaming via WebSocket (port 38729) is the primary mode. The web app
+also imports exported JSON sessions for offline analysis.
 
 ## Essential Commands
 
